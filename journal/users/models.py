@@ -2,14 +2,14 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 class CustomUser (AbstractUser):
-    STUDENT = 'student'
+    SPORTSMEN = 'sportsmen'
     COACH = 'coach'
     ADMIN = 'admin'
 
     ROLE_CHOICES = [
-        (STUDENT, 'Спортсмен'),
+        (SPORTSMEN, 'Спортсмен'),
         (COACH, 'Тренер'),
-        (ADMIN, 'Admin')
+        (ADMIN, 'Администратор')
     ]
     role = models.CharField(max_length=255,choices=ROLE_CHOICES)
     middle_name = models.CharField(max_length=255, null=True, blank=True)# null=True, blank=True - Делают поля не обязательными для заполнения
