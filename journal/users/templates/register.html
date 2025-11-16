@@ -1,43 +1,47 @@
-<!DOCTYPE html>
+{% load static %}
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <!-- <link href="{% static 'css/bootstrap.min.css' %}" rel=“stylesheet” >
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"> </script>  -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 
-<body>
-    <form action="" method="post">
+<body class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+    <form action="" method="post" class="p-4 border rounded" style="width: 400px; min-width: 300px;">
         {% csrf_token %}
         {% for field in form %}
-        <div class='field'>
-            {{field}}
+        <div class="mb-3">
+            {{ field }}
             {% if field.errors %}
-            <div class="field-errors">
+            <div class="text-danger small">
                 {% for error in field.errors %}
-                <p class="error">{{ error }}</p>
+                <p>{{ error }}</p>
                 {% endfor %}
             </div>
             {% endif %}
         </div>
         {% endfor %}
-        <label for="">
-            <input type="checkbox" id="togglePassword">
-            Показать пароль
-        </label>
-        <button>Зарегестрироваться</button>
+        <div class="form-check mb-3">
+            <input type="checkbox" id="togglePassword" class="form-check-input">
+            <label for="togglePassword" class="form-check-label">Показать пароль</label>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
         {% if form.non_field_errors %}
-        <div class="form-errors">
+        <div class="text-danger mt-3">
             {% for error in form.non_field_errors %}
-            <p class="error">
-                {{error}}
-            </p>
+            <p>{{ error }}</p>
             {% endfor %}
-
         </div>
         {% endif %}
     </form>
 </body>
+
 
 </html>

@@ -27,6 +27,10 @@ def log_in(request):
 
 def log_out(request):
     logout(request)
-    return redirect('users:log_in')       
+    return redirect('users:log_in')    
+
+def home(request):
+    form = LoginForm()  
+    return render(request, 'home.html', {'form': form}) 
 
 # Create your views here.

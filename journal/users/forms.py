@@ -5,35 +5,36 @@ from django.contrib.auth import authenticate
 
 class RegisterForm(UserCreationForm):
     first_name = forms.CharField(
-        widget=forms.TextInput(attrs={'autofocus': True, 'placeholder': 'Укажите Ваше имя'})
+        widget=forms.TextInput(attrs={'autofocus': True, 'placeholder': 'Укажите Ваше имя','class':'form-control'})
     )
 
     last_name = forms.CharField(
-        widget=forms.TextInput(attrs={'autofocus': True, 'placeholder': 'Укажите Вашу фамилию'})
+        widget=forms.TextInput(attrs={'autofocus': True, 'placeholder': 'Укажите Вашу фамилию','class':'form-control'})
     )
 
     middle_name = forms.CharField(
-        widget=forms.TextInput(attrs={'autofocus': True, 'placeholder': 'Укажите Ваше отчество'})
+        widget=forms.TextInput(attrs={'autofocus': True, 'placeholder': 'Укажите Ваше отчество','class':'form-control'})
     )
     
     email = forms.CharField(
-        widget=forms.EmailInput(attrs={'placeholder':'Укажите Вашу эллектронную почту'})
+        widget=forms.EmailInput(attrs={'placeholder':'Укажите Вашу эллектронную почту','class':'form-control'})
     )
     phone_number = forms.CharField(max_length=12,
-        widget=forms.TextInput(attrs={'placeholder': 'Укажите Ваш номер телефона'})
+        widget=forms.TextInput(attrs={'placeholder': 'Укажите Ваш номер телефона','class':'form-control'})
     )
 
     password1 = forms.CharField(
-        widget=forms.PasswordInput(attrs={'placeholder': 'Введите пароль'})
+        widget=forms.PasswordInput(attrs={'placeholder': 'Введите пароль','class':'form-control'})
     )
 
     password2 = forms.CharField(
-        widget=forms.PasswordInput(attrs={'placeholder': 'Повторите пароль'})
+        widget=forms.PasswordInput(attrs={'placeholder': 'Повторите пароль','class':'form-control'})
     )
 
     role = forms.ChoiceField(
-        choices=CustomUser.ROLE_CHOICES
-    )
+        choices=CustomUser.ROLE_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'})
+)
 
     class Meta:
         model = CustomUser
@@ -42,11 +43,11 @@ class RegisterForm(UserCreationForm):
 
 class LoginForm(forms.Form):
     email = forms.EmailField(
-        widget=forms.EmailInput(attrs={'autofocus':True, 'placeholder':'Укажите Вашу эллектронную почту'})
+        widget=forms.EmailInput(attrs={'autofocus':True, 'placeholder':'Укажите Вашу эллектронную почту','class':'form-control'})
     )
 
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'placeholder': 'Введите пароль', 'class':'password'}) 
+        widget=forms.PasswordInput(attrs={'placeholder': 'Введите пароль', 'class':'form-control'}) 
     )
 
     def clean(self):# Кастомная функция для входа по email 
