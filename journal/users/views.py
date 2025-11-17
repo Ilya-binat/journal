@@ -21,7 +21,7 @@ def log_in(request):
         user = form.get_user()
         login(request,user)
 
-        return HttpResponse('Вход выполнен')
+        return redirect('users:home')
     
     return render(request, 'log_in.html', {'form':form})
 

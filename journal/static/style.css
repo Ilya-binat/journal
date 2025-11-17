@@ -21,47 +21,57 @@ form {
 
 body {
   margin: 0;
-  padding-top: 56px; /* отступ для фиксированного navbar, если понадобится */
+  padding-top: 56px;
+  /* отступ для фиксированного navbar, если понадобится */
 }
 
 .navbar {
-  position: fixed; /* фиксируем navbar вверху */
+  position: fixed;
+  /* фиксируем navbar вверху */
   top: 0;
   left: 0;
   width: 100%;
-  background-color: #f8f9fa; /* светлый фон, можно изменить */
-  border-bottom: 1px solid #dee2e6; /* лёгкая тень/граница снизу */
+  background-color: #f8f9fa;
+  /* светлый фон, можно изменить */
+  border-bottom: 1px solid #dee2e6;
+  /* лёгкая тень/граница снизу */
   display: flex;
-  justify-content: flex-end; /* выравнивание по правому краю */
+  justify-content: flex-end;
+  /* выравнивание по правому краю */
   padding: 0.5rem 1rem;
-  z-index: 1030; /* чтобы navbar был сверху над остальным контентом */
+  z-index: 1030;
+  /* чтобы navbar был сверху над остальным контентом */
 }
 
-.navbar .button {
-  margin-left: 1rem;
-  padding: 0.375rem 0.75rem;
-  font-size: 1rem;
-  cursor: pointer;
-  border: none;
-  border-radius: 0.25rem;
+/* Прозрачные кнопки с ТЁМНО-СЕРОЙ рамкой */
+.nav-btn.btn {
+  background-color: #3B82F6 !important;
+  color: white !important;
+  border: 2px solid lightgray !important;
+  /* ровный темно-серый */
+  padding: 10px 22px;
+  font-size: 16px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s ease;
 }
 
-.navbar .button.success {
-  background-color: lightgray;
-  color: black;
+/* Hover */
+.nav-btn.btn:hover {
+  background-color: lightblue (0, 0, 0, 0.06) !important;
+  /* темнее, но всё ещё серый */
+  color: white !important;
+  transform: scale(1.05);
 }
 
-.navbar .button.danger {
-  background-color: #dc3545;
-  color: white;
+.navbar-logo {
+    max-height: 40px;
+    width: auto;
+    transition: 0.3s;
 }
 
-.navbar .button.info {
-  background-color: lightskyblue;
-  color: white;
-}
-
-.navbar .button:hover {
-  opacity: 0.85;
-  text-decoration: none;
+.navbar-logo:hover {
+    transform: scale(1.3);
 }

@@ -20,8 +20,8 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('users/', include(('users.urls', 'users'),
-         namespace = 'users')),
+    path('users/', include(('users.urls', 'users'),namespace = 'users')),
+    
      
 ]
 urlpatterns += staticfiles_urlpatterns()
