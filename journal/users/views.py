@@ -8,7 +8,7 @@ def register(request):
 
     if form.is_valid():
         form.save()
-        return HttpResponse('Регистрация прошла успешно')
+        return redirect(request, 'log_in.html', {'form:form'})
     
 
     return render(request, 'register.html', {'form':form})

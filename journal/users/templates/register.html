@@ -30,8 +30,18 @@
         </div>
         {% endif %}
     </form>
+    <div class="button">
+        <a href="{% url 'users:log_in' %}" class="form-link">У Вас уже есть аккаунт</a>
+    </div>
 </body>
 
 
-</html>
+<script>
+    document.getElementById('togglePassword').addEventListener('change', function () {
+        let passwordFields = document.querySelectorAll('.password');
+        passwordFields.forEach(field => {
+            field.type = this.checked ? 'text' : 'password';
+        });
+    });
+</script>
 {% endblock %}

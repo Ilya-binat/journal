@@ -25,11 +25,11 @@ class RegisterForm(UserCreationForm):
     )
 
     password1 = forms.CharField(
-        widget=forms.PasswordInput(attrs={'placeholder': 'Введите пароль','class':'form-control'})
+        widget=forms.PasswordInput(attrs={'placeholder': 'Введите пароль','class':'form-control password'})
     )
 
     password2 = forms.CharField(
-        widget=forms.PasswordInput(attrs={'placeholder': 'Повторите пароль','class':'form-control'})
+        widget=forms.PasswordInput(attrs={'placeholder': 'Повторите пароль','class':'form-control password'})
     )
 
     role = forms.ChoiceField(
