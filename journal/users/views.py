@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from .forms import RegisterForm, LoginForm
 from django.http import HttpResponse
 from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
 
 def register(request):
     form = RegisterForm(request.POST or None)
@@ -21,7 +22,7 @@ def log_in(request):
         user = form.get_user()
         login(request,user)
 
-        return redirect('users:home')
+        return redirect('users:profile')
     
     return render(request, 'log_in.html', {'form':form})
 
@@ -32,5 +33,9 @@ def log_out(request):
 def home(request):
     form = LoginForm()  
     return render(request, 'home.html', {'form': form}) 
+
+@login_required# нужно импортировать login_required
+def profile(request):
+    return render(request, 'profile.html', {'user_obj':request.user})
 
 # Create your views here.
