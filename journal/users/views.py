@@ -38,4 +38,28 @@ def home(request):
 def profile(request):
     return render(request, 'profile.html', {'user_obj':request.user})
 
+@login_required
+def update_avatar(request):
+    if request.method == "POST":
+        avatar = request.FILES.get("avatar")
+        if avatar:
+            request.user.profile.image = avatar
+            request.user.profile.save()
+        return redirect('users:profile')
+
+    return redirect('users:profile')
+
+@login_required
+def edit_profile(request):
+    return render(request, 'users/edit_profile.html')
+
+@login_required
+def change_password(request):
+    return render(request, 'users/change_password.html')
+
+
+
+@login_required
+def profile_update(request):
+    return render(request, 'users/profile_update.html')
 # Create your views here.
