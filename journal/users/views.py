@@ -26,7 +26,7 @@ def log_in(request):
         user = form.get_user()
         login(request, user)
 
-        return redirect("users:profile")
+        return redirect("student:schedule")
 
     return render(request, "log_in.html", {"form": form})
 
@@ -60,17 +60,17 @@ def update_avatar(request):
 
 @login_required
 def edit_profile(request):
-    return render(request, "users/edit_profile.html")
+    return render(request, "edit_profile.html")
 
 
 @login_required
 def change_password(request):
-    return render(request, "users/change_password.html")
+    return render(request, "change_password.html")
 
 
 @login_required
 def profile_update(request):
-    return render(request, "users/profile_update.html")
+    return render(request, "profile_update.html")
 
 
 # Create your views here.
