@@ -5,16 +5,6 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 
 
-def register(request):
-    form = RegisterForm(request.POST or None)
-
-    if request.method == "POST" and form.is_valid():
-        user = form.save(commit=False)  # не сохраняем сразу
-        user.username = form.cleaned_data["email"]  # подставляем email
-        user.save()  # теперь сохраняем
-        return redirect("users:log_in")  # переход на логин-страницу
-
-    return render(request, "register.html", {"form": form})
 
 
 
@@ -36,17 +26,12 @@ def log_out(request):
     return redirect("users:log_in")
 
 
-def home(request):
-    form = LoginForm()
-    return render(request, "home.html", {"form": form})
-
-
-@login_required  # нужно импортировать login_required
+@login_required(login_url='/users/log_in')  # нужно импортировать login_required
 def profile(request):
     return render(request, "profile.html", {"user_obj": request.user})
 
 
-@login_required
+@login_required(login_url='/users/log_in')
 def update_avatar(request):
     if request.method == "POST":
         avatar = request.FILES.get("avatar")
@@ -58,17 +43,17 @@ def update_avatar(request):
     return redirect("users:profile")
 
 
-@login_required
+@login_required(login_url='/users/log_in')
 def edit_profile(request):
     return render(request, "edit_profile.html")
 
 
-@login_required
+@login_required(login_url='/users/log_in')
 def change_password(request):
     return render(request, "change_password.html")
 
 
-@login_required
+@login_required(login_url='/users/log_in')
 def profile_update(request):
     return render(request, "profile_update.html")
 

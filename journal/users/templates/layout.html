@@ -22,23 +22,9 @@
       <div class="container-fluid d-flex justify-content-between align-items-center">
 
         <!-- ЛОГО СЛЕВА -->
-        <a class="navbar-brand m-0 p-0" href="{% url 'users:home' %}">
+        <a class="navbar-brand m-0 p-0" href="">
           <img src="{% static 'images/icon.png' %}" alt="icon" class="navbar-logo">
         </a>
-
-        <!-- КНОПКИ СПРАВА -->
-        <div class="d-flex align-items-center">
-          {% if user.is_authenticated %}
-          <a href="{% url 'users:log_out' %}" class="btn nav-btn d-flex align-items-center gap-2 ms-3">
-            <i class="bi bi-box-arrow-left ms-1"></i>
-            Выйти
-            </a>
-          {% else %}
-          <a href="{% url 'users:log_in' %}" class="btn nav-btn ms-3">Войти</a>
-          <a href="{% url 'users:register' %}" class="btn nav-btn ms-3">Создать аккаунт</a>
-          {% endif %}
-        </div>
-
       </div>
     </nav>
   </header>

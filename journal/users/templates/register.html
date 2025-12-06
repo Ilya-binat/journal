@@ -17,11 +17,7 @@
             {% endif %}
         </div>
         {% endfor %}
-        <div class="form-check mb-3">
-            <input type="checkbox" id="togglePassword" class="form-check-input">
-            <label for="togglePassword" class="form-check-label">Показать пароль</label>
-        </div>
-        <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
+        <button type="submit" class="btn btn-primary w-100">Создать</button>
         {% if form.non_field_errors %}
         <div class="text-danger mt-3">
             {% for error in form.non_field_errors %}
