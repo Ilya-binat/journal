@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
-from .forms import RegisterForm
+from .forms import RegisterForm, GroupForm, Group
 from django .http import HttpResponse
+
 
 
 
@@ -18,4 +19,25 @@ def register(request):
         return redirect("users:log_in")  # переход на логин-страницу
 
     return render(request, "register.html", {"form": form})
+
+def group(request):
+    groups = Group.objects.all()
+    return render(request, 'group.html', {"groups":groups})
+
+
+def add_group(request):
+    form = GroupForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        return redirect('administrator:group')
+    return render(request, 'add_group.html', {"form": form})
+
+def edit_group(request, pk):
+    group_data = Group.objects.get(pk=pk)
+    form = GroupForm(request.POST or None, instance=group_data)# Заполняем форму и передаем ее в шаблон
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        return redirect('administrator:group')
+    return render(request, 'add_group.html', {"form":form})
 # Create your views here.

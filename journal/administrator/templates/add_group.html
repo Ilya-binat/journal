@@ -1,0 +1,22 @@
+{% extends 'base_layout.html' %}
+{% load static %}
+{% block content %}
+<div class="d-flex justify-content-center align-items-center">
+<form action="" method="post" class="p-4 border rounded" style="width: 400px; min-width: 300px;">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="mb-3">
+        {{ field }}
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary w-100">Отправить</button>
+    {% if form.non_field_errors %}
+    <div class="text-danger mt-3">
+        {% for error in form.non_field_errors %}
+        <p>{{ error }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+</form>
+</div>
+{% endblock %}
