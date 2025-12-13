@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .forms import RegisterForm, GroupForm, Group
+from .forms import RegisterForm, GroupForm, Group, CustomUser
 from django .http import HttpResponse
 
 
@@ -40,4 +40,17 @@ def edit_group(request, pk):
         form.save()
         return redirect('administrator:group')
     return render(request, 'add_group.html', {"form":form})
+
+def users(request):
+    users = CustomUser.objects.filter(is_superuser = False)
+
+    return render(request, 'users.html', {'users':users})
+
+def edit_user(request, pk):
+    user = CustomUser.objects.get(pk=pk)
+    form = RegisterForm(request.POST or None, instance = user)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        return redirect('administrator:users')
+    return render(request, 'register.html', {'form':form})
 # Create your views here.

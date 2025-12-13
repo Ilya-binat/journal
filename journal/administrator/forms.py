@@ -35,6 +35,13 @@ class RegisterForm(forms.ModelForm):
         )
     )
 
+    birth_date = forms.DateField(
+    widget=forms.DateInput(attrs={
+        'type': 'date',
+        'class': 'form-control'
+    })
+)
+
     email = forms.CharField(
         widget=forms.EmailInput(
             attrs={"placeholder": "Укажите эллектронную почту", "class": "form-control"}
@@ -58,6 +65,7 @@ class RegisterForm(forms.ModelForm):
             "last_name",
             "first_name",
             "middle_name",
+            "birth_date",
             "email",
             "phone_number",
             "role",

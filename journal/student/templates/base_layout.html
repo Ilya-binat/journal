@@ -30,8 +30,8 @@
         </a>
 
         {% if user.is_superuser %}
-        <a href="{% url 'administrator:create_user' %}">
-            <i class="bi bi-plus-lg me-2"></i> Добавить пользователя
+        <a href="{% url 'administrator:users' %}">
+            <i class="bi bi-plus-lg me-2"></i> Все пользователи
         </a>
         {% endif %}
 

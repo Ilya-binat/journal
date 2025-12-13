@@ -4,42 +4,6 @@ from.models import CustomUser
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError 
 
-class RegisterForm(UserCreationForm):
-    first_name = forms.CharField(
-        widget=forms.TextInput(attrs={'autofocus': True, 'placeholder': 'Укажите Ваше имя','class':'form-control'})
-    )
-
-    last_name = forms.CharField(
-        widget=forms.TextInput(attrs={'autofocus': True, 'placeholder': 'Укажите Вашу фамилию','class':'form-control'})
-    )
-
-    middle_name = forms.CharField(
-        widget=forms.TextInput(attrs={'autofocus': True, 'placeholder': 'Укажите Ваше отчество','class':'form-control'})
-    )
-    
-    email = forms.CharField(
-        widget=forms.EmailInput(attrs={'placeholder':'Укажите Вашу эллектронную почту','class':'form-control'})
-    )
-    phone_number = forms.CharField(max_length=12,
-        widget=forms.TextInput(attrs={'placeholder': 'Укажите Ваш номер телефона','class':'form-control'})
-    )
-
-    password1 = forms.CharField(
-        widget=forms.PasswordInput(attrs={'placeholder': 'Введите пароль','class':'form-control password'})
-    )
-
-    password2 = forms.CharField(
-        widget=forms.PasswordInput(attrs={'placeholder': 'Повторите пароль','class':'form-control password'})
-    )
-
-    role = forms.ChoiceField(
-        choices=CustomUser.ROLE_CHOICES,
-        widget=forms.Select(attrs={'class': 'form-select'})
-)
-
-    class Meta:
-        model = CustomUser
-        fields = ['last_name', 'first_name', 'middle_name', 'email', 'phone_number', 'password1', 'password2', 'role']
 
 
 class LoginForm(forms.Form):

@@ -17,7 +17,11 @@
             {% endif %}
         </div>
         {% endfor %}
+        <div class="d-flex justify-content-center gap-1">
         <button type="submit" class="btn btn-primary w-100">Создать</button>
+        <a href="{% url 'administrator:users' %}" class="btn btn-secondary w-100">Отменить</a>
+        </div>
+       
         {% if form.non_field_errors %}
         <div class="text-danger mt-3">
             {% for error in form.non_field_errors %}
