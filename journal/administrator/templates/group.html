@@ -7,7 +7,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Группы</h2>
         <a href="{% url 'administrator:add_group' %}" class="btn btn-primary">
-            <i class="bi bi-people me-2" ></i>
+            <i class="bi bi-people me-2"></i>
             Добавить группу
         </a>
     </div>
@@ -33,19 +33,99 @@
                     <td>Иванов И.И.</td>
                     <td class="text-center">12</td>
                     <td class="text-end">
-                        <a href="{% url 'administrator:edit_group' group.pk %}" class="btn btn-sm btn-outline-secondary me-1">
+                        <a href="{% url 'administrator:edit_group' group.pk %}"
+                            class="btn btn-sm btn-outline-secondary me-1">
                             <i class="bi bi-pencil"></i>
                         </a>
-                        <button class="btn btn-sm btn-outline-danger">
+                        <button type="button" class="btn btn-sm btn-outline-danger delete-group-btn"
+                            data-bs-toggle="modal" data-bs-target="#deleteGroupModal" id="{{ group.pk }}"
+                            data-group-name="{{ group.group_name }}">
                             <i class="bi bi-trash"></i>
                         </button>
                     </td>
                 </tr>
-               {% endfor %}
+                {% endfor %}
             </tbody>
 
         </table>
     </div>
-
+    <!-- Модальное окно удаления группы -->
+    <div class="modal fade" id="deleteGroupModal" tabindex="-1" aria-labelledby="deleteGroupModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteGroupModalLabel">Удалить группу?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Вы уверены, что хотите удалить группу <strong id="groupNameToDelete"></strong>?
+                    <div class="alert alert-warning mt-2">
+                        Все спортсмены из этой группы будут удалены!
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <form id="deleteGroupForm" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <!-- Cкрытый input который сохраняет id группы -->
+                        <input type="hidden" name="group_id" id="groupIdToDelete">
+                        <button type="submit" class="btn btn-danger">Удалить</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+{% block script %}
+<script>
+    // открытие модалки удаления
+    let deleteButtons = document.querySelectorAll('.delete-group-btn')
+
+    deleteButtons.forEach(function (btn) {
+        btn.onclick = function () {
+            id = btn.id
+            
+        }
+
+    })
+
+    //  удаление группы
+    let id;
+    let groupDeleteForm = document.querySelector('#deleteGroupForm')
+    
+
+    groupDeleteForm.onsubmit = function (event) {
+        event.preventDefault()
+        console.log(id);
+
+        fetch('/administrator/delete_group/' + id, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')// getCookie - вернет тот параметр который мы запросим, в данном случае она возвращает csrf - токен
+            },
+        })
+            .then(response => location.reload())  // promise - действия которые выполняются раз за разом.
+            .catch(error => console.log(error))
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+
+
+        return cookieValue;
+    }
+</script>
 {% endblock %}

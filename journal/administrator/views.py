@@ -41,6 +41,14 @@ def edit_group(request, pk):
         return redirect('administrator:group')
     return render(request, 'add_group.html', {"form":form})
 
+def delete_group(request, pk):
+    group_data = Group.objects.get(pk=pk)
+    if request.method == 'POST':
+        group_data.delete()
+    return HttpResponse()
+        
+
+
 def users(request):
     users = CustomUser.objects.filter(is_superuser = False)
 
