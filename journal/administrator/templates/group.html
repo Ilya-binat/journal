@@ -68,8 +68,6 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
                     <form id="deleteGroupForm" method="post" style="display: inline;">
                         {% csrf_token %}
-                        <!-- Cкрытый input который сохраняет id группы -->
-                        <input type="hidden" name="group_id" id="groupIdToDelete">
                         <button type="submit" class="btn btn-danger">Удалить</button>
                     </form>
                 </div>

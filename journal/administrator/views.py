@@ -1,24 +1,8 @@
 from django.shortcuts import render, redirect
-from .forms import RegisterForm, GroupForm, Group, CustomUser
+from .forms import GroupForm, Group, CustomUser
 from django .http import HttpResponse
+from users.forms import RegisterForm
 
-
-
-
-def register(request):
-    if not request.user.is_superuser:
-        return HttpResponse('Извиниет у Вас нет прав для выполнения этого действия')
-    
-    form = RegisterForm(request.POST or None)
-
-    if request.method == "POST" and form.is_valid():
-        user = form.save(commit=False)  # не сохраняем сразу
-        user.username = form.cleaned_data["email"]  # подставляем email
-        user.set_password ('12345678')
-        user.save()  # теперь сохраняем
-        return redirect("users:log_in")  # переход на логин-страницу
-
-    return render(request, "register.html", {"form": form})
 
 def group(request):
     groups = Group.objects.all()
@@ -47,18 +31,23 @@ def delete_group(request, pk):
         group_data.delete()
     return HttpResponse()
         
+def coaches(request):
+    coaches = CustomUser.objects.all()
 
+    return render(request, 'coaches.html', {'coaches':coaches})
 
-def users(request):
-    users = CustomUser.objects.filter(is_superuser = False)
-
-    return render(request, 'users.html', {'users':users})
-
-def edit_user(request, pk):
-    user = CustomUser.objects.get(pk=pk)
-    form = RegisterForm(request.POST or None, instance = user)
+def delete_coach(request, pk):
+    coach_data = CustomUser.objects.get(pk=pk)
+    if request.method == 'POST':
+        coach_data.delete()
+        return HttpResponse()
+    
+def edit_coach(request, pk):
+    coach = CustomUser.objects.get(pk=pk)
+    form = RegisterForm(request.POST or None, instance = coach)
     if request.method == 'POST' and form.is_valid():
         form.save()
-        return redirect('administrator:users')
+        return redirect('administrator:coaches')
     return render(request, 'register.html', {'form':form})
+
 # Create your views here.

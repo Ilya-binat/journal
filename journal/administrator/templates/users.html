@@ -6,8 +6,8 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Пользователи</h2>
-        <a href="{% url 'administrator:create_user' %}" class="btn btn-primary">
-            <i class="bi bi-people me-2" ></i>
+        <a href="{% url 'users:create_user' %}" class="btn btn-primary">
+            <i class="bi bi-people me-2"></i>
             Добавить пользователя
         </a>
     </div>
@@ -17,40 +17,158 @@
             <thead class="table-light">
                 <tr>
                     <th scope="col">ID</th>
-                    <th scope="col">Фамиия</th>
-                    <th scope="col">Имя</th>
-                    <th scope="col">Отчество</th>
+                    <th scope="col">Полное имя</th>
                     <th scope="col" class="text-end">Дата рождения</th>
                     <th scope="col" class="text-center">Почта</th>
                     <th scope="col" class="text-end">Номер телефона</th>
                     <th scope="col" class="text-end">Роль</th>
+                    <th scope="col" class="text-end">Статус</th>
                 </tr>
             </thead>
             <tbody>
                 {% for user in users %}
                 <tr>
                     <td class="text-center">{{ user.id }}</td>
-                    <td class="text-center">{{ user.last_name|default:"-" }}</td>
-                    <td class="text-center">{{ user.first_name|default:"-" }}</td>
-                    <td class="text-center">{{ user.middle_name|default:"-" }}</td>
+                    <td class="text-center">{{ user.get_full_name|default:"-" }}</td>
                     <td class="text-center">{{ user.birth_date|default:"Не указано" }}</td>
                     <td class="text-center">{{ user.email|default:"-" }}</td>
                     <td class="text-center">{{ user.phone_number|default:"-" }}</td>
-                    <td class="text-center">{{ user.role|default:"-" }}</td>
-                    <td class="text-end">
-                        <a href="{% url 'administrator:edit_user' user.pk %}" class="btn btn-sm btn-outline-secondary me-1">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <button class="btn btn-sm btn-outline-danger">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                    <td class="text-center">
+                        {% if user.role == 'Администратор' %}
+                        <span class="badge bg-primary"> {{ user.role|default:"-" }}</span>
+                        {% elif user.role == 'Тренер' %}
+                        <span class="badge bg-info"> {{ user.role|default:"-" }}</span>
+                        {% elif user.role == 'Спортсмен' %}
+                        <span class="badge bg-secondary"> {{ user.role|default:"-" }}</span>
+                        {% endif %}
                     </td>
+                    <td class="text-center">
+                        {% if user.is_active %}
+                        <span class="badge bg-success">Активен</span>
+                        {% else %}
+                        <span class="badge bg-danger">Не активен</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'users:edit_user' user.pk %}">
+                                        <i class="bi bi-pencil me-2"></i>Редактировать
+                                    </a>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item delete-user-btn" type="button" data-bs-toggle="modal"
+                                        data-bs-target="#deleteUserModal" data-user-id="{{ user.pk }}">
+                                        <i class="bi bi-trash me-2"></i>Удалить
+                                    </button>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="">
+                                        <i class="bi bi-lock me-2"></i>Сменить пароль
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'users:patch_user' user.pk %}"
+                                        class="dropdown-item activate-user-btn" type="button"
+                                        data-user-id="{{ user.pk }}">
+                                        {% if user.is_active %}
+                                        <i class="bi bi-x-circle me-2"></i>Деактивировать
+                                        {% else %}
+                                        <i class="bi bi-check-circle me-2"></i>Активировать
+                                        {% endif %}
+
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+
                 </tr>
-               {% endfor %}
+                {% endfor %}
             </tbody>
 
         </table>
     </div>
-
+    <!-- Модальное окно удаления пользователя -->
+    <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteUserModalLabel">Удалить пользователя?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Вы уверены, что хотите удалить пользователя?
+                    <div class="alert alert-warning mt-2">
+                        Все данные связанные с этим пользователем будут удалены!
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <form id="deleteUserForm" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Удалить</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+{% block script %}
+<script>
+    // открытие модалки удаления
+    let deleteButtons = document.querySelectorAll('.delete-user-btn')
+
+    deleteButtons.forEach(function (btn) {
+        btn.onclick = function () {
+            id = btn.id
+
+        }
+
+    })
+
+    //  удаление группы
+    let id;
+    let userDeleteForm = document.querySelector('#deleteUserForm')
+
+
+    userDeleteForm.onsubmit = function (event) {
+        event.preventDefault()
+        console.log(id);
+
+        fetch('/users/delete_user/' + id, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')// getCookie - вернет тот параметр который мы запросим, в данном случае она возвращает csrf - токен
+            },
+        })
+            .then(response => location.reload())  // promise - действия которые выполняются раз за разом.
+            .catch(error => console.log(error))
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+
+
+        return cookieValue;
+    }
+</script>
 {% endblock %}

@@ -1,11 +1,25 @@
 from django.shortcuts import render, redirect
-from .forms import LoginForm
+from .forms import LoginForm, RegisterForm
 from django.http import HttpResponse
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from.models import *
 
 
+def register(request):
+    if not request.user.is_superuser:
+        return HttpResponse('Извиниет у Вас нет прав для выполнения этого действия')
+    
+    form = RegisterForm(request.POST or None)
 
+    if request.method == "POST" and form.is_valid():
+        user = form.save(commit=False)  # не сохраняем сразу
+        user.username = form.cleaned_data["email"]  # подставляем email
+        user.set_password ('12345678')
+        user.save()  # теперь сохраняем
+        return redirect("users:users")  # переход на страницу пользователей
+
+    return render(request, "register.html", {"form": form})
 
 
 def log_in(request):
@@ -57,5 +71,29 @@ def change_password(request):
 def profile_update(request):
     return render(request, "profile_update.html")
 
+def users(request):
+    users = CustomUser.objects.filter(is_superuser = False)
 
-# Create your views here.
+    return render(request, 'users.html', {'users':users})
+
+def edit_user(request, pk):
+    user = CustomUser.objects.get(pk=pk)
+    form = RegisterForm(request.POST or None, instance = user)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        return redirect('users:users')
+    return render(request, 'register.html', {'form':form})
+
+def delete_user(request, pk):
+    user_data = CustomUser.objects.get(pk=pk)
+    if request.method == 'POST':
+        user_data.delete()
+    return HttpResponse()
+
+def patch_user(request, pk):
+    user = CustomUser.objects.get(pk=pk)
+    user.is_active = not user.is_active
+    user.save()
+    
+    return redirect('users:users')
+
