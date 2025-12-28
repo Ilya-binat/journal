@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect
 from .forms import LoginForm, RegisterForm
-from django.http import HttpResponse
-from django.contrib.auth import login, logout
+from django.http import HttpResponse, JsonResponse
+from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from.models import *
+import json
 
 
 def register(request):
@@ -88,7 +89,7 @@ def delete_user(request, pk):
     user_data = CustomUser.objects.get(pk=pk)
     if request.method == 'POST':
         user_data.delete()
-    return HttpResponse()
+    return redirect('users:users')
 
 def patch_user(request, pk):
     user = CustomUser.objects.get(pk=pk)
@@ -96,4 +97,22 @@ def patch_user(request, pk):
     user.save()
     
     return redirect('users:users')
+
+def change_password(request, pk):
+    data = json.loads(request.body)
+    password1 = data.get('password1')
+    password2 = data.get('password2')
+
+    if len (password1) < 8:
+        return JsonResponse('Пароль слишком короткий')
+    
+    if password1 != password2:
+        return JsonResponse('Пароли не совпадают')
+    
+    user = request.user
+    user.set_password(password1)
+    user.save()
+    update_session_auth_hash(request, user)
+
+    return HttpResponse('Смена пароля')
 

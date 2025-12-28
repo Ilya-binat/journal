@@ -15,5 +15,6 @@ urlpatterns = [
     path('edit_user/<int:pk>', edit_user, name = 'edit_user'),
     path('delete_user/<int:pk>', delete_user, name = 'delete_user'),
     path('patch_user/<int:pk>', patch_user, name = 'patch_user'),# patch - не большое обновление данных пользователя
-    path('', users, name = 'users'),
+    path('index/', users, name = 'users'),
+    path('change_password/<int:pk>', change_password, name = 'change_password'),
 ]
