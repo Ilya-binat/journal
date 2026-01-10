@@ -3,9 +3,6 @@ from users.models import CustomUser
 from .models import stage_choices, Group
 
 
-
-
-
 # Для создания группы
 class GroupForm(forms.ModelForm):
     group_name = forms.CharField(
@@ -22,10 +19,16 @@ class GroupForm(forms.ModelForm):
         choices=stage_choices, widget=forms.Select(attrs={"class": "form-select"})
     )
 
+    coach = forms.ModelChoiceField(
+        queryset=CustomUser.objects.filter(role = 'Тренер'), 
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
+
     class Meta:
         model = Group
         fields = [
             'group_name',
-            'stage'
+            'stage',
+            'coach'
         ]
 

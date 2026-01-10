@@ -23,6 +23,14 @@ class CustomUser(AbstractUser):
     def get_full_name(self): # Соединение полей ФИО в одно. Далее в html меняем на эту функцию
         full_name = "%s %s %s" % (self.last_name, self.first_name, self.middle_name)
         return full_name.strip() #strip - удаление пробеллов по бокам
+    
+    def get_short_name(self):
+        initials = []
+        if self.first_name:
+            initials.append(self.first_name[0] + '.')
+        if self.middle_name:
+            initials.append(self.middle_name[0])
+        return f"{self.last_name} {''.join(initials)}"
 
 
 

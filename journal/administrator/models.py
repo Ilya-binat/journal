@@ -16,7 +16,7 @@ class Slot(models.Model):
     date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
-    coach = models.ForeignKey('administrator.Coach', on_delete=models.SET_NULL, null=True, blank=True)
+    coach = models.ForeignKey('users.CustomUser', on_delete=models.SET_NULL, null=True, blank=True)
     hall = models.ForeignKey('administrator.Hall', on_delete=models.SET_NULL, null=True, blank=True)
     group = models.ForeignKey('administrator.Group', on_delete=models.SET_NULL, null=True, blank=True)
 
@@ -38,6 +38,7 @@ stage_choices = [
 class Group(models.Model):
     stage = models.CharField(max_length=255, choices=stage_choices)
     group_name = models.CharField(max_length=255, unique=True)
+    coach = models.ForeignKey('users.CustomUser', on_delete=models.SET_NULL, null=True, blank=True)
 
 
 # Далее переходим в admin.py импортируем все модели, далее регестрируем их

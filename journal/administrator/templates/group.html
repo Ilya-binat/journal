@@ -12,43 +12,56 @@
         </a>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-striped table-hover align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Имя группы</th>
-                    <th scope="col">Уровень группы</th>
-                    <th scope="col">Тренер</th>
-                    <th scope="col" class="text-center">Кол-во спортсменов</th>
-                    <th scope="col" class="text-end">Действия</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for group in groups %}
-                <tr>
-                    <td>{{ group.id }}</td>
-                    <td>{{ group.group_name }}</td>
-                    <td>{{ group.stage }}</td>
-                    <td>Иванов И.И.</td>
-                    <td class="text-center">12</td>
-                    <td class="text-end">
-                        <a href="{% url 'administrator:edit_group' group.pk %}"
-                            class="btn btn-sm btn-outline-secondary me-1">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <button type="button" class="btn btn-sm btn-outline-danger delete-group-btn"
-                            data-bs-toggle="modal" data-bs-target="#deleteGroupModal" id="{{ group.pk }}"
-                            data-group-name="{{ group.group_name }}">
-                            <i class="bi bi-trash"></i>
+    <table class="table table-striped table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Имя группы</th>
+                <th scope="col">Уровень группы</th>
+                <th scope="col">Тренер</th>
+                <th scope="col" class="text-center">Кол-во спортсменов</th>
+                <th scope="col" class="text-end">Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for group in groups %}
+            <tr>
+                <td>{{ group.id }}</td>
+                <td>{{ group.group_name }}</td>
+                <td>{{ group.stage }}</td>
+                <td>{{ group.coach.get_short_name }}</td>
+                <td class="text-center">12</td>
+                <td class="text-end">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
                         </button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
 
-        </table>
-    </div>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a href="{% url 'administrator:edit_group' group.pk %}" class="dropdown-item">
+                                    <i class="bi bi-pencil"></i>
+                                    Редактировать
+                                </a>
+                            </li>
+                            <li>
+                                <button type="button" class="dropdown-item delete-group-btn" data-bs-toggle="modal"
+                                    data-bs-target="#deleteGroupModal" id="{{ group.pk }}"
+                                    data-group-name="{{ group.group_name }}">
+                                    <i class="bi bi-trash"></i>
+                                    Удалить
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+
     <!-- Модальное окно удаления группы -->
     <div class="modal fade" id="deleteGroupModal" tabindex="-1" aria-labelledby="deleteGroupModalLabel"
         aria-hidden="true">
@@ -84,7 +97,7 @@
     deleteButtons.forEach(function (btn) {
         btn.onclick = function () {
             id = btn.id
-            
+
         }
 
     })
@@ -92,7 +105,7 @@
     //  удаление группы
     let id;
     let groupDeleteForm = document.querySelector('#deleteGroupForm')
-    
+
 
     groupDeleteForm.onsubmit = function (event) {
         event.preventDefault()

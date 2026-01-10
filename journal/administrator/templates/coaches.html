@@ -1,5 +1,43 @@
 {% extends 'base_layout.html' %}
 {% load static %}
 {% block content %}
+<div class="container py-4">
 
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Тренеры</h2>
+    </div>
+     <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Фамилия</th>
+                    <th scope="col">Имя</th>
+                    <th scope="col">Отчество</th>
+                    <th scope="col">Группы</th>
+                    <th scope="col">Общее кол-во спортсменов</th>
+                    <th scope="col" class="text-end">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for coach in coaches %}
+                <tr>
+                    <td>{{ coach.id }}</td>
+                    <td>{{ coach.last_name }}</td>
+                    <td>{{ coach.first_name }}</td>
+                    <td>{{ coach.middle_name }}</td>
+                    <td>
+                        {% for group in coach.group_set.all %}
+                        <span class="badge bg-primary">{{group.group_name}}</span>
+                        {% endfor %}
+                    </td>
+                    <td></td>
+                    <td class="text-end"></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+</div>
 {% endblock %}

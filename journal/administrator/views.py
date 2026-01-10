@@ -32,22 +32,11 @@ def delete_group(request, pk):
     return HttpResponse()
         
 def coaches(request):
-    coaches = CustomUser.objects.all()
+    coaches = CustomUser.objects.filter(role='Тренер')
+    
 
     return render(request, 'coaches.html', {'coaches':coaches})
 
-def delete_coach(request, pk):
-    coach_data = CustomUser.objects.get(pk=pk)
-    if request.method == 'POST':
-        coach_data.delete()
-        return HttpResponse()
-    
-def edit_coach(request, pk):
-    coach = CustomUser.objects.get(pk=pk)
-    form = RegisterForm(request.POST or None, instance = coach)
-    if request.method == 'POST' and form.is_valid():
-        form.save()
-        return redirect('administrator:coaches')
-    return render(request, 'register.html', {'form':form})
+
 
 # Create your views here.

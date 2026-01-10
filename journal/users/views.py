@@ -77,6 +77,7 @@ def users(request):
 
     return render(request, 'users.html', {'users':users})
 
+@login_required(login_url='/users/log_in')
 def edit_user(request, pk):
     user = CustomUser.objects.get(pk=pk)
     form = RegisterForm(request.POST or None, instance = user)
@@ -85,12 +86,14 @@ def edit_user(request, pk):
         return redirect('users:users')
     return render(request, 'register.html', {'form':form})
 
+@login_required(login_url='/users/log_in')
 def delete_user(request, pk):
     user_data = CustomUser.objects.get(pk=pk)
     if request.method == 'POST':
         user_data.delete()
     return redirect('users:users')
 
+@login_required(login_url='/users/log_in')
 def patch_user(request, pk):
     user = CustomUser.objects.get(pk=pk)
     user.is_active = not user.is_active
@@ -98,6 +101,7 @@ def patch_user(request, pk):
     
     return redirect('users:users')
 
+@login_required(login_url='/users/log_in')
 def change_password(request, pk):
     data = json.loads(request.body)
     password1 = data.get('password1')
