@@ -37,7 +37,9 @@ class RegisterForm(forms.ModelForm):
     )
 
     birth_date = forms.DateField(
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"})
+        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+        required=True
+
     )
 
     email = forms.CharField(

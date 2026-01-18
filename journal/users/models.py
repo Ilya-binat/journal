@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from datetime import date
 
 
 class CustomUser(AbstractUser):
@@ -31,6 +32,18 @@ class CustomUser(AbstractUser):
         if self.middle_name:
             initials.append(self.middle_name[0])
         return f"{self.last_name} {''.join(initials)}"
+    
+    def get_age(self):
+        if not self.birth_date:
+            return None
+
+        today = date.today()
+        age = today.year - self.birth_date.year
+
+        if (today.month, today.day) < (self.birth_date.month, self.birth_date.day):
+            age -= 1
+
+        return age
 
 
 

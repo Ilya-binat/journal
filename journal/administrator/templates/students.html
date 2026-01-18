@@ -1,0 +1,46 @@
+{% extends 'base_layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Спортсмены</h2>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Фамилия</th>
+                    <th scope="col">Имя</th>
+                    <th scope="col">Отчество</th>
+                    <th scope="col">Дата рождения</th>
+                    <th scope="col">Возраст</th>
+                    <th scope="col">Разряд</th>
+                    <th scope="col">Группа</th>
+                    <th scope="col">Номер телефона</th>
+                    <th scope="col" class="text-end">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>{{ student.id }}</td>
+                    <td>{{ student.last_name }}</td>
+                    <td>{{ student.first_name }}</td>
+                    <td>{{ student.middle_name }}</td>
+                    <td>{{ student.birth_date|date:"d.m.Y" }}</td>
+                    <td>{{ student.get_age }}</td>
+                    <td></td>
+                    <td></td>
+                    <td>{{ student.phone_number }}</td>
+                    <td class="text-end"></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+</div>
+{% endblock %}
