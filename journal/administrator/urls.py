@@ -10,6 +10,6 @@ urlpatterns =[
     path('students/', students, name = 'students'),
     path('coach/<int:pk>', coach, name = 'coach'),
     path('save_coach_groups/<int:pk>', save_coach_groups, name = 'save_coach_groups'),
-
-    
+    path('student/<int:pk>', student, name = 'student'),
+    path('save_student_group/<int:pk>', save_student_group, name = 'save_student_group'),
 ]

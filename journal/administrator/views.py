@@ -3,7 +3,7 @@ from .forms import GroupForm, Group, CustomUser
 from django.http import HttpResponse, JsonResponse
 import json
 from django.db.models import Count, Q
-
+from.models import StudentGroup
 from users.forms import RegisterForm
 
 
@@ -41,6 +41,10 @@ def delete_group(request, pk):
 
 def coaches(request):
     coaches = CustomUser.objects.filter(role="Тренер")
+    # .prefetch_related(
+    #     'coach_groups__customuser_set'
+    # )
+    
 
     return render(request, "coaches.html", {"coaches": coaches})
 
@@ -54,8 +58,8 @@ def students(request):
 def coach(request, pk):
     coach_data = get_object_or_404(CustomUser, pk=pk)
 
-    # Получаем список, групп тренера в в виде словарей с id и именем группы.
-    coach_groups = list(coach_data.group_set.values("id", "group_name"))
+    # Получаем список, групп тренера в виде словарей с id и именем группы.
+    coach_groups = list(coach_data.coach_groups.values("id", "group_name"))
     all_groups = list(Group.objects.values("id", "group_name"))
 
     return JsonResponse(
@@ -88,5 +92,42 @@ def save_coach_groups(request, pk):
     # Передаем команду, действие выполнено успешно
     return JsonResponse({"status": "ok"})
 
+def student(request, pk):
+    student_data = get_object_or_404(CustomUser, pk=pk)
+
+    try:
+        student_group = student_data.current_groups
+        current_group = [{'id':student_group.group.id,'group_name':student_group.group.group_name}] 
+    except StudentGroup.DoesNotExist:
+        current_group = []
+
+    all_groups = list(Group.objects.values("id", "group_name"))
+
+    return JsonResponse(
+        {
+            "student_id": student_data.id,
+            "current_group": current_group,
+            "all_groups": all_groups,
+        }
+    )
+
+
+def save_student_group(request, pk):
+   
+    student = get_object_or_404(CustomUser, pk=pk)
+
+    data = json.loads(request.body)
+
+    group_id = data.get("group")[0]
+
+    student_group = StudentGroup.objects.filter(student=student).exists()
+    if student_group:
+        StudentGroup.objects.filter(student=student).update(group=group_id)
+    else:
+        group = get_object_or_404(Group, pk=group_id)
+        StudentGroup.objects.create(student=student, group=group)
+        
+
+    return JsonResponse({"status": "ok"})
 
 # Create your views here.

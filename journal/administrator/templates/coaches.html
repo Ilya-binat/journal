@@ -27,7 +27,7 @@
                     <td>{{ coach.first_name }}</td>
                     <td>{{ coach.middle_name }}</td>
                     <td>
-                        {% for group in coach.group_set.all %}
+                        {% for group in coach.coach_groups.all %}
                         <span class="badge bg-primary">{{group.group_name}}</span>
                         {% endfor %}
                     </td>
@@ -102,7 +102,7 @@
         document.querySelector('.save-groups').onclick = () => {
             const selectedGroups = Array.from(
                 document.querySelectorAll('#groupsCheckboxList input:checked')
-            ).map(input => Number(input.value))
+             ).map(input => Number(input.value)) // map-нужен для того чтобы из input достать id выбранных групп
 
             fetch(`/administrator/save_coach_groups/${coachId}`, {
                 method: 'POST',

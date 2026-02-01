@@ -20,6 +20,7 @@
                     <th scope="col">Разряд</th>
                     <th scope="col">Группа</th>
                     <th scope="col">Номер телефона</th>
+                    <th scope="col">Тренер</th>
                     <th scope="col" class="text-end">Действия</th>
                 </tr>
             </thead>
@@ -33,9 +34,27 @@
                     <td>{{ student.birth_date|date:"d.m.Y" }}</td>
                     <td>{{ student.get_age }}</td>
                     <td></td>
-                    <td></td>
+                    <td>
+                        {% if student.current_groups %}
+                        {{student.current_groups.group.group_name}}
+                        {% else %}
+                        Не состоит
+                        {% endif %}
+                    </td>
+
                     <td>{{ student.phone_number }}</td>
-                    <td class="text-end"></td>
+                    <td></td>
+                    <td class="text-end">
+                        <button class="btn btn-primary btn-sm show-groups-btn " data-bs-toggle="modal"
+                            data-bs-target="#studentModal" data-id="{{ student.pk }}">
+                            <i class="bi bi-plus-lg"></i>
+                            {% if student.current_groups %}
+                            Выбрать группу
+                            {% else %}
+                            Добавить в группу
+                            {% endif %}
+                        </button>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -43,4 +62,93 @@
         </table>
     </div>
 </div>
+<!-- Модальное окно групп -->
+<div class="modal fade" id="studentModal" tabindex="-1" aria-labelledby="studentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Группа cпортсмена</label>
+                    <div id='studentGroupList' class='list-group'>
+
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="submit" class="btn btn-success save-groups">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    const modalBody = document.querySelector('#studentModal .modal-body')
+    const list = document.getElementById('studentGroupList')
+    let studentId;
+    document.querySelectorAll('.show-groups-btn').forEach(btn => {
+        btn.onclick = () => {
+            studentId = btn.dataset.id
+            fetch(`/administrator/student/${studentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Начинаем с чистой модалки
+                    list.innerHTML = ''
+
+                    data.all_groups.forEach(group => {
+                        const checked = data.current_group.some(g => g.id === group.id)
+
+                        const item = document.createElement('label')
+                        item.className = 'list-group-item d-flex align-items-center gap-2'
+                        item.innerHTML = `
+                        <input
+                            class="form-check-input"
+                            type="radio"
+                            value="${group.id}"
+                            name='group'
+                            ${checked ? 'checked' : ''}>
+                        <span>${group.group_name}</span>
+                    `
+                        list.append(item)
+                    })
+                })
+        }
+    })
+     document.querySelector('.save-groups').onclick = () => {
+            const selectedGroups = Array.from(
+                document.querySelectorAll('#studentGroupList input:checked')
+             ).map(input => Number(input.value)) // map-нужен для того чтобы из input достать id выбранных групп
+
+            fetch(`/administrator/save_student_group/${studentId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')// getCookie - вернет тот параметр который мы запросим, в данном случае она возвращает csrf - токен
+                },
+                body: JSON.stringify({ group: selectedGroups })
+            })
+                .then(response => location.reload())  // promise - действия которые выполняются раз за разом.
+                .catch(error => console.log(error))
+
+        }
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    cookie = cookie.trim();
+                    if (cookie.startsWith(name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+
+
+            return cookieValue;
+        }
+</script>
 {% endblock %}

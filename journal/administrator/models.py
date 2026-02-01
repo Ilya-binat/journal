@@ -38,8 +38,20 @@ stage_choices = [
 class Group(models.Model):
     stage = models.CharField(max_length=255, choices=stage_choices)
     group_name = models.CharField(max_length=255, unique=True)
-    coach = models.ForeignKey('users.CustomUser', on_delete=models.SET_NULL, null=True, blank=True)
+    coach = models.ForeignKey('users.CustomUser', on_delete=models.SET_NULL, null=True, blank=True, 
+    related_name='coach_groups')
 
-
+class StudentGroup(models.Model):
+    student = models.OneToOneField(
+        'users.CustomUser',
+        on_delete=models.CASCADE,
+        related_name='current_groups',
+        limit_choices_to={'role':'Спортсмен'},
+    )
+    group = models.ForeignKey(
+        'administrator.Group',
+        on_delete=models.CASCADE,
+        related_name='group_students',
+    )
 # Далее переходим в admin.py импортируем все модели, далее регестрируем их
 # Create your models here.
