@@ -56,6 +56,7 @@
                             data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-three-dots-vertical"></i>
                         </button>
+                        <!-- Выпадающй список -->
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
                                 <a class="dropdown-item" href="{% url 'users:edit_user' user.pk %}">
@@ -155,92 +156,95 @@
 {% endblock %}
 {% block script %}
 <script>
-    // открытие модалки удаления
-    let id;
-    let deleteButtons = document.querySelectorAll('.delete-user-btn')
-    let changePasswordBtns = document.querySelectorAll('.change-password-btn')
+    document.addEventListener('DOMContentLoaded', function () {
 
-    deleteButtons.forEach(function (btn) {
-        btn.onclick = function () {
-            id = btn.id
-        }
-    })
+        // открытие модалки удаления
+        let id;
+        let deleteButtons = document.querySelectorAll('.delete-user-btn')
+        let changePasswordBtns = document.querySelectorAll('.change-password-btn')
 
-    changePasswordBtns.forEach(function (btn) {
-        btn.onclick = function () {
-            id = btn.id
-        }
-    })
-
-
-    //  удаление пользователя
-
-    let userDeleteForm = document.querySelector('#deleteUserForm')
-
-
-    userDeleteForm.onsubmit = function (event) {
-        event.preventDefault()
-        console.log(id);
-
-        fetch('/users/delete_user/' + id, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')// getCookie - вернет тот параметр который мы запросим, в данном случае она возвращает csrf - токен
-            },
-
+        deleteButtons.forEach(function (btn) {
+            btn.onclick = function () {
+                id = btn.id
+            }
         })
-            .then(response => location.reload())  // promise - действия которые выполняются раз за разом.
-            .catch(error => console.log(error))
-    }
 
-    let changePasswordForm = document.querySelector('#changePasswordForm')
-
-    changePasswordForm.onsubmit = function (event) {
-        let password1 = document.querySelector('#password1').value
-        let password2 = document.querySelector('#password2').value
-        event.preventDefault()
-
-        if (password1.length < 8) {
-            alert('Пароль слишком короткий')
-            return
-        }
-
-        if (password1 != password2) {
-            alert('Пароли не совпадают')
-            return
-        }
+        changePasswordBtns.forEach(function (btn) {
+            btn.onclick = function () {
+                id = btn.id
+            }
+        })
 
 
-        fetch('/users/change_password/' + id, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')// getCookie - вернет тот параметр который мы запросим, в данном случае она возвращает csrf - токен
-            },
-            body: JSON.stringify({
-                password1, password2
+        //  удаление пользователя
+
+        let userDeleteForm = document.querySelector('#deleteUserForm')
+
+
+        userDeleteForm.onsubmit = function (event) {
+            event.preventDefault()
+            console.log(id);
+
+            fetch('/users/delete_user/' + id, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')// getCookie - вернет тот параметр который мы запросим, в данном случае она возвращает csrf - токен
+                },
+
             })
-        })
-            .then(response => location.reload())
-            .catch(error => console.log(error))
-    }
+                .then(response => location.reload())  // promise - действия которые выполняются раз за разом.
+                .catch(error => console.log(error))
+        }
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let cookie of cookies) {
-                cookie = cookie.trim();
-                if (cookie.startsWith(name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
+        let changePasswordForm = document.querySelector('#changePasswordForm')
+
+        changePasswordForm.onsubmit = function (event) {
+            let password1 = document.querySelector('#password1').value
+            let password2 = document.querySelector('#password2').value
+            event.preventDefault()
+
+            if (password1.length < 8) {
+                alert('Пароль слишком короткий')
+                return
+            }
+
+            if (password1 != password2) {
+                alert('Пароли не совпадают')
+                return
+            }
+
+
+            fetch('/users/change_password/' + id, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')// getCookie - вернет тот параметр который мы запросим, в данном случае она возвращает csrf - токен
+                },
+                body: JSON.stringify({
+                    password1, password2
+                })
+            })
+                .then(response => location.reload())
+                .catch(error => console.log(error))
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    cookie = cookie.trim();
+                    if (cookie.startsWith(name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
                 }
             }
+
+
+            return cookieValue;
         }
-
-
-        return cookieValue;
-    }
+    });
 </script>
 {% endblock %}

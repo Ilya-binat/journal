@@ -40,10 +40,9 @@ def delete_group(request, pk):
 
 
 def coaches(request):
-    coaches = CustomUser.objects.filter(role="Тренер")
-    # .prefetch_related(
-    #     'coach_groups__customuser_set'
-    # )
+    coaches = CustomUser.objects.filter(role="Тренер").annotate(
+        student_count=Count('coach_groups__group_students')
+    )
     
 
     return render(request, "coaches.html", {"coaches": coaches})
@@ -129,5 +128,31 @@ def save_student_group(request, pk):
         
 
     return JsonResponse({"status": "ok"})
+
+def delete_student_group(request, pk):
+
+    student_group = get_object_or_404(StudentGroup, pk=pk)
+
+    if request.method == 'POST':
+        student_group.delete()
+
+    return JsonResponse({'status':'ok'})  
+
+def get_students_list(request, pk):
+    group = Group.objects.get(pk=pk)
+
+    student_list = group.group_students.all()
+
+    response = []
+
+    for student_group in student_list:
+        response.append({
+            'id':student_group.student.id,
+            'full_name':student_group.student.get_full_name()
+        })
+        
+    response = sorted(response, key = lambda x:x['full_name']) # Сортировка списа студентов по имени
+
+    return JsonResponse({'students':response, 'group_name':group.group_name})
 
 # Create your views here.

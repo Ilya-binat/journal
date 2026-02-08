@@ -31,14 +31,4 @@
         {% endif %}
     </form>
 </body>
-
-
-<script>
-    document.getElementById('togglePassword').addEventListener('change', function () {
-        let passwordFields = document.querySelectorAll('.password');
-        passwordFields.forEach(field => {
-            field.type = this.checked ? 'text' : 'password';
-        });
-    });
-</script>
 {% endblock %}

@@ -119,3 +119,7 @@ body {
   margin-left: 240px;
   padding: 20px;
 }
+
+.group-click{
+ cursor: pointer;
+}

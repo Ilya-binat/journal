@@ -12,4 +12,6 @@ urlpatterns =[
     path('save_coach_groups/<int:pk>', save_coach_groups, name = 'save_coach_groups'),
     path('student/<int:pk>', student, name = 'student'),
     path('save_student_group/<int:pk>', save_student_group, name = 'save_student_group'),
+    path('delete_student_group/<int:pk>', delete_student_group, name = 'delete_student_group'),
+    path('get_students_list/<int:pk>', get_students_list, name = 'get_students_list'),
 ]

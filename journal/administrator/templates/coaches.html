@@ -14,7 +14,7 @@
                     <th scope="col">Фамилия</th>
                     <th scope="col">Имя</th>
                     <th scope="col">Отчество</th>
-                    <th scope="col">Группы</th>
+                    <th class="text-center" scope="col">Группы</th>
                     <th scope="col">Общее кол-во спортсменов</th>
                     <th scope="col" class="text-end">Действия</th>
                 </tr>
@@ -28,10 +28,11 @@
                     <td>{{ coach.middle_name }}</td>
                     <td>
                         {% for group in coach.coach_groups.all %}
-                        <span class="badge bg-primary">{{group.group_name}}</span>
+                        <span class="badge bg-primary group-click" data-bs-toggle="modal"
+                            data-bs-target="#groupStudentsModal" data-id="{{ group.pk }}">{{group.group_name}}</span>
                         {% endfor %}
                     </td>
-                    <td></td>
+                    <td class="text-center">{{coach.student_count}}</td>
                     <td class="text-end">
                         <button class="btn btn-primary btn-sm show-groups-btn " data-bs-toggle="modal"
                             data-bs-target="#coachModal" data-id="{{ coach.pk }}">
@@ -45,6 +46,7 @@
         </table>
     </div>
 </div>
+<!-- Модальное окно групп тренера -->
 <div class="modal fade" id="coachModal" tabindex="-1" aria-labelledby="coachModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -66,7 +68,31 @@
         </div>
     </div>
 </div>
+<!-- Модальное окно списка групп у тренера -->
+<div class="modal fade" id="groupStudentsModal" tabindex="-1" aria-labelledby="groupStudentsLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label group-name"></label>
+                    <ol id='studentsList' class='list-group'>
+
+                    </ol>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                    aria-label="Close">Закрыть</button>
+
+            </div>
+        </div>
+    </div>
+</div>
 <script>
+    // Обработка всех действий без обнавления страниц(Присваивания функций кнопке. Обработчики событий, запросы, ответы на них)
     document.addEventListener('DOMContentLoaded', () => {
         const modalBody = document.querySelector('#coachModal .modal-body')
         const list = document.getElementById('groupsCheckboxList')
@@ -102,7 +128,7 @@
         document.querySelector('.save-groups').onclick = () => {
             const selectedGroups = Array.from(
                 document.querySelectorAll('#groupsCheckboxList input:checked')
-             ).map(input => Number(input.value)) // map-нужен для того чтобы из input достать id выбранных групп
+            ).map(input => Number(input.value)) // map-нужен для того чтобы из input достать id выбранных групп
 
             fetch(`/administrator/save_coach_groups/${coachId}`, {
                 method: 'POST',
@@ -132,6 +158,35 @@
 
             return cookieValue;
         }
+        let groups = document.querySelectorAll('.group-click')
+        groups.forEach(
+            group => {
+                group.onclick = () => {
+                    fetch(`/administrator/get_students_list/${group.dataset.id}`, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')// getCookie - вернет тот параметр который мы запросим, в данном случае она возвращает csrf - токен
+                        },
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            let title = document.querySelector('#groupStudentsModal .group-name')
+                            let list = document.querySelector('#studentsList')
+                            title.textContent = data.group_name
+                            list.innerHTML = ''
+
+                            data.students.forEach((student, index) => {
+                                const item = document.createElement('li')
+                                item.className = 'list-group-item d-flex align-items-center gap-2'
+                                item.textContent = `${index +1}. ${student.full_name}`
+                                list.append(item)
+                            })
+                        })
+                        .catch(error => console.log(error))
+                }
+
+            }
+        )
     }) 
 </script>
 {% endblock %}
