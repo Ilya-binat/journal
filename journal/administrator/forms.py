@@ -1,6 +1,6 @@
 from django import forms
 from users.models import CustomUser
-from .models import stage_choices, Group
+from .models import stage_choices, Group, SchedulePeriod
 
 
 # Для создания группы
@@ -29,3 +29,39 @@ class GroupForm(forms.ModelForm):
             
         ]
 
+# Форма для добавления периода
+
+class PeriodForm(forms.ModelForm):
+    name =  forms.CharField(
+        label='Название периода',
+        widget=forms.TextInput(
+            attrs={
+                "autofocus": True,
+                "placeholder": "Название периода",
+                "class": "form-control",
+            }
+        )
+    )
+    date_start = forms.DateField(
+        label="Дата начала",
+        widget=forms.DateInput(
+            attrs={
+                "type": "date",
+                "class": "form-control"
+            }
+        )
+    )
+
+    date_end = forms.DateField(
+        label="Дата окончания",
+        widget=forms.DateInput(
+            attrs={
+                "type": "date",
+                "class": "form-control"
+            }
+        )
+    )
+
+    class Meta:
+        model = SchedulePeriod
+        fields = ["name", "date_start", "date_end"]

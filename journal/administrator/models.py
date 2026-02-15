@@ -53,5 +53,48 @@ class StudentGroup(models.Model):
         on_delete=models.CASCADE,
         related_name='group_students',
     )
-# Далее переходим в admin.py импортируем все модели, далее регестрируем их
-# Create your models here.
+
+
+# Модель расписания 
+class Schedule(models.Model):
+    coach = models.ForeignKey(
+        'users.CustomUser',
+        on_delete=models.CASCADE,
+        limit_choices_to={'role':'Тренер'}
+    )
+
+    group = models.ForeignKey('administrator.Group', on_delete=models.CASCADE)
+    hall = models.ForeignKey('administrator.Hall', on_delete=models.CASCADE)
+
+    weekday = models.IntegerField(choices=[
+        (1,'Понедельник'),
+        (2,'Вторник'),
+        (3,'Среда'),
+        (4,'Четверг'),
+        (5,'Пятница'),
+        (6,'Суббота'),
+        (7,'Воскресенье'),
+    ])
+    #  Связь с расписания с периодами
+    period = models.ForeignKey(
+        'administrator.SchedulePeriod',
+        on_delete=models.CASCADE,
+        related_name="schedules"
+    )  
+
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+
+    is_active = models.BooleanField(default=True)
+
+# Модель периода 
+class SchedulePeriod(models.Model):
+    name = models.CharField(max_length=100)  # Имя периода  
+    date_start = models.DateField()
+    date_end = models.DateField()
+
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.date_start} – {self.date_end})"
+    

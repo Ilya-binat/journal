@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import GroupForm, Group, CustomUser
+from .forms import GroupForm, Group, CustomUser, PeriodForm
 from django.http import HttpResponse, JsonResponse
 import json
 from django.db.models import Count, Q
-from.models import StudentGroup
+from .models import StudentGroup, SchedulePeriod
 from users.forms import RegisterForm
 
 
@@ -41,9 +41,8 @@ def delete_group(request, pk):
 
 def coaches(request):
     coaches = CustomUser.objects.filter(role="Тренер").annotate(
-        student_count=Count('coach_groups__group_students')
+        student_count=Count("coach_groups__group_students")
     )
-    
 
     return render(request, "coaches.html", {"coaches": coaches})
 
@@ -91,12 +90,15 @@ def save_coach_groups(request, pk):
     # Передаем команду, действие выполнено успешно
     return JsonResponse({"status": "ok"})
 
+
 def student(request, pk):
     student_data = get_object_or_404(CustomUser, pk=pk)
 
     try:
         student_group = student_data.current_groups
-        current_group = [{'id':student_group.group.id,'group_name':student_group.group.group_name}] 
+        current_group = [
+            {"id": student_group.group.id, "group_name": student_group.group.group_name}
+        ]
     except StudentGroup.DoesNotExist:
         current_group = []
 
@@ -112,7 +114,7 @@ def student(request, pk):
 
 
 def save_student_group(request, pk):
-   
+
     student = get_object_or_404(CustomUser, pk=pk)
 
     data = json.loads(request.body)
@@ -125,18 +127,19 @@ def save_student_group(request, pk):
     else:
         group = get_object_or_404(Group, pk=group_id)
         StudentGroup.objects.create(student=student, group=group)
-        
 
     return JsonResponse({"status": "ok"})
+
 
 def delete_student_group(request, pk):
 
     student_group = get_object_or_404(StudentGroup, pk=pk)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         student_group.delete()
 
-    return JsonResponse({'status':'ok'})  
+    return JsonResponse({"status": "ok"})
+
 
 def get_students_list(request, pk):
     group = Group.objects.get(pk=pk)
@@ -146,13 +149,55 @@ def get_students_list(request, pk):
     response = []
 
     for student_group in student_list:
-        response.append({
-            'id':student_group.student.id,
-            'full_name':student_group.student.get_full_name()
-        })
-        
-    response = sorted(response, key = lambda x:x['full_name']) # Сортировка списа студентов по имени
+        response.append(
+            {
+                "id": student_group.student.id,
+                "full_name": student_group.student.get_full_name(),
+            }
+        )
 
-    return JsonResponse({'students':response, 'group_name':group.group_name})
+    response = sorted(
+        response, key=lambda x: x["full_name"]
+    )  # Сортировка списа студентов по имени
+
+    return JsonResponse({"students": response, "group_name": group.group_name})
+
+
+def periods(request):
+    form = PeriodForm()
+    periods = SchedulePeriod.objects.order_by('date_start')  # по дате начала по возрастанию
+    return render(request, "periods.html", {
+        "form": form,
+        "periods": periods
+    })
+
+def add_period(request):
+    form = PeriodForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        period = form.save()
+        return JsonResponse(
+            {
+                "success": True,
+                "period": {
+                    "id": period.id,
+                    "name": period.name,
+                    "date_start": period.date_start.strftime("%Y-%m-%d"),
+                    "date_end": period.date_end.strftime("%Y-%m-%d"),
+                },
+            }
+        )
+
+    return JsonResponse({"success": False, "errors": form.errors}, status=400)
+
+def delete_period(request,pk):
+    data_period = SchedulePeriod.objects.get(pk=pk)
+    if request.method == "POST":
+        data_period.delete()
+    return HttpResponse()
+
+
+
+
 
 # Create your views here.

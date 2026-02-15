@@ -14,4 +14,8 @@ urlpatterns =[
     path('save_student_group/<int:pk>', save_student_group, name = 'save_student_group'),
     path('delete_student_group/<int:pk>', delete_student_group, name = 'delete_student_group'),
     path('get_students_list/<int:pk>', get_students_list, name = 'get_students_list'),
+    path('add_period/', add_period, name = 'add_period'),
+    # path('edit_period/<int:pk>', edit_period, name = 'edit_period'),
+    path('delete_period/<int:pk>', delete_period, name = 'delete_period'),
+    path('periods/', periods, name = 'periods'),
 ]

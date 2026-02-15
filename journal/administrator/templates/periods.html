@@ -1,0 +1,208 @@
+{% extends 'base_layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Периоды</h2>
+        <a href="{% url 'administrator:add_period' %}" class="btn btn-primary" data-bs-toggle="modal"
+            data-bs-target="#periodModal">
+            <i class="bi bi-people me-2"></i>
+            Добавить период
+        </a>
+    </div>
+
+    <table class="table table-striped table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th scope="col">№</th>
+                <th scope="col">Название</th>
+                <th scope="col">Дата начала</th>
+                <th scope="col">Дата конца</th>
+            </tr>
+        </thead>
+        <tbody id="periodTableBody">
+            {% for period in periods %}
+            <tr>
+                <td>{{ period.id }}</td>
+                <td>{{ period.name }}</td>
+                <td>{{ period.date_start|date:"d.m.Y" }}</td>
+                <td>{{ period.date_end|date:"d.m.Y" }}</td>
+                <td class="text-end">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a href="{% url 'administrator:add_period' %}" class="dropdown-item">
+                                    <i class="bi bi-pencil"></i>
+                                    Редактировать
+                                </a>
+                            </li>
+                            <li>
+                                <button type="button" class="dropdown-item delete-period-btn" data-bs-toggle="modal"
+                                    data-bs-target="#deletePeriodModal" id="{{ period.pk }}"
+                                    data-group-name="{{ period.name }}">
+                                    <i class="bi bi-trash"></i>
+                                    Удалить
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+
+    <!-- Модальное окно добавления периода -->
+    <div class="modal fade" id="periodModal" tabindex="-1" aria-labelledby="periodModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="periodForm">
+                    <div class="modal-header">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+
+                        {% csrf_token %}
+                        {% for field in form %}
+                        <div class="mb-3">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            <div class="text-danger">{{ field.errors }}</div>
+                        </div>
+                        {% endfor %}
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-success save-period">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно удаления периода -->
+    <div class="modal fade" id="deletePeriodModal" tabindex="-1" aria-labelledby="deleteGroupModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deletePeriodModalLabel">Удалить период?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Вы уверены, что хотите удалить период <strong id="groupNameToDelete"></strong>?
+                    <div class="alert alert-warning mt-2">
+                        Все периоды будут удалены!
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <form id="deletePeriodForm" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Удалить</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+<script>
+    // открытие модалки удаления
+    let deleteButtons = document.querySelectorAll('.delete-period-btn')
+
+    deleteButtons.forEach(function (btn) {
+        btn.onclick = function () {
+            id = btn.id
+
+        }
+
+    })
+
+    // Сохранение добавленных периодов 
+    document.getElementById('periodForm').onsubmit = function (e) {
+        e.preventDefault()
+
+        const formData = new FormData(this)
+
+        fetch('/administrator/add_period/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: formData
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const p = data.period
+
+                    const row = `
+            <tr>
+                <td>${p.id}</td>
+                <td>${p.name}</td>
+                <td>${p.date_start}</td>
+                <td>${p.date_end}</td>
+            </tr>
+        `
+
+                    document.getElementById("periodTableBody")
+                        .insertAdjacentHTML("beforeend", row)
+
+                    bootstrap.Modal.getInstance(
+                        document.getElementById('periodModal')
+                    ).hide()
+
+                    document.getElementById("periodForm").reset()
+                } else {
+                    alert(JSON.stringify(data.errors))
+                }
+            })
+    }
+
+    //  удаление группы
+    let id;
+    let periodDeleteForm = document.querySelector('#deletePeriodForm')
+    periodDeleteForm.onsubmit = function (event) {
+        event.preventDefault()
+        console.log(id);
+
+        fetch('/administrator/delete_period/' + id, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')// getCookie - вернет тот параметр который мы запросим, в данном случае она возвращает csrf - токен
+            },
+        })
+            .then(response => location.reload())  // promise - действия которые выполняются раз за разом.
+            .catch(error => console.log(error))
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+
+
+        return cookieValue;
+    }
+</script>
+{% endblock %}
