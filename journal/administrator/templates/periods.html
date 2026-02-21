@@ -6,7 +6,7 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Периоды</h2>
-        <a href="{% url 'administrator:add_period' %}" class="btn btn-primary" data-bs-toggle="modal"
+        <a href="{% url 'administrator:add_period' %}" class="btn btn-primary add-period" data-bs-toggle="modal"
             data-bs-target="#periodModal">
             <i class="bi bi-people me-2"></i>
             Добавить период
@@ -24,7 +24,7 @@
         </thead>
         <tbody id="periodTableBody">
             {% for period in periods %}
-            <tr>
+            <tr id="period-{{ period.id }}">
                 <td>{{ period.id }}</td>
                 <td>{{ period.name }}</td>
                 <td>{{ period.date_start|date:"d.m.Y" }}</td>
@@ -34,10 +34,10 @@
                         <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
                             <i class="bi bi-three-dots-vertical"></i>
                         </button>
-
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
-                                <a href="{% url 'administrator:add_period' %}" class="dropdown-item">
+                                <a href="#" class="dropdown-item edit-period" data-id="{{ period.pk }}"
+                                    data-bs-toggle="modal" data-bs-target="#periodModal">
                                     <i class="bi bi-pencil"></i>
                                     Редактировать
                                 </a>
@@ -65,6 +65,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <form id="periodForm">
+                    <input type="hidden" name="period_id" id="period_id">
                     <div class="modal-header">
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -118,6 +119,15 @@
 {% endblock %}
 {% block script %}
 <script>
+    // При нажатие кнопки добавить работы модалки переключится на добавление
+    document.querySelector('.add-period').addEventListener('click', function () {
+
+        const form = document.getElementById('periodForm')
+
+        form.reset()
+        form.dataset.mode = "add"
+        form.dataset.id = ""
+    })
     // открытие модалки удаления
     let deleteButtons = document.querySelectorAll('.delete-period-btn')
 
@@ -128,14 +138,48 @@
         }
 
     })
+    // Выполнение функции редактироваия
+    document.querySelectorAll('.edit-period').forEach(function (btn) {
 
-    // Сохранение добавленных периодов 
+        btn.addEventListener('click', function () {
+
+            const id = this.dataset.id
+
+            fetch('/administrator/get_period/' + id + '/')
+                .then(res => res.json())
+                .then(data => {
+
+                    document.getElementById('period_id').value = data.id
+                    document.querySelector('[name="name"]').value = data.name
+                    document.querySelector('[name="date_start"]').value = data.date_start
+                    document.querySelector('[name="date_end"]').value = data.date_end
+
+                    // Указываем, что форма теперь в режиме редактирования
+                    document.getElementById('periodForm').dataset.mode = "edit"
+                    document.getElementById('periodForm').dataset.id = id
+
+                })
+
+        })
+
+    })
+    // Сохранение добавленных периодов и редактирование периодов с последующим охранением
     document.getElementById('periodForm').onsubmit = function (e) {
+
         e.preventDefault()
 
-        const formData = new FormData(this)
+        const form = this
+        const formData = new FormData(form)
 
-        fetch('/administrator/add_period/', {
+        let url = '/administrator/add_period/'
+        let methodType = "add"
+
+        if (form.dataset.mode === "edit") {
+            url = '/administrator/edit_period/' + form.dataset.id + '/'
+            methodType = "edit"
+        }
+
+        fetch(url, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
@@ -144,33 +188,50 @@
         })
             .then(res => res.json())
             .then(data => {
+
                 if (data.success) {
+
                     const p = data.period
 
-                    const row = `
-            <tr>
-                <td>${p.id}</td>
-                <td>${p.name}</td>
-                <td>${p.date_start}</td>
-                <td>${p.date_end}</td>
-            </tr>
-        `
+                    if (methodType === "add") {
 
-                    document.getElementById("periodTableBody")
-                        .insertAdjacentHTML("beforeend", row)
+                        const row = `
+                    <tr id="period-${p.id}">
+                        <td>${p.id}</td>
+                        <td>${p.name}</td>
+                        <td>${p.date_start}</td>
+                        <td>${p.date_end}</td>
+                    </tr>
+                    `
+
+                        document.getElementById("periodTableBody")
+                            .insertAdjacentHTML("beforeend", row)
+
+                    } else {
+
+                        // Обновляем существующую строку
+                        const row = document.getElementById("period-" + p.id)
+
+                        row.children[1].textContent = p.name
+                        row.children[2].textContent = p.date_start
+                        row.children[3].textContent = p.date_end
+                    }
 
                     bootstrap.Modal.getInstance(
                         document.getElementById('periodModal')
                     ).hide()
 
-                    document.getElementById("periodForm").reset()
+                    form.reset()
+                    form.dataset.mode = "add"
+                    form.dataset.id = ""
+
                 } else {
                     alert(JSON.stringify(data.errors))
                 }
+
             })
     }
-
-    //  удаление группы
+    //  удаление периода
     let id;
     let periodDeleteForm = document.querySelector('#deletePeriodForm')
     periodDeleteForm.onsubmit = function (event) {

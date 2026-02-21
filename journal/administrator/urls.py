@@ -15,7 +15,11 @@ urlpatterns =[
     path('delete_student_group/<int:pk>', delete_student_group, name = 'delete_student_group'),
     path('get_students_list/<int:pk>', get_students_list, name = 'get_students_list'),
     path('add_period/', add_period, name = 'add_period'),
-    # path('edit_period/<int:pk>', edit_period, name = 'edit_period'),
+    path('get_period/<int:pk>/',get_period, name='get_period'),
+    path('edit_period/<int:pk>/', edit_period, name = 'edit_period'),
     path('delete_period/<int:pk>', delete_period, name = 'delete_period'),
-    path('periods/', periods, name = 'periods'),
+    path('add_hall/', add_hall, name = 'add_hall'),
+    path('get_hall/<int:pk>', get_hall, name = 'get_hall'),
+    path('edit_hall/<int:pk>/', edit_hall, name = 'edit_hall'),
+    path('delete_hall/<int:pk>/', delete_hall, name = 'delete_hall'),
 ]

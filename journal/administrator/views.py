@@ -90,7 +90,7 @@ def save_coach_groups(request, pk):
     # Передаем команду, действие выполнено успешно
     return JsonResponse({"status": "ok"})
 
-
+# Отвечает за открытие модального окна и вывода информации и показ группы к которой студент прикреплен
 def student(request, pk):
     student_data = get_object_or_404(CustomUser, pk=pk)
 
@@ -165,11 +165,11 @@ def get_students_list(request, pk):
 
 def periods(request):
     form = PeriodForm()
-    periods = SchedulePeriod.objects.order_by('date_start')  # по дате начала по возрастанию
-    return render(request, "periods.html", {
-        "form": form,
-        "periods": periods
-    })
+    periods = SchedulePeriod.objects.order_by(
+        "date_start"
+    )  # по дате начала по возрастанию
+    return render(request, "periods.html", {"form": form, "periods": periods})
+
 
 def add_period(request):
     form = PeriodForm(request.POST or None)
@@ -190,14 +190,63 @@ def add_period(request):
 
     return JsonResponse({"success": False, "errors": form.errors}, status=400)
 
-def delete_period(request,pk):
+
+def delete_period(request, pk):
     data_period = SchedulePeriod.objects.get(pk=pk)
     if request.method == "POST":
         data_period.delete()
     return HttpResponse()
 
+# Берем период который будет редактироваться
+def get_period(request, pk):
+    period = get_object_or_404(SchedulePeriod, pk=pk)
+
+    return JsonResponse({
+        "id": period.id,
+        "name": period.name,
+        "date_start": period.date_start.strftime("%Y-%m-%d"),
+        "date_end": period.date_end.strftime("%Y-%m-%d"),
+    })
+
+def edit_period(request, pk):
+    period_data = SchedulePeriod.objects.get(pk=pk)
+    form = PeriodForm(
+        request.POST or None, instance=period_data)
 
 
+    if request.method == 'POST' and form.is_valid():
+        period = form.save()
+        return JsonResponse(
+            {
+                "success": True,
+                "period": {
+                    "id": period.id,
+                    "name": period.name,
+                    "date_start": period.date_start.strftime("%Y-%m-%d"),
+                    "date_end": period.date_end.strftime("%Y-%m-%d"),
+               }
+            }
+        )
+    return JsonResponse({"success": False, "errors": form.errors}, status=400)
+
+
+def add_hall(request):
+    form = HallForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        hall = form.save()
+        return JsonResponse(
+            {
+                "success": True,
+                "period": {
+                    "id": hall.id,
+                    "name": hall.hall_name,
+                   "training_type":hall.training_type
+                },
+            }
+        )
+
+    return JsonResponse({"success": False, "errors": form.errors}, status=400)
 
 
 # Create your views here.

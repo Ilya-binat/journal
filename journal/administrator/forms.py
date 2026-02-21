@@ -1,6 +1,6 @@
 from django import forms
 from users.models import CustomUser
-from .models import stage_choices, Group, SchedulePeriod
+from .models import *
 
 
 # Для создания группы
@@ -65,3 +65,32 @@ class PeriodForm(forms.ModelForm):
     class Meta:
         model = SchedulePeriod
         fields = ["name", "date_start", "date_end"]
+
+class HallForm(forms.ModelForm):
+
+    hall_name = forms.CharField(
+        label='Номер зала',
+        widget=forms.TextInput(
+            attrs={
+                "autofocus": True,
+                "placeholder": "Номер зала",
+                "class": "form-control",
+            }
+        )
+    )
+
+    training_type = forms.ModelChoiceField(
+        queryset=TrainingType.objects.all(),
+        required=False,
+        label='Тип тренировки',
+        empty_label='Выберите тип тренировки',
+        widget=forms.Select(
+            attrs={
+                "class": "form-select",
+            }
+        )
+    )
+
+    class Meta:
+        model = Hall
+        fields = ['hall_name', 'training_type']
