@@ -1,0 +1,277 @@
+{% extends 'base_layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Залы</h2>
+        <a href="{% url 'administrator:add_hall' %}" class="btn btn-primary add-hall" data-bs-toggle="modal"
+            data-bs-target="#hallModal">
+          <i class="bi bi-building me-2"></i>
+            Добавить зал
+        </a>
+    </div>
+
+    <table class="table table-striped table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th scope="col">№</th>
+                <th scope="col">Название</th>
+                <th scope="col">Вид спорта</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody id="hallTableBody">
+            {% for hall in halls %}
+            <tr id="hall-{{ hall.id }}">
+                <td>{{ hall.id }}</td>
+                <td>{{ hall.hall_name }}</td>
+                <td>{{ hall.training_type}}</td>
+                <td class="text-end">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a href="#" class="dropdown-item edit-hall" data-id="{{ hall.pk }}"
+                                    data-bs-toggle="modal" data-bs-target="#hallModal">
+                                    <i class="bi bi-pencil"></i>
+                                    Редактировать
+                                </a>
+                            </li>
+                            <li>
+                                <button type="button" class="dropdown-item delete-hall-btn" data-bs-toggle="modal"
+                                    data-bs-target="#deleteHallModal" id="{{ hall.pk }}"
+                                    data-group-name="{{ hall.hall_name }}">
+                                    <i class="bi bi-trash"></i>
+                                    Удалить
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+
+    <!-- Модальное окно добавления зала -->
+    <div class="modal fade" id="hallModal" tabindex="-1" aria-labelledby="hallModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="hallForm">
+                    <input type="hidden" name="hall_id" id="hall_id">
+                    <div class="modal-header">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+
+                        {% csrf_token %}
+                        {% for field in form %}
+                        <div class="mb-3">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            <div class="text-danger">{{ field.errors }}</div>
+                        </div>
+                        {% endfor %}
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-success save-hall">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно удаления периода -->
+    <div class="modal fade" id="deleteHallModal" tabindex="-1" aria-labelledby="deleteHallModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteHallModalLabel">Удалить период?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Вы уверены, что хотите удалить зал <strong id="groupNameToDelete"></strong>?
+                    <div class="alert alert-warning mt-2">
+                        Все залы будут удалены!
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <form id="deleteHallForm" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Удалить</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+<script>
+    // При нажатие кнопки добавить работы модалки переключится на добавление
+    document.querySelector('.add-hall').addEventListener('click', function () {
+
+        const form = document.getElementById('hallForm')
+
+        form.reset()
+        form.dataset.mode = "add"
+        form.dataset.id = ""
+    })
+    // открытие модалки удаления
+    document.querySelectorAll('.delete-hall-btn').forEach(function (btn) {
+
+    btn.addEventListener('click', function () {
+
+        const hallId = this.id
+        const hallName = this.dataset.groupName
+
+        document.getElementById('deleteHallForm').dataset.id = hallId
+        document.getElementById('groupNameToDelete').textContent = hallName
+
+    })
+
+})
+    // Выполнение функции редактироваия
+    document.querySelectorAll('.edit-hall').forEach(function (btn) {
+
+        btn.addEventListener('click', function () {
+
+            const id = this.dataset.id
+
+            fetch('/administrator/get_hall/' + id + '/')
+                .then(res => res.json())
+                .then(data => {
+
+                    document.getElementById('hall_id').value = data.id
+                    document.querySelector('[name="hall_name"]').value = data.hall_name
+                    document.querySelector('[name="training_type"]').value = data.training_type
+                    
+
+                    // Указываем, что форма теперь в режиме редактирования
+                    document.getElementById('hallForm').dataset.mode = "edit"
+                    document.getElementById('hallForm').dataset.id = id
+
+                })
+
+        })
+
+    })
+    // Сохранение добавленных залов и редактирование залов с последующим охранением
+    document.getElementById('hallForm').onsubmit = function (e) {
+
+        e.preventDefault()
+
+        const form = this
+        const formData = new FormData(form)
+
+        let url = '/administrator/add_hall/'
+        let methodType = "add"
+
+        if (form.dataset.mode === "edit") {
+            url = '/administrator/edit_hall/' + form.dataset.id + '/'
+            methodType = "edit"
+        }
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: formData
+        })
+            .then(res => res.json())
+            .then(data => {
+
+                if (data.success) {
+
+                    const p = data.hall
+
+                    if (methodType === "add") {
+
+                        const row = `
+                    <tr id="hall-${p.id}">
+                        <td>${p.id}</td>
+                        <td>${p.hall_name}</td>
+                        <td>${p.training_type}</td>
+                    </tr>
+                    `
+
+                        document.getElementById("hallTableBody")
+                            .insertAdjacentHTML("beforeend", row)
+
+                    } else {
+
+                        // Обновляем существующую строку
+                        const row = document.getElementById("hall-" + p.id)
+
+                        row.children[1].textContent = p.hall_name
+                        row.children[2].textContent = p.training_type
+                    }
+
+                    bootstrap.Modal.getInstance(
+                        document.getElementById('hallModal')
+                    ).hide()
+
+                    form.reset()
+                    form.dataset.mode = "add"
+                    form.dataset.id = ""
+
+                } else {
+                    alert(JSON.stringify(data.errors))
+                }
+
+            })
+    }
+    //  удаление периода
+    let id;
+    let hallDeleteForm = document.querySelector('#deleteHallForm')
+   hallDeleteForm.onsubmit = function (event) {
+
+    event.preventDefault()
+
+    const id = this.dataset.id
+
+    fetch('/administrator/delete_hall/' + id + '/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+    })
+    .then(response => {
+        if (response.ok) {
+            document.getElementById('hall-' + id).remove()
+            bootstrap.Modal.getInstance(
+                document.getElementById('deleteHallModal')
+            ).hide()
+        }
+    })
+}
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+
+
+        return cookieValue;
+    }
+</script>
+{% endblock %}

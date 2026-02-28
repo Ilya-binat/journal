@@ -1,5 +1,15 @@
 from django.db import models
 
+WEEKDAYS = [
+        (1,'Понедельник'),
+        (2,'Вторник'),
+        (3,'Среда'),
+        (4,'Четверг'),
+        (5,'Пятница'),
+        (6,'Суббота'),
+        (7,'Воскресенье'),
+    ]
+
 class Coach(models.Model):
     first_name = models.CharField(max_length=255)
     last_name  = models.CharField(max_length=255)
@@ -7,6 +17,10 @@ class Coach(models.Model):
 
 class TrainingType(models.Model):
     name = models.CharField(max_length=255)
+
+# str функция отображает поле name вместо TrainingType object
+    def __str__(self):
+        return self.name
 
 class Hall(models.Model):
     hall_name = models.CharField(max_length=255)
@@ -66,15 +80,7 @@ class Schedule(models.Model):
     group = models.ForeignKey('administrator.Group', on_delete=models.CASCADE)
     hall = models.ForeignKey('administrator.Hall', on_delete=models.CASCADE)
 
-    weekday = models.IntegerField(choices=[
-        (1,'Понедельник'),
-        (2,'Вторник'),
-        (3,'Среда'),
-        (4,'Четверг'),
-        (5,'Пятница'),
-        (6,'Суббота'),
-        (7,'Воскресенье'),
-    ])
+    weekday = models.IntegerField(choices=WEEKDAYS)
     #  Связь с расписания с периодами
     period = models.ForeignKey(
         'administrator.SchedulePeriod',
@@ -98,3 +104,4 @@ class SchedulePeriod(models.Model):
     def __str__(self):
         return f"{self.name} ({self.date_start} – {self.date_end})"
     
+ 
