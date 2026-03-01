@@ -7,4 +7,6 @@ admin.site.register(Hall)
 admin.site.register(Slot)
 admin.site.register(Group)
 admin.site.register(StudentGroup)
+admin.site.register(WeekDay)
+admin.site.register(Schedule)
 # Register your models here.

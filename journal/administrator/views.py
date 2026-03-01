@@ -90,6 +90,7 @@ def save_coach_groups(request, pk):
     # Передаем команду, действие выполнено успешно
     return JsonResponse({"status": "ok"})
 
+
 # Отвечает за открытие модального окна и вывода информации и показ группы к которой студент прикреплен
 def student(request, pk):
     student_data = get_object_or_404(CustomUser, pk=pk)
@@ -197,24 +198,26 @@ def delete_period(request, pk):
         data_period.delete()
     return HttpResponse()
 
+
 # Берем период который будет редактироваться
 def get_period(request, pk):
     period = get_object_or_404(SchedulePeriod, pk=pk)
 
-    return JsonResponse({
-        "id": period.id,
-        "name": period.name,
-        "date_start": period.date_start.strftime("%Y-%m-%d"),
-        "date_end": period.date_end.strftime("%Y-%m-%d"),
-    })
+    return JsonResponse(
+        {
+            "id": period.id,
+            "name": period.name,
+            "date_start": period.date_start.strftime("%Y-%m-%d"),
+            "date_end": period.date_end.strftime("%Y-%m-%d"),
+        }
+    )
+
 
 def edit_period(request, pk):
     period_data = SchedulePeriod.objects.get(pk=pk)
-    form = PeriodForm(
-        request.POST or None, instance=period_data)
+    form = PeriodForm(request.POST or None, instance=period_data)
 
-
-    if request.method == 'POST' and form.is_valid():
+    if request.method == "POST" and form.is_valid():
         period = form.save()
         return JsonResponse(
             {
@@ -224,17 +227,16 @@ def edit_period(request, pk):
                     "name": period.name,
                     "date_start": period.date_start.strftime("%Y-%m-%d"),
                     "date_end": period.date_end.strftime("%Y-%m-%d"),
-               }
+                },
             }
         )
     return JsonResponse({"success": False, "errors": form.errors}, status=400)
 
+
 # CRUD - зал
 def halls(request):
     form = HallForm()
-    halls = Hall.objects.order_by(
-        "hall_name"
-    )  # по дате начала по возрастанию
+    halls = Hall.objects.order_by("hall_name")  # по дате начала по возрастанию
     return render(request, "halls.html", {"form": form, "halls": halls})
 
 
@@ -249,7 +251,7 @@ def add_hall(request):
                 "hall": {
                     "id": hall.id,
                     "hall_name": hall.hall_name,
-                   "training_type":hall.training_type.name
+                    "training_type": hall.training_type.name,
                 },
             }
         )
@@ -263,24 +265,25 @@ def delete_hall(request, pk):
         data_hall.delete()
     return HttpResponse()
 
+
 # Берем зал который будет редактироваться
 def get_hall(request, pk):
     hall = get_object_or_404(Hall, pk=pk)
 
-    return JsonResponse({
-        "id": hall.id,
-        "hall_name": hall.hall_name,
-        "training_type": hall.training_type.id,
-    })
+    return JsonResponse(
+        {
+            "id": hall.id,
+            "hall_name": hall.hall_name,
+            "training_type": hall.training_type.id,
+        }
+    )
 
 
 def edit_hall(request, pk):
     hall_data = Hall.objects.get(pk=pk)
-    form = HallForm(
-        request.POST or None, instance=hall_data)
+    form = HallForm(request.POST or None, instance=hall_data)
 
-
-    if request.method == 'POST' and form.is_valid():
+    if request.method == "POST" and form.is_valid():
         hall = form.save()
         return JsonResponse(
             {
@@ -289,28 +292,60 @@ def edit_hall(request, pk):
                     "id": hall.id,
                     "hall_name": hall.hall_name,
                     "training_type": hall.training_type.name,
-                    
-               }
+                },
             }
         )
     return JsonResponse({"success": False, "errors": form.errors}, status=400)
 
+
 # Расписание
+
 
 def schedule(request):
     # Передавать всех тренеров, все залы, все группы, все периоды
-    return render (request, 'schedule.html')
+    return render(request, "schedule.html")
+
 
 def add_schedule(request):
-    coaches = CustomUser.objects.filter(role = 'Тренер')
+    coaches = CustomUser.objects.filter(role="Тренер")
     all_groups = Group.objects.all()
     halls = Hall.objects.all()
     periods = SchedulePeriod.objects.all()
+    weekdays = WeekDay.objects.all()
 
+    return render(
+        request,
+        "add_schedule.html",
+        {
+            "coaches": coaches,
+            "all_groups": all_groups,
+            "halls": halls,
+            "periods": periods,
+            "weekdays": weekdays,
+        },
+    )
 
+# Функция сохранения созданного расписания
 
+def save_schedule(request):
+    if request.method == 'POST':
+        coach = request.POST.get('coach')
+        group = request.POST.get('group')
+        hall = request.POST.get('hall')
+        period = request.POST.get('period')
+        start_time = request.POST.get('start_time')
+        end_time = request.POST.get('end_time')
+        weekdays = request.POST.get('weekdays')
+        schedule = Schedule.objects.create(
+            coach_id = coach,
+            group_id = group,
+            hall_id = hall,
+            period_id = period,
+            start_time = start_time,
+            end_time = end_time,
 
-    return render(request, 'add_schedule.html',{'coaches':coaches, 'all_groups':all_groups, 
-                                               'halls':halls,'periods':periods, 'weekdays':WEEKDAYS})
+        )
+        schedule.weekdays.set(weekdays)
+        return redirect('administrator:schedule')
 
 # Create your views here.
