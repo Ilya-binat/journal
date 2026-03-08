@@ -85,6 +85,12 @@ class Schedule(models.Model):
 
     is_active = models.BooleanField(default=True)
 
+
+# __str__ функция - 
+    def __str__(self):
+        return f'{self.coach.get_short_name()} - {self.group.group_name}' 
+    
+   
 # Модель периода 
 class SchedulePeriod(models.Model):
     name = models.CharField(max_length=100)  # Имя периода  
@@ -100,6 +106,9 @@ class SchedulePeriod(models.Model):
 
 class WeekDay(models.Model):
     name = models.CharField(max_length=255)
+    short_name = models.CharField(max_length=2, null=True)
+
+
 
     def __str__(self):
         return self.name

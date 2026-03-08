@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import CustomUser
+from .models import *
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 
@@ -52,6 +52,11 @@ class RegisterForm(forms.ModelForm):
         widget=forms.TextInput(
             attrs={"placeholder": "Укажите номер телефона", "class": "form-control"}
         ),
+    )
+
+    gender = forms.ChoiceField(
+        choices=GENDER_CHOICES,
+        widget=forms.Select(attrs={"class":"form-select"})
     )
 
     role = forms.ChoiceField(

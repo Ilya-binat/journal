@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import GroupForm, Group, CustomUser, PeriodForm, HallForm
+from .forms import *
 from django.http import HttpResponse, JsonResponse
 import json
 from django.db.models import Count, Q
@@ -302,8 +302,9 @@ def edit_hall(request, pk):
 
 
 def schedule(request):
-    # Передавать всех тренеров, все залы, все группы, все периоды
-    return render(request, "schedule.html")
+    schedules = Schedule.objects.all()
+
+    return render(request, "schedule.html", {"schedules": schedules})
 
 
 def add_schedule(request):
@@ -325,27 +326,54 @@ def add_schedule(request):
         },
     )
 
+
 # Функция сохранения созданного расписания
 
+
 def save_schedule(request):
-    if request.method == 'POST':
-        coach = request.POST.get('coach')
-        group = request.POST.get('group')
-        hall = request.POST.get('hall')
-        period = request.POST.get('period')
-        start_time = request.POST.get('start_time')
-        end_time = request.POST.get('end_time')
-        weekdays = request.POST.get('weekdays')
-        schedule = Schedule.objects.create(
-            coach_id = coach,
-            group_id = group,
-            hall_id = hall,
-            period_id = period,
-            start_time = start_time,
-            end_time = end_time,
+    coaches = CustomUser.objects.filter(role="Тренер")
+    all_groups = Group.objects.all()
+    halls = Hall.objects.all()
+    periods = SchedulePeriod.objects.all()
+    weekdays = WeekDay.objects.all()
 
-        )
-        schedule.weekdays.set(weekdays)
-        return redirect('administrator:schedule')
+    if request.method == "POST":
+        form = ScheduleForm(request.POST)
 
-# Create your views here.
+        if form.is_valid():
+            coach = request.POST.get("coach")
+            group = request.POST.get("group")
+            hall = request.POST.get("hall")
+            period = request.POST.get("period")
+            start_time = request.POST.get("start_time")
+            end_time = request.POST.get("end_time")
+            weekdays = request.POST.getlist("weekdays")
+
+            schedule = Schedule.objects.create(
+                coach_id=coach,
+                group_id=group,
+                hall_id=hall,
+                period_id=period,
+                start_time=start_time,
+                end_time=end_time,
+            )
+            schedule.weekdays.set(weekdays)
+
+            return redirect("administrator:schedule")
+        
+        return render(request, 'add_schedule.html',  {
+            "coaches": coaches,
+            "all_groups": all_groups,
+            "halls": halls,
+            "periods": periods,
+            "weekdays": weekdays,
+            'form':form
+        },)
+
+
+def fetch_coach_groups(request, pk):
+    groups = Group.objects.filter(coach_id = pk).values()
+
+    return JsonResponse({
+        'groups':list(groups)
+    })

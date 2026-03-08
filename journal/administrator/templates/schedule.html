@@ -5,7 +5,7 @@
 <div class="container py-4">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0",>Расписание</h2>
+        <h2 class="mb-0" ,>Расписание</h2>
         <a href="{% url 'administrator:add_schedule' %}" class="btn btn-primary">
             <i class="bi bi-grid me-2"></i>
             Добавить расписание
@@ -18,11 +18,68 @@
                 <th scope="col">№</th>
                 <th scope="col">Группа</th>
                 <th scope="col">Тренер</th>
+                <th scope="col"></th>
                 <th scope="col">Действия</th>
             </tr>
         </thead>
         <tbody id="scheduleTableBody">
-          
+            {% for schedule in schedules %}
+            <tr>
+                <td>{{ schedule.id }}</td>
+
+                <td>
+                    {{ schedule.group.group_name }}
+                </td>
+
+                <td>
+                    {{ schedule.coach.first_name }}
+                    {{ schedule.coach.last_name }}
+                </td>
+                <td>
+                    Зал:{{ schedule.hall.hall_name }}
+                    <br>
+                    Период:{{ schedule.period.name }}
+                    <br>
+                    {{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }}
+                    <br>
+                    {% for weekday in schedule.weekdays.all %}
+                    
+                     <span class="badge bg-primary">{{ weekday.short_name }}</span>
+                    {% endfor %}
+                   
+                </td>
+
+                <!-- Кнопки -->
+                <td>
+                    <div class="dropdown">
+                        <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="bi bi-pencil me-2"></i>Редактировать
+                                </a>
+                            </li>
+
+                            <li>
+                                <button class="dropdown-item text-danger" type="button">
+                                    <i class="bi bi-trash me-2"></i>Удалить
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center">
+                    Расписание отсутствует
+                </td>
+            </tr>
+            {% endfor %}
         </tbody>
 
     </table>

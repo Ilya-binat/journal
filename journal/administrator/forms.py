@@ -94,3 +94,48 @@ class HallForm(forms.ModelForm):
     class Meta:
         model = Hall
         fields = ['hall_name', 'training_type']
+
+#  Форма добавления расписания 
+
+class ScheduleForm(forms.Form):
+
+    coach = forms.IntegerField()
+    group = forms.IntegerField()
+    hall = forms.IntegerField()
+    period = forms.IntegerField()
+    weekdays = forms.MultipleChoiceField(choices=[])
+    start_time = forms.TimeField()
+    end_time = forms.TimeField()
+
+    # Функция загрузки дней недели из базы данных
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['weekdays'].choices = [
+            (wd.id, wd.name) for wd in WeekDay.objects.all()
+        ]
+
+     # Функция проверки уникальности расписания 
+
+    def clean(self):
+        cleaned_data = super().clean()
+        coach_id = cleaned_data.get('coach')
+        weekdays = cleaned_data.get('weekdays')
+        start_time = cleaned_data.get('start_time')
+        end_time = cleaned_data.get('end_time')
+
+#  Проверка пересечения тренировоак по времени и дням недели 
+        if coach_id and weekdays and start_time and end_time:
+           for weekday in weekdays:
+               conflict = Schedule.objects.filter(
+                   coach_id = coach_id,
+                   weekdays__id = weekday
+               ).filter(
+                   start_time__lt = end_time,
+                   end_time__gt = start_time 
+               ).exists()
+               if conflict:
+                   raise forms.ValidationError('У тренера уже есть занятие в этот день недели, в указанное время')
+               
+        return cleaned_data 

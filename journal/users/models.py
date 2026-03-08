@@ -2,7 +2,10 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from datetime import date
 
-
+GENDER_CHOICES = [
+    ("Мужчина", "Мужчина"),
+    ("Женщина", "Женщина"),
+]
 class CustomUser(AbstractUser):
 
     ROLE_CHOICES = [
@@ -17,6 +20,9 @@ class CustomUser(AbstractUser):
     )  # null=True, blank=True - Делают поля не обязательными для заполнения
     birth_date = models.DateField(null=True, blank=True)
     phone_number = models.CharField(max_length=11, null=True, blank=True)
+    gender = models.CharField(max_length=255, choices=GENDER_CHOICES, null=True)
+
+    
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
