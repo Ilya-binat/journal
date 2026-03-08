@@ -43,10 +43,10 @@
                     {{ schedule.start_time|time:"H:i" }} - {{ schedule.end_time|time:"H:i" }}
                     <br>
                     {% for weekday in schedule.weekdays.all %}
-                    
-                     <span class="badge bg-primary">{{ weekday.short_name }}</span>
+
+                    <span class="badge bg-primary">{{ weekday.short_name }}</span>
                     {% endfor %}
-                   
+
                 </td>
 
                 <!-- Кнопки -->
@@ -64,7 +64,8 @@
                             </li>
 
                             <li>
-                                <button class="dropdown-item text-danger" type="button">
+                                <button class="dropdown-item text-danger delete-btn" type="button" data-bs-toggle="modal"
+                                    data-bs-target="#deleteScheduleModal" id="{{ schedule.pk }}">
                                     <i class="bi bi-trash me-2"></i>Удалить
                                 </button>
                             </li>
@@ -84,4 +85,73 @@
 
     </table>
 </div>
+<!-- Модалка удаления расписания -->
+<div class="modal fade" id="deleteScheduleModal" tabindex="-1" aria-labelledby="deleteScheduleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteScheduleModalLabel">Удалить расписание?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Удалить расписание у этого тренера?
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <form id="deleteScheduleForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Да, удалить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+     let deleteButtons = document.querySelectorAll('.delete-btn')
+
+    deleteButtons.forEach(function (btn) {
+        btn.onclick = function () {
+            id = btn.id
+
+        }
+
+    })
+
+    //  удаление группы
+    let id;
+    let scheduleDeleteForm = document.querySelector('#deleteScheduleForm')
+
+
+    scheduleDeleteForm.onsubmit = function (event) {
+        event.preventDefault()
+        console.log(id);
+
+        fetch('/administrator/delete_schedule/' + id, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')// getCookie - вернет тот параметр который мы запросим, в данном случае она возвращает csrf - токен
+            },
+        })
+            .then(response => location.reload())  // promise - действия которые выполняются раз за разом.
+            .catch(error => console.log(error))
+    }
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+
+
+        return cookieValue;
+    }
+</script>
 {% endblock %}

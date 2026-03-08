@@ -377,3 +377,13 @@ def fetch_coach_groups(request, pk):
     return JsonResponse({
         'groups':list(groups)
     })
+
+def delete_schedule(request, pk):
+    schedule = Schedule.objects.get(pk=pk)
+
+    if request.method == 'POST':
+        schedule.delete()
+
+        return JsonResponse ({
+            'success':True
+        })
