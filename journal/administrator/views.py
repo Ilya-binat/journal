@@ -341,19 +341,19 @@ def save_schedule(request):
         form = ScheduleForm(request.POST)
 
         if form.is_valid():
-            coach = request.POST.get("coach")
-            group = request.POST.get("group")
-            hall = request.POST.get("hall")
-            period = request.POST.get("period")
+            coach_id = request.POST.get("coach")
+            group_id = request.POST.get("group")
+            hall_id = request.POST.get("hall")
+            period_id = request.POST.get("period")
             start_time = request.POST.get("start_time")
             end_time = request.POST.get("end_time")
             weekdays = request.POST.getlist("weekdays")
 
             schedule = Schedule.objects.create(
-                coach_id=coach,
-                group_id=group,
-                hall_id=hall,
-                period_id=period,
+                coach_id=coach_id,
+                group_id=group_id,
+                hall_id=hall_id,
+                period_id=period_id,
                 start_time=start_time,
                 end_time=end_time,
             )
@@ -361,29 +361,105 @@ def save_schedule(request):
 
             return redirect("administrator:schedule")
         
-        return render(request, 'add_schedule.html',  {
-            "coaches": coaches,
-            "all_groups": all_groups,
-            "halls": halls,
-            "periods": periods,
-            "weekdays": weekdays,
-            'form':form
-        },)
+        return render(
+            request,
+            "add_schedule.html",
+            {
+                "coaches": coaches,
+                "all_groups": all_groups,
+                "halls": halls,
+                "periods": periods,
+                "weekdays": weekdays,
+                "form": form,
+            },
+        )
 
 
 def fetch_coach_groups(request, pk):
-    groups = Group.objects.filter(coach_id = pk).values()
+    groups = Group.objects.filter(coach_id=pk).values()
 
-    return JsonResponse({
-        'groups':list(groups)
-    })
+    return JsonResponse({"groups": list(groups)})
+
 
 def delete_schedule(request, pk):
     schedule = Schedule.objects.get(pk=pk)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         schedule.delete()
 
-        return JsonResponse ({
-            'success':True
-        })
+        return JsonResponse({"success": True})
+
+
+def edit_schedule(request, pk):
+    schedule_data = Schedule.objects.get(pk=pk)
+    coach_id = schedule_data.coach.id
+    group_data = schedule_data.group
+    hall_id = schedule_data.hall.id
+    period_id = schedule_data.period.id
+    weekdays_id = list(schedule_data.weekdays.values_list('id', flat=True))
+    start_time = schedule_data.start_time
+    end_time = schedule_data.end_time
+
+    coaches = CustomUser.objects.filter(role="Тренер")
+    all_groups = Group.objects.all()
+    halls = Hall.objects.all()
+    periods = SchedulePeriod.objects.all()
+    weekdays = WeekDay.objects.all()
+    
+    return render(
+        request,
+        "edit_schedule.html",
+        {
+            "schedule_id":schedule_data.id,
+            "coach_id": coach_id,
+            "group_data": group_data,
+            "hall_id": hall_id,
+            "period_id": period_id,
+            "weekdays_id": weekdays_id,
+            'coaches':coaches,
+            'all_groups':all_groups,
+            'halls':halls,
+            'periods':periods,
+            'weekdays':weekdays, 
+            'start_time':start_time,
+            'end_time':end_time
+        },
+    )
+
+def update_schedule(request, pk):
+    schedule_data = get_object_or_404(Schedule, pk=pk)
+    coaches = CustomUser.objects.filter(role="Тренер")
+    all_groups = Group.objects.all()
+    halls = Hall.objects.all()
+    periods = SchedulePeriod.objects.all()
+    weekdays = WeekDay.objects.all()
+
+    if request.method == "POST":
+        form = ScheduleForm(request.POST, exclude_pk=schedule_data.pk)
+
+        if form.is_valid():
+            schedule_data.coach_id = request.POST.get("coach")
+            schedule_data.group_id = request.POST.get("group")
+            schedule_data.hall_id = request.POST.get("hall")
+            schedule_data.period_id = request.POST.get("period")
+            schedule_data.start_time = request.POST.get("start_time")
+            schedule_data.end_time = request.POST.get("end_time")
+            schedule_data.save()
+            selected_weekdays = request.POST.getlist("weekdays")
+            schedule_data.weekdays.set(selected_weekdays)
+
+            return redirect("administrator:schedule")
+        
+        return render(
+            request,
+            "edit_schedule.html",
+            {
+                "schedule_id":schedule_data.id,
+                "coaches": coaches,
+                "all_groups": all_groups,
+                "halls": halls,
+                "periods": periods,
+                "weekdays": weekdays,
+                "form": form,
+            },
+        )

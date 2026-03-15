@@ -28,5 +28,7 @@ urlpatterns =[
     path('add_schedule/', add_schedule, name = 'add_schedule'),
     path('save_schedule/', save_schedule, name = 'save_schedule'),# Разделение функции охранения на две части 1.Открытие страницы сохранения 2.Само сохранение
     path('fetch_coach_groups/<int:pk>/', fetch_coach_groups, name= 'fetch_coach_groups'),
-    path('delete_schedule/<int:pk>', delete_schedule, name= 'delete_scheule'),
+    path('delete_schedule/<int:pk>', delete_schedule, name= 'delete_schedule'),
+    path('edit_schedule/<int:pk>/', edit_schedule, name= 'edit_schedule' ),
+    path('update_schedule/<int:pk>/', update_schedule, name = 'update_schedule'), 
 ]

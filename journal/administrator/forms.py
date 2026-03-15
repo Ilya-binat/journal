@@ -109,8 +109,9 @@ class ScheduleForm(forms.Form):
 
     # Функция загрузки дней недели из базы данных
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, exclude_pk=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.exclude_pk=exclude_pk
 
         self.fields['weekdays'].choices = [
             (wd.id, wd.name) for wd in WeekDay.objects.all()
@@ -134,7 +135,7 @@ class ScheduleForm(forms.Form):
                ).filter(
                    start_time__lt = end_time,
                    end_time__gt = start_time 
-               ).exists()
+               ).exclude(pk=self.exclude_pk)
                if conflict:
                    raise forms.ValidationError('У тренера уже есть занятие в этот день недели, в указанное время')
                

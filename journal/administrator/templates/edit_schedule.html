@@ -4,39 +4,38 @@
 {% block content %}
 
 <body class="d-flex justify-content-center" style="height: 100vh;">
-    <form action="{% url 'administrator:save_schedule' %}" method="post" class="p-4 border rounded"
+    <form action="{% url 'administrator:update_schedule' schedule_id %}" method="post" class="p-4 border rounded"
         style="width: 600px; min-width: 300px;">
         {% csrf_token %}
         <div class="mb-3">
             <label for="coachSelect" class="form-label">Выберите тренера</label>
             <select name="coach" required class="form-select" id="coachSelect">
-                <option value="" selected disabled>Не выбрано</option>
+               
                 {% for coach in coaches %}
-                <option value="{{coach.id}}">{{ coach.get_full_name }}</option>
+                <option value="{{coach.id}}"{% if coach.id == coach_id %} selected {% endif %}>{{ coach.get_full_name }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="mb-3">
             <label for="groupSelect" class="form-label">Выберите группу</label>
             <select name="group" required class="form-select" id="groupSelect">
-                <option value="" selected disabled>Не выбрано</option>
+                <option value="{{group_data.id}}" selected>{{group_data.group_name}}</option>
             </select>
         </div>
         <div class="mb-3">
             <label for="hallSelect" class="form-label">Выберите зал</label>
             <select name="hall" required class="form-select" id="hallSelect">
-                <option value="" selected disabled>Не выбрано</option>
+                
                 {% for hall in halls %}
-                <option value="{{hall.id}}">{{ hall.hall_name }}</option>
+                <option value="{{hall.id}}"{% if hall.id == hall_id %} selected {% endif %}>{{ hall.hall_name }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="mb-3">
             <label for="periodSelect" class="form-label">Выберите период</label>
             <select name="period" required class="form-select" id="periodSelect">
-                <option value="" selected disabled>Не выбрано</option>
                 {% for period in periods %}
-                <option value="{{period.id}}">{{ period.name }}</option>
+                <option value="{{period.id}}"{% if period.id == period_id %} selected {% endif %}>{{ period.name }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -45,7 +44,7 @@
             {% for weekday in weekdays %}
             <div class="form-check">
                 <input name="weekdays" class="form-check-input" type="checkbox" id="day-{{weekday.id}}"
-                    value="{{weekday.id}}">
+                    value="{{weekday.id}}"{% if weekday.id in weekdays_id %}checked{% endif %}>
                 <label class="form-check-label" for="day-{{weekday.id}}">
                     {{weekday.name}}
                 </label>
@@ -56,11 +55,11 @@
         <div class="mb-3">
             <label for="weekdaysSelect" class="form-label">Выберите время тренировки</label>
             <br>
-            <input name="start_time" required type="time" class="form-control-sm"> - <input name="end_time" required
-                type="time" class="form-control-sm">
+            <input name="start_time" required type="time" class="form-control-sm" value="{{ start_time|time:'H:i' }}"> -
+             <input name="end_time" required type="time" class="form-control-sm" value="{{ end_time|time:'H:i' }}">
         </div>
         <div class="d-flex justify-content-center gap-1">
-            <button type="submit" class="btn btn-primary w-100">Создать</button>
+            <button type="submit" class="btn btn-primary w-100">Сохранить</button>
             <a href="{% url 'administrator:schedule' %}" class="btn btn-secondary w-100">Отменить</a>
         </div>
 
@@ -71,7 +70,14 @@
             <p>{{ error }}</p>
             {% endfor %}
         </div>
+        
         {% endif %}
+        {% for field, errors in form.errors.items %}
+        {% for error in errors %}
+        <p class="text-danger">{{ field }}: {{ error }}</p>
+        {% endfor %}
+        {% endfor %}
+       
     </form>
 </body>
 <script>
@@ -101,7 +107,7 @@
 
                 data.groups.forEach((item) => {
                     let option = document.createElement('option')
-                    option.setAttribute('value', item.id)
+                    option.setAttribute('id', item.id)
                     option.textContent = item.group_name
                     groupSelect.append(option)
                 })
@@ -109,3 +115,5 @@
     })
 </script>
 {% endblock %}
+
+
