@@ -113,4 +113,23 @@ class WeekDay(models.Model):
     def __str__(self):
         return self.name
     
- 
+STATUS_CHOICES=[
+    ('present','Присутствовал'),
+    ('absent','Отсутствовал'),
+    ('excused', 'Уважительная причина'),
+    ('late', 'Опаздал')
+]
+
+# Модель расписания
+class Attendance(models.Model):
+    slot = models.ForeignKey(Slot, on_delete=models.CASCADE, related_name='attendances')
+    student = models.ForeignKey('users.CustomUser', on_delete=models.CASCADE, related_name='attendances', limit_choices_to={'role':'Спортсмен'})
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='absent')
+    note = models.CharField(max_length=255, blank = True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('slot','student')
+
+    def __str__(self):
+        return f'{self.student} — {self.slot.date} ({self.get_status_display()})'

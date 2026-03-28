@@ -1,4 +1,9 @@
-from.views import *
+from .views.coach import * 
+from .views.group import * 
+from .views.student import * 
+from .views.hall import * 
+from .views.period import * 
+from .views.schedule import * 
 from django.urls import path
 
 urlpatterns =[
