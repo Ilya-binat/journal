@@ -23,8 +23,8 @@ class Slot(models.Model):
     date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
-    coach = models.ForeignKey('users.CustomUser', on_delete=models.SET_NULL, null=True, blank=True)
-    hall = models.ForeignKey('administrator.Hall', on_delete=models.SET_NULL, null=True, blank=True)
+    coach = models.ForeignKey('users.CustomUser', on_delete=models.SET_NULL, null=True, blank=True) # null - делает поле не обязательным в базе данных
+    hall = models.ForeignKey('administrator.Hall', on_delete=models.SET_NULL, null=True, blank=True) # blank - делает поле не обязательным в форме
     group = models.ForeignKey('administrator.Group', on_delete=models.SET_NULL, null=True, blank=True)
 
 stage_choices = [
@@ -47,6 +47,9 @@ class Group(models.Model):
     group_name = models.CharField(max_length=255, unique=True)
     coach = models.ForeignKey('users.CustomUser', on_delete=models.SET_NULL, null=True, blank=True, 
     related_name='coach_groups')
+
+    def __str__(self):
+        return self.group_name
 
 class StudentGroup(models.Model):
     student = models.OneToOneField(
@@ -149,3 +152,29 @@ class Competition(models.Model):
 
     def __str__(self):
         return f'{self.title} - {self.date_start} -{self.date_end}'
+    
+
+# Модель КПИ
+
+class Assessment(models.Model):
+    name = models.CharField(max_length=255)
+    coach = models.ForeignKey('users.CustomUser', 
+            on_delete=models.CASCADE, 
+            limit_choices_to={'role':'Тренер'})
+    group = models.ForeignKey(
+         'administrator.Group',
+        on_delete=models.CASCADE,
+    )
+    sport_type = models.ForeignKey(TrainingType, on_delete=models.CASCADE)
+    next_stage = models.CharField(choices=stage_choices, max_length=255)
+    is_passed = models.BooleanField(default=False)
+    date_start = models.DateField()
+    date_end = models.DateField()
+
+    
+    class Meta:
+        unique_together = ('name','coach', 'group', 'date_start', 'date_end')
+
+    def __str__(self):
+        return f'{self.name} - {self.group}-{self.date_start} -{self.date_end}'
+
