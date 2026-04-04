@@ -1,10 +1,11 @@
+from django.urls import path
 from .views.coach import * 
 from .views.group import * 
 from .views.student import * 
 from .views.hall import * 
 from .views.period import * 
 from .views.schedule import * 
-from django.urls import path
+from .views.competition import *
 
 urlpatterns =[
     path('group/', group, name = 'group'),
@@ -36,4 +37,8 @@ urlpatterns =[
     path('delete_schedule/<int:pk>', delete_schedule, name= 'delete_schedule'),
     path('edit_schedule/<int:pk>/', edit_schedule, name= 'edit_schedule' ),
     path('update_schedule/<int:pk>/', update_schedule, name = 'update_schedule'), 
+    path('competitions/', competitions, name='competitions'),
+    path('add_competition/', add_competition, name='add_competition'),
+    path('edit_competition/<int:pk>/', edit_competition, name='edit_competition'),
+    path('get_competition/<int:pk>/', get_competition, name='get_competition'),
 ]

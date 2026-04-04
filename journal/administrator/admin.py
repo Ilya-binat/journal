@@ -9,4 +9,5 @@ admin.site.register(Group)
 admin.site.register(StudentGroup)
 admin.site.register(WeekDay)
 admin.site.register(Schedule)
+admin.site.register(Competition)
 # Register your models here.

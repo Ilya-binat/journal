@@ -6,6 +6,7 @@ class Coach(models.Model):
     last_name  = models.CharField(max_length=255)
     middle_name  = models.CharField(max_length=255)
 
+# Модель вида спорта
 class TrainingType(models.Model):
     name = models.CharField(max_length=255)
 
@@ -133,3 +134,18 @@ class Attendance(models.Model):
 
     def __str__(self):
         return f'{self.student} — {self.slot.date} ({self.get_status_display()})'
+    
+# Модель графика соревнований
+
+class Competition(models.Model):
+    title = models.CharField(max_length=255)
+    address = models.CharField(max_length=255)
+    sport_type = models.ForeignKey(TrainingType, on_delete=models.CASCADE)
+    date_start = models.DateTimeField()
+    date_end = models.DateTimeField()
+
+    class Meta:
+        unique_together = ('title','sport_type', 'date_start', 'date_end')
+
+    def __str__(self):
+        return f'{self.title} - {self.date_start} -{self.date_end}'

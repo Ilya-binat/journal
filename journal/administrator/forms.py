@@ -140,3 +140,63 @@ class ScheduleForm(forms.Form):
                    raise forms.ValidationError('У тренера уже есть занятие в этот день недели, в указанное время')
                
         return cleaned_data 
+    
+class CompetitionForm(forms.ModelForm):
+    title = forms.CharField(
+        label='Название соревнования',
+        widget=forms.TextInput(
+            attrs={
+                "autofocus": True,
+                "placeholder": "Название соревнования",
+                "class": "form-control",
+            }
+        )
+    )
+
+    sport_type = forms.ModelChoiceField(
+        queryset=TrainingType.objects.all(),
+        required=False,
+        label='Вид спорта',
+        empty_label='Выберите вид спорта',
+        widget=forms.Select(
+            attrs={
+                "class": "form-select",
+            }
+        )
+    )
+
+    address = forms.CharField(
+        label = 'Место проведения',
+        widget=forms.TextInput(
+            attrs={
+                "autofocus": True,
+                "placeholder": 'Место проведения',
+                "class":"form-control",
+            }
+        )
+    )
+
+    date_start = forms.DateTimeField(
+        label="Дата начала",
+        widget=forms.DateTimeInput(
+            attrs={
+                "type": "datetime-local",
+                "class": "form-control"
+            }
+        )
+    )
+
+    date_end = forms.DateTimeField(
+        label="Дата окончания",
+        widget=forms.DateTimeInput(
+            attrs={
+                "type": "datetime-local",
+                "class": "form-control"
+            }
+        )
+    )
+
+
+    class Meta:
+        model = Competition
+        fields = ['title', 'sport_type', 'address', 'date_start', 'date_end']
