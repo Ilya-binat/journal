@@ -70,3 +70,11 @@ def get_competition(request, pk):
             "date_end": competition.date_end,
         }
     )
+
+
+def delete_competition(request, pk):
+   
+    competition_data = Competition.objects.get(pk=pk)
+    if request.method == "POST":
+        competition_data.delete()
+    return HttpResponse()

@@ -41,4 +41,5 @@ urlpatterns =[
     path('add_competition/', add_competition, name='add_competition'),
     path('edit_competition/<int:pk>/', edit_competition, name='edit_competition'),
     path('get_competition/<int:pk>/', get_competition, name='get_competition'),
+    path('delete_competition/<int:pk>/', delete_competition, name='delet_competition'),
 ]

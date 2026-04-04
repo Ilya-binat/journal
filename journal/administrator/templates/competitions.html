@@ -49,7 +49,7 @@
                             <li>
                                 <button type="button" class="dropdown-item delete-competition-btn"
                                     data-bs-toggle="modal" data-bs-target="#deleteCompetitionModal"
-                                    id="{{ competition.pk }}" data-group-name="{{ competition.title }}">
+                                    id="{{ competition.pk }}">
                                     <i class="bi bi-trash"></i>
                                     Удалить
                                 </button>
@@ -96,23 +96,23 @@
     </div>
 
     <!-- Модальное окно удаления соревнования -->
-    <div class="modal fade" id="deleteHallModal" tabindex="-1" aria-labelledby="deleteHallModalLabel"
+    <div class="modal fade" id="deleteCompetitionModal" tabindex="-1" aria-labelledby="deleteCompetitionModalLabel"
         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="deleteHallModalLabel">Удалить период?</h5>
+                    <h5 class="modal-title" id="deleteCompetitionModalLabel">Удалить соревнование?</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    Вы уверены, что хотите удалить зал <strong id="groupNameToDelete"></strong>?
+                    Вы уверены, что хотите удалить соревнование? 
                     <div class="alert alert-warning mt-2">
-                        Все залы будут удалены!
+                        Вся информация о соревновании будет удалена!
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <form id="deleteHallForm" method="post" style="display: inline;">
+                    <form id="deleteCompetitionForm" method="post" style="display: inline;">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger">Удалить</button>
                     </form>
@@ -134,15 +134,13 @@
         form.dataset.id = ""
     })
     // открытие модалки удаления
-    document.querySelectorAll('.delete-hall-btn').forEach(function (btn) {
+    document.querySelectorAll('.delete-competition-btn').forEach(function (btn) {
 
         btn.addEventListener('click', function () {
 
-            const hallId = this.id
-            const hallName = this.dataset.groupName
+            const competitionId = this.id
 
-            document.getElementById('deleteHallForm').dataset.id = hallId
-            document.getElementById('groupNameToDelete').textContent = hallName
+            document.getElementById('deleteCompetitionForm').dataset.id = competitionId
 
         })
 
@@ -176,7 +174,7 @@
         })
 
     })
-    // Сохранение добавленных залов и редактирование залов с последующим охранением
+    // Сохранение добавленных соревнований и редактирование соревнований с последующим охранением
     document.getElementById('competitionForm').onsubmit = function (e) {
 
         e.preventDefault()
@@ -272,16 +270,16 @@
 
             })
     }
-    //  удаление периода
+    //  удаление соревнования
     let id;
-    let hallDeleteForm = document.querySelector('#deleteHallForm')
-    hallDeleteForm.onsubmit = function (event) {
+    let competitionDeleteForm = document.querySelector('#deleteCompetitionForm')
+     competitionDeleteForm.onsubmit = function (event) {
 
         event.preventDefault()
 
         const id = this.dataset.id
 
-        fetch('/administrator/delete_hall/' + id + '/', {
+        fetch('/administrator/delete_competition/' + id + '/', {
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
@@ -289,9 +287,9 @@
         })
             .then(response => {
                 if (response.ok) {
-                    document.getElementById('hall-' + id).remove()
+                    document.getElementById('competition-' + id).remove()
                     bootstrap.Modal.getInstance(
-                        document.getElementById('deleteHallModal')
+                        document.getElementById('deleteCompetitionModal')
                     ).hide()
                 }
             })
