@@ -133,3 +133,5 @@ AUTH_USER_MODEL = 'users.CustomUser'# Указали кастомную моде
 STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 
 STATIC_URL = '/static/'
+
+AUTHENTICATION_BACKENDS = ['users.backends.EmailBackend']
