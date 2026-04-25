@@ -243,7 +243,7 @@ class AssessmentForm(forms.ModelForm):
 
     next_stage = forms.ChoiceField(
         label="Перевод на следующий этап",
-        choices=stage_choices,
+        choices=[("", "Выберите этап подготовки")] + list(stage_choices),
         widget=forms.Select(attrs={"class": "form-select"}),
     )
 

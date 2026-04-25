@@ -171,10 +171,44 @@ class Assessment(models.Model):
     date_start = models.DateField()
     date_end = models.DateField()
 
+
     
     class Meta:
         unique_together = ('name','coach', 'group', 'date_start', 'date_end')
 
+    def is_assessment_passed(self):
+        # Если все испытания сданы
+        return all(result.passed for result in self.results.all())
+
     def __str__(self):
         return f'{self.name} - {self.group}-{self.date_start} -{self.date_end}'
+
+    #  Модель тестовых испытаний
+class TestItem(models.Model):
+    name = models.CharField(max_length=255)
+    stage = models.CharField(max_length=255, choices=stage_choices)
+    max_cor_male = models.FloatField()
+    max_cor_female = models.FloatField()
+
+    def __str__(self):
+        return self.name
+    
+    # Модель результатов сдачи КПИ 
+class AssessmentResult(models.Model):
+    assessment = models.ForeignKey('Assessment', on_delete=models.CASCADE, related_name='results')
+    test_item = models.ForeignKey('TestItem', on_delete=models.CASCADE)
+    athlete = models.ForeignKey('users.CustomUser', on_delete=models.CASCADE, limit_choices_to={'role':'Спортсмен'})
+    score = models.PositiveIntegerField(null=True, blank=True)  # Результат выполнения
+    passed = models.BooleanField(default=False)  # Сдал/не сдал
+
+    def save(self, *args, **kwargs):
+        # Автоматическая проверка на прохождение
+        if self.score is not None and self.score >= self.test_item.max_score:
+            self.passed = True
+        else:
+            self.passed = False
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.athlete} - {self.test_item} ({self.score})'
 

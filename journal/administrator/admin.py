@@ -11,4 +11,7 @@ admin.site.register(WeekDay)
 admin.site.register(Schedule)
 admin.site.register(Competition)
 admin.site.register(Assessment)
+admin.site.register(TestItem)
+admin.site.register(AssessmentResult)
+
 # Register your models here.

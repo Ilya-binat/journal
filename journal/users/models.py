@@ -39,6 +39,9 @@ class CustomUser(AbstractUser):
             initials.append(self.middle_name[0])
         return f"{self.last_name} {''.join(initials)}"
     
+    def __str__(self):
+        return self.get_short_name()
+    
     def get_age(self):
         if not self.birth_date:
             return None

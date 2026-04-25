@@ -7,6 +7,7 @@ from .views.period import *
 from .views.schedule import * 
 from .views.competition import *
 from .views.assessments import *
+from .views.test_item import *
 
 urlpatterns =[
     path('group/', group, name = 'group'),
@@ -44,4 +45,9 @@ urlpatterns =[
     path('get_competition/<int:pk>/', get_competition, name='get_competition'),
     path('delete_competition/<int:pk>/', delete_competition, name='delet_competition'),
     path('assessments/', assessments, name='assessments'),
+    path('add_assessment/', add_assessment, name='add_assessment'),
+    path('get_assessment/<int:pk>/', get_assessment, name='get_assessment'),
+    path('edit_assessment/<int:pk>/', edit_assessment, name='edit_assessment'),
+    path('delete_assessment/<int:pk>/', delete_assessment, name='delete_assessment'),
+    path('test_items/', test_items, name='test_items'),
 ]

@@ -5,18 +5,11 @@
 <div class="container py-4">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Контрольно-переводные испытания</h2>
-        <div>
-            <a href="{% url 'administrator:test_items' %} " class="btn btn-success add-assessment">
-                <i class="bi bi-building me-2"></i>
-                Показать испытания
-            </a>
-            <a href="#" class="btn btn-primary add-assessment" data-bs-toggle="modal" data-bs-target="#assessmentModal">
-                <i class="bi bi-building me-2"></i>
-                Добавить КПИ
-            </a>
-        </div>
-
+        <h2 class="mb-0">Задания КПИ</h2>
+        <a href="#" class="btn btn-primary add-assessment" data-bs-toggle="modal" data-bs-target="#assessmentModal">
+            <i class="bi bi-building me-2"></i>
+            Добавить испытание
+        </a>
     </div>
 
     <table class="table table-striped table-hover align-middle">
@@ -24,24 +17,20 @@
             <tr>
                 <th scope="col">№</th>
                 <th scope="col">Название</th>
-                <th scope="col">Тренер</th>
-                <th scope="col">Группа</th>
-                <th scope="col">Вид спорта</th>
-                <th scope="col">Дата</th>
+                <th scope="col">Этап подготовки</th>
+                <th scope="col">Котрольный результат мальчики</th>
+                <th scope="col">Котрольный результат девочки</th>
                 <th scope="col"></th>
             </tr>
         </thead>
         <tbody id="assessmentTableBody">
-            {% for assessment in assessments %}
-            <tr id="assessment-{{ assessment.id }}">
-                <td>{{ assessment.id }}</td>
-                <td>{{ assessment.name }}</td>
-                <td>{{ assessment.coach.get_short_name }}</td>
-                <td>{{ assessment.group }}</td>
-                <td>{{ assessment.sport_type}}</td>
-                <td>{{ assessment.date_start|date:"d.m.Y" }} - <br>
-                    {{ assessment.date_end|date:"d.m.Y" }}
-                </td>
+            {% for test_item in data %}
+            <tr id="test_items-{{ test_items.id }}">
+                <td>{{ test_item.id }}</td>
+                <td>{{ test_item.name }}</td>
+                <td>{{ test_item.stage }}</td>
+                <td>{{ test_item.max_cor_male }}</td>
+                <td>{{ test_item.max_cor_female }}</td>
                 <td class="text-end">
                     <div class="dropdown">
                         <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
@@ -56,8 +45,9 @@
                                 </a>
                             </li>
                             <li>
-                                <button type="button" class="dropdown-item delete-assessment-btn" data-bs-toggle="modal"
-                                    data-bs-target="#deleteAssessmentModal" id="{{ assessment.pk }}">
+                                <button type="button" class="dropdown-item delete-assessment-btn"
+                                    data-bs-toggle="modal" data-bs-target="#deleteAssessmentModal"
+                                    id="{{ assessment.pk }}">
                                     <i class="bi bi-trash"></i>
                                     Удалить
                                 </button>

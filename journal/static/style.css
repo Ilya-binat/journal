@@ -123,3 +123,18 @@ body {
 .group-click{
  cursor: pointer;
 }
+
+.sidebar {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-top {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.sidebar-bottom {
+    background: #1e1e1e;
+}

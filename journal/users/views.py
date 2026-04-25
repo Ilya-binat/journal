@@ -30,8 +30,13 @@ def log_in(request):
     if form.is_valid():
         user = form.get_user()
         login(request, user)
+        if user.role == 'Администратор':
+            return redirect("administrator:schedule")
+        elif user.role == 'Тренер':
+            return redirect("teacher:schedule")
+        elif user.role == 'Спортсмен':
+            return redirect('student:schedule')
 
-        return redirect("student:schedule")
 
     return render(request, "log_in.html", {"form": form})
 
