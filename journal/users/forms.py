@@ -56,7 +56,7 @@ class RegisterForm(forms.ModelForm):
 
     gender = forms.ChoiceField(
         choices=GENDER_CHOICES,
-        widget=forms.Select(attrs={"class":"form-select"})
+        widget=forms.Select(attrs={"class": "form-select"})
     )
 
     role = forms.ChoiceField(
@@ -94,10 +94,11 @@ class LoginForm(forms.Form):
         )
     )
 
-    def clean(self):  # Кастомная функция для входа по email
+    def clean(self):
         email = self.cleaned_data.get("email")
         password = self.cleaned_data.get("password")
-        user = authenticate(email=email, password=password)
+
+        user = authenticate(username=email, password=password)
 
         if user is None:
             raise ValidationError("Неверный email или пароль")
@@ -106,4 +107,4 @@ class LoginForm(forms.Form):
         return self.cleaned_data
 
     def get_user(self):
-        return self.user
+        return getattr(self, 'user', None)
