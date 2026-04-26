@@ -1,4 +1,373 @@
 {% extends 'teacher_base_layout.html' %}
 {% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0">Расписание</h2>
+</div>
 
+
+<!-- WEEK NAVIGATION -->
+<div class="d-flex align-items-center gap-2 mb-4">
+    <button class="btn btn-outline-secondary btn-sm rounded-circle" style="width:36px;height:36px;">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <div class="d-flex gap-2 flex-grow-1 overflow-auto">
+        {% for day in week_days %}
+        <div class="text-center px-3 py-2 rounded-3 flex-grow-1 {% if day.is_today %}border border-primary bg-primary text-white{% else %}bg-white border{% endif %}"
+            style="min-width:90px;cursor:pointer;">
+            <div class="small text-uppercase fw-semibold {% if not day.is_today %}text-muted{% endif %}">{{ day.weekday }}</div>
+            <div class="fs-3 fw-bold lh-1">{{ day.day }}</div>
+            <div class="small {% if not day.is_today %}text-muted{% endif %}">{{ day.month }}</div>
+            <div class="mt-1">
+                <i class="bi bi-circle-fill"
+                    style="font-size:6px; color:{% if day.is_today %}white{% else %}#3B82F6{% endif %};"></i>
+            </div>
+        </div>
+        {% endfor %}
+
+     
+    </div>
+
+    <button class="btn btn-outline-secondary btn-sm rounded-circle" style="width:36px;height:36px;">
+        <i class="bi bi-chevron-right"></i>
+    </button>
+</div>
+
+<!-- STATS CARDS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-3 d-flex align-items-center justify-content-center"
+                    style="width:48px;height:48px;background:#EFF6FF;">
+                    <i class="bi bi-calendar-check fs-5 text-primary"></i>
+                </div>
+                <div>
+                    <div class="fs-2 fw-bold lh-1">7</div>
+                    <div class="text-muted small">Тренировок сегодня</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-3 d-flex align-items-center justify-content-center"
+                    style="width:48px;height:48px;background:#FFF7ED;">
+                    <i class="bi bi-clock fs-5 text-warning"></i>
+                </div>
+                <div>
+                    <div class="fs-2 fw-bold lh-1">6 ч. 54 мин.</div>
+                    <div class="text-muted small">Часов на неделе</div>
+                </div>
+            </div>
+        </div>
+    </div>
+  
+</div>
+
+<!-- MAIN CONTENT ROW -->
+<div class="row g-3">
+    <!-- LEFT: SCHEDULE -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span>📅</span>
+                    <span class="fw-semibold">Расписание на субботу, 25 мая</span>
+                </div>
+
+                <!-- Timeline -->
+                <div class="position-relative" style="padding-left: 70px;">
+
+                    <!-- 07:00 - Утренняя растяжка -->
+                    <div class="d-flex mb-3">
+                        <div class="position-absolute start-0 text-muted small fw-semibold" style="width:60px;">07:00
+                        </div>
+                        <div class="d-flex align-items-start gap-2 w-100">
+                            <div class="d-flex flex-column align-items-center me-2 mt-1">
+                                <div class="rounded-circle bg-success" style="width:10px;height:10px;"></div>
+                                <div class="bg-secondary" style="width:2px;height:50px;opacity:0.2;"></div>
+                            </div>
+                            <div class="card border-0 w-100"
+                                style="background:#F8FFFE;border-left:3px solid #22C55E !important;border-radius:10px;">
+                                <div class="card-body py-2 px-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="fw-semibold">Утренняя растяжка</div>
+                                        <span class="badge rounded-pill"
+                                            style="background:#DCFCE7;color:#15803D;">РАСТЯЖКА</span>
+                                    </div>
+                                    <div class="d-flex gap-3 mt-1 small text-muted">
+                                        <span><i class="bi bi-person me-1"></i>Ольга Л.</span>
+                                        <span><i class="bi bi-clock me-1"></i>45 мин</span>
+                                        <span class="text-success"><i
+                                                class="bi bi-check-circle-fill me-1"></i>Завершено</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 08:00 - Free -->
+                    <div class="d-flex mb-3">
+                        <div class="position-absolute start-0 text-muted small fw-semibold" style="width:60px;">08:00
+                        </div>
+                        <div class="d-flex align-items-start gap-2 w-100">
+                            <div class="d-flex flex-column align-items-center me-2 mt-1">
+                                <div class="rounded-circle border"
+                                    style="width:10px;height:10px;border-color:#dee2e6!important;"></div>
+                                <div class="bg-secondary" style="width:2px;height:30px;opacity:0.2;"></div>
+                            </div>
+                            <div class="text-muted small py-1">
+                                <i class="bi bi-plus-circle me-1 text-primary"></i> Свободное время — добавить
+                                тренировку
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 09:00 - Силовая тренировка -->
+                    <div class="d-flex mb-3">
+                        <div class="position-absolute start-0 text-muted small fw-semibold" style="width:60px;">09:00
+                        </div>
+                        <div class="d-flex align-items-start gap-2 w-100">
+                            <div class="d-flex flex-column align-items-center me-2 mt-1">
+                                <div class="rounded-circle bg-success" style="width:10px;height:10px;"></div>
+                                <div class="bg-secondary" style="width:2px;height:50px;opacity:0.2;"></div>
+                            </div>
+                            <div class="card border-0 w-100"
+                                style="background:#FFF8F8;border-left:3px solid #EF4444 !important;border-radius:10px;">
+                                <div class="card-body py-2 px-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="fw-semibold">Силовая тренировка</div>
+                                        <span class="badge rounded-pill"
+                                            style="background:#FEE2E2;color:#B91C1C;">СИЛОВАЯ</span>
+                                    </div>
+                                    <div class="d-flex gap-3 mt-1 small text-muted">
+                                        <span><i class="bi bi-person me-1"></i>Екатерина К.</span>
+                                        <span><i class="bi bi-clock me-1"></i>60 мин</span>
+                                        <span class="text-success"><i
+                                                class="bi bi-check-circle-fill me-1"></i>Завершено</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 10:30 - Кардио интенсив -->
+                    <div class="d-flex mb-3">
+                        <div class="position-absolute start-0 text-muted small fw-semibold" style="width:60px;">10:30
+                        </div>
+                        <div class="d-flex align-items-start gap-2 w-100">
+                            <div class="d-flex flex-column align-items-center me-2 mt-1">
+                                <div class="rounded-circle bg-success" style="width:10px;height:10px;"></div>
+                                <div class="bg-secondary" style="width:2px;height:50px;opacity:0.2;"></div>
+                            </div>
+                            <div class="card border-0 w-100"
+                                style="background:#FFFBF0;border-left:3px solid #F59E0B !important;border-radius:10px;">
+                                <div class="card-body py-2 px-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="fw-semibold">Кардио интенсив</div>
+                                        <span class="badge rounded-pill"
+                                            style="background:#FEF3C7;color:#92400E;">КАРДИО</span>
+                                    </div>
+                                    <div class="d-flex gap-3 mt-1 small text-muted">
+                                        <span><i class="bi bi-person me-1"></i>Иван В.</span>
+                                        <span><i class="bi bi-clock me-1"></i>50 мин</span>
+                                        <span class="text-success"><i
+                                                class="bi bi-check-circle-fill me-1"></i>Завершено</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 11:30 - Free -->
+                    <div class="d-flex mb-3">
+                        <div class="position-absolute start-0 text-muted small fw-semibold" style="width:60px;">11:30
+                        </div>
+                        <div class="d-flex align-items-start gap-2 w-100">
+                            <div class="d-flex flex-column align-items-center me-2 mt-1">
+                                <div class="rounded-circle border"
+                                    style="width:10px;height:10px;border-color:#dee2e6!important;"></div>
+                                <div class="bg-secondary" style="width:2px;height:30px;opacity:0.2;"></div>
+                            </div>
+                            <div class="text-muted small py-1">
+                                <i class="bi bi-plus-circle me-1 text-primary"></i> Свободное время — добавить
+                                тренировку
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 12:00 - Йога и медитация -->
+                    <div class="d-flex mb-3">
+                        <div class="position-absolute start-0 text-muted small fw-semibold" style="width:60px;">12:00
+                        </div>
+                        <div class="d-flex align-items-start gap-2 w-100">
+                            <div class="d-flex flex-column align-items-center me-2 mt-1">
+                                <div class="rounded-circle bg-primary" style="width:10px;height:10px;"></div>
+                                <div class="bg-secondary" style="width:2px;height:50px;opacity:0.2;"></div>
+                            </div>
+                            <div class="card border-0 w-100"
+                                style="background:#F5F3FF;border-left:3px solid #8B5CF6 !important;border-radius:10px;">
+                                <div class="card-body py-2 px-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="fw-semibold">Йога и медитация</div>
+                                        <span class="badge rounded-pill"
+                                            style="background:#EDE9FE;color:#6D28D9;">ЙОГА</span>
+                                    </div>
+                                    <div class="d-flex gap-3 mt-1 small text-muted">
+                                        <span><i class="bi bi-person me-1"></i>Мария С.</span>
+                                        <span><i class="bi bi-clock me-1"></i>60 мин</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 13:00 - Free -->
+                    <div class="d-flex mb-3">
+                        <div class="position-absolute start-0 text-muted small fw-semibold" style="width:60px;">13:00
+                        </div>
+                        <div class="d-flex align-items-start gap-2 w-100">
+                            <div class="d-flex flex-column align-items-center me-2 mt-1">
+                                <div class="rounded-circle border"
+                                    style="width:10px;height:10px;border-color:#dee2e6!important;"></div>
+                            </div>
+                            <div class="text-muted small py-1">
+                                <i class="bi bi-plus-circle me-1 text-primary"></i> Свободное время — добавить
+                                тренировку
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: SIDEBAR PANELS -->
+    <div class="col-lg-4">
+
+        <!-- CLIENTS TODAY -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fw-semibold">Клиенты сегодня</span>
+                    <a href="#" class="text-primary small text-decoration-none">Все →</a>
+                </div>
+
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+                        style="width:40px;height:40px;background:#EF4444;flex-shrink:0;">ЕК</div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold small">Екатерина К.</div>
+                        <div class="text-muted" style="font-size:12px;">09:00 · Силовая</div>
+                    </div>
+                    <i class="bi bi-circle-fill text-success" style="font-size:8px;"></i>
+                </div>
+
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+                        style="width:40px;height:40px;background:#3B82F6;flex-shrink:0;">ИВ</div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold small">Иван В.</div>
+                        <div class="text-muted" style="font-size:12px;">10:30 · Кардио</div>
+                    </div>
+                    <i class="bi bi-circle-fill text-success" style="font-size:8px;"></i>
+                </div>
+
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+                        style="width:40px;height:40px;background:#8B5CF6;flex-shrink:0;">МС</div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold small">Мария С.</div>
+                        <div class="text-muted" style="font-size:12px;">12:00 · Йога</div>
+                    </div>
+                    <i class="bi bi-circle-fill" style="font-size:8px;color:#3B82F6;"></i>
+                </div>
+
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+                        style="width:40px;height:40px;background:#F59E0B;flex-shrink:0;">АП</div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold small">Андрей П.</div>
+                        <div class="text-muted" style="font-size:12px;">14:00 · HIIT</div>
+                    </div>
+                    <i class="bi bi-circle-fill text-success" style="font-size:8px;"></i>
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+                        style="width:40px;height:40px;background:#22C55E;flex-shrink:0;">ОЛ</div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold small">Ольга Л.</div>
+                        <div class="text-muted" style="font-size:12px;">08:00 · Растяжка</div>
+                    </div>
+                    <i class="bi bi-circle-fill text-success" style="font-size:8px;"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- WEEK OCCUPANCY -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-bar-chart-fill text-primary"></i>
+                    <span class="fw-semibold">Занятость недели</span>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>Понедельник</span>
+                        <span class="text-muted">5/6</span>
+                    </div>
+                    <div class="progress" style="height:8px;border-radius:4px;">
+                        <div class="progress-bar bg-primary" style="width:83%;"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>Вторник</span>
+                        <span class="text-muted">4/6</span>
+                    </div>
+                    <div class="progress" style="height:8px;border-radius:4px;">
+                        <div class="progress-bar" style="width:67%;background:#8B5CF6;"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>Среда</span>
+                        <span class="text-muted">6/6</span>
+                    </div>
+                    <div class="progress" style="height:8px;border-radius:4px;">
+                        <div class="progress-bar bg-success" style="width:100%;"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>Четверг</span>
+                        <span class="text-muted">3/6</span>
+                    </div>
+                    <div class="progress" style="height:8px;border-radius:4px;">
+                        <div class="progress-bar bg-warning" style="width:50%;"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>Пятница</span>
+                        <span class="text-muted">2/6</span>
+                    </div>
+                    <div class="progress" style="height:8px;border-radius:4px;">
+                        <div class="progress-bar bg-danger" style="width:33%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
 {% endblock %}
