@@ -26,6 +26,10 @@ class Slot(models.Model):
     coach = models.ForeignKey('users.CustomUser', on_delete=models.SET_NULL, null=True, blank=True) # null - делает поле не обязательным в базе данных
     hall = models.ForeignKey('administrator.Hall', on_delete=models.SET_NULL, null=True, blank=True) # blank - делает поле не обязательным в форме
     group = models.ForeignKey('administrator.Group', on_delete=models.SET_NULL, null=True, blank=True)
+    
+
+    def __str__(self):
+        return f'{self.date} - {self.coach.get_short_name()}' 
 
 stage_choices = [
     ('НП1', 'НП1'),

@@ -135,3 +135,7 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 STATIC_URL = '/static/'
 
 AUTHENTICATION_BACKENDS = ['users.backends.EmailBackend']
+
+# Локализация дней недели
+LANGUAGE_CODE = 'ru'
+USE_L10N = True
