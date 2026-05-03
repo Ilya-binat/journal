@@ -16,6 +16,8 @@ def generate_slots(schedule):
                 end_time = schedule.end_time,
                 coach = schedule.coach,
                 hall = schedule.hall,
-                group = schedule.group
+                group = schedule.group,
+                status = 'planned',
+                schedule = schedule
             )
         current += timedelta(days=1)
