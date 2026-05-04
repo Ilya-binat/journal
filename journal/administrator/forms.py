@@ -268,3 +268,80 @@ class AssessmentForm(forms.ModelForm):
             "date_start",
             "date_end",
         ]
+
+# Форма тестового испытания (TestItem)
+
+class TestItemForm(forms.ModelForm):
+
+    name = forms.CharField(
+        label="Название испытания",
+        widget=forms.TextInput(
+            attrs={
+                "autofocus": True,
+                "placeholder": "Введите название испытания",
+                "class": "form-control",
+            }
+        ),
+    )
+
+    stage = forms.ChoiceField(
+        label="Этап подготовки",
+        choices=stage_choices,
+        widget=forms.Select(
+            attrs={
+                "class": "form-select",
+            }
+        ),
+    )
+
+    max_cor_male = forms.FloatField(
+        label="Норматив для мужчин",
+        widget=forms.NumberInput(
+            attrs={
+                "placeholder": "Введите норматив",
+                "class": "form-control",
+                "step": "0.01",
+            }
+        ),
+    )
+
+    max_cor_female = forms.FloatField(
+        label="Норматив для женщин",
+        widget=forms.NumberInput(
+            attrs={
+                "placeholder": "Введите норматив",
+                "class": "form-control",
+                "step": "0.01",
+            }
+        ),
+    )
+
+    class Meta:
+        model = TestItem
+        fields = [
+            "name",
+            "stage",
+            "max_cor_male",
+            "max_cor_female",
+        ]
+
+    # Дополнительная валидация
+    def clean(self):
+        cleaned_data = super().clean()
+
+        male = cleaned_data.get("max_cor_male")
+        female = cleaned_data.get("max_cor_female")
+
+        if male is not None and male < 0:
+            self.add_error(
+                "max_cor_male",
+                "Норматив не может быть отрицательным",
+            )
+
+        if female is not None and female < 0:
+            self.add_error(
+                "max_cor_female",
+                "Норматив не может быть отрицательным",
+            )
+
+        return cleaned_data

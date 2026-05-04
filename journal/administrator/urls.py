@@ -50,4 +50,6 @@ urlpatterns =[
     path('edit_assessment/<int:pk>/', edit_assessment, name='edit_assessment'),
     path('delete_assessment/<int:pk>/', delete_assessment, name='delete_assessment'),
     path('test_items/', test_items, name='test_items'),
+    path('add_test_items/', add_test_items, name='add_test_items'),
+    path('get_test_items/<int:pk>/', get_test_items, name='get_test_items'),
 ]

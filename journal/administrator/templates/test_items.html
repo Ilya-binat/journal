@@ -6,7 +6,7 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Задания КПИ</h2>
-        <a href="#" class="btn btn-primary add-assessment" data-bs-toggle="modal" data-bs-target="#assessmentModal">
+        <a href="#" class="btn btn-primary add-test-item" data-bs-toggle="modal" data-bs-target="#testItemModal">
             <i class="bi bi-building me-2"></i>
             Добавить испытание
         </a>
@@ -23,9 +23,9 @@
                 <th scope="col"></th>
             </tr>
         </thead>
-        <tbody id="assessmentTableBody">
+        <tbody id="testItemTableBody">
             {% for test_item in data %}
-            <tr id="test_items-{{ test_items.id }}">
+            <tr id="test_item-{{ test_item.id }}">
                 <td>{{ test_item.id }}</td>
                 <td>{{ test_item.name }}</td>
                 <td>{{ test_item.stage }}</td>
@@ -38,16 +38,15 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
-                                <a href="#" class="dropdown-item edit-assessment" data-id="{{ assessment.pk }}"
-                                    data-bs-toggle="modal" data-bs-target="#assessmentModal">
+                                <a href="#" class="dropdown-item edit-test-item" data-id="{{ test_item.pk }}"
+                                    data-bs-toggle="modal" data-bs-target="#testItemModal">
                                     <i class="bi bi-pencil"></i>
                                     Редактировать
                                 </a>
                             </li>
                             <li>
-                                <button type="button" class="dropdown-item delete-assessment-btn"
-                                    data-bs-toggle="modal" data-bs-target="#deleteAssessmentModal"
-                                    id="{{ assessment.pk }}">
+                                <button type="button" class="dropdown-item delete-test-item-btn" data-bs-toggle="modal"
+                                    data-bs-target="#deleteTestItemModal" id="{{ test_item.pk }}">
                                     <i class="bi bi-trash"></i>
                                     Удалить
                                 </button>
@@ -62,13 +61,12 @@
 
     </table>
 
-    <!-- Модальное окно добавления КПИ -->
-    <div class="modal fade" id="assessmentModal" tabindex="-1" aria-labelledby="assessmentModalLabel"
-        aria-hidden="true">
+    <!-- Модальное окно добавления тестов -->
+    <div class="modal fade" id="testItemModal" tabindex="-1" aria-labelledby="testItemModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="assessmentForm">
-                    <input type="hidden" name="assessment" id="assessment_id">
+                <form id="testItemForm">
+                    <input type="hidden" name="test-item" id="test-item-id">
                     <div class="modal-header">
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -94,23 +92,23 @@
     </div>
 
     <!-- Модальное окно удаления соревнования -->
-    <div class="modal fade" id="deleteAssessmentModal" tabindex="-1" aria-labelledby="deleteAssessmentModalLabel"
+    <div class="modal fade" id="deleteTestItemModal" tabindex="-1" aria-labelledby="deleteTestItemModalLabel"
         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="deleteAssessmentModalLabel">Удалить КПИ?</h5>
+                    <h5 class="modal-title" id="deleteTestItemModalLabel">Удалить тестовое испытание?</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    Вы уверены, что хотите удалить КПИ?
+                    Вы уверены, что хотите удалить тестовое испытание?
                     <div class="alert alert-warning mt-2">
-                        Вся информация о КПИ будет удалена!
+                        Вся информация о тестовом испытание будет удалена!
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <form id="deleteAssessmentForm" method="post" style="display: inline;">
+                    <form id="deleteTestItemForm" method="post" style="display: inline;">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger">Удалить</button>
                     </form>
@@ -123,41 +121,43 @@
 {% block script %}
 <script>
     // При нажатие кнопки добавить работы модалки переключится на добавление
-    document.querySelector('.add-assessment').addEventListener('click', function () {
+    document.querySelector('.add-test-item').addEventListener('click', function () {
 
-        const form = document.getElementById('assessmentForm')
+        const form = document.getElementById('testItemForm')
 
         form.reset()
         form.dataset.mode = "add"
         form.dataset.id = ""
     })
     // открытие модалки удаления
-    document.querySelectorAll('.delete-assessment-btn').forEach(function (btn) {
+    document.querySelectorAll('.delete-test-item-btn').forEach(function (btn) {
 
         btn.addEventListener('click', function () {
 
-            const assessmentId = this.id
+            const testItemId = this.id
 
-            document.getElementById('deleteAssessmentForm').dataset.id = assessmentId
+            document.getElementById('deleteTestItemForm').dataset.id = testItemId
 
         })
 
     })
     // Выполнение функции редактироваия
-    document.querySelectorAll('.edit-assessment').forEach(function (btn) {
+    document.querySelectorAll('.edit-test-item').forEach(function (btn) {
 
         btn.addEventListener('click', function () {
 
             const id = this.dataset.id
 
-            fetch('/administrator/get_assessment/' + id + '/')
+            fetch('/administrator/get_test_item/' + id + '/')
                 .then(res => res.json())
                 .then(data => {
                     console.log(data);
 
-                    document.getElementById('assessment_id').value = data.id
+                    document.getElementById('test-item-id').value = data.id
                     document.querySelector('[name="name"]').value = data.name
-                    document.querySelector('[name="coach"]').value = data.coach
+                    document.querySelector('[name="stage"]').value = data.stage
+                    document.querySelector('[name="max_cor_male"]').value = data.max_cor_male
+                    document.querySelector('[name="max_cor_female"]').value = data.max_cor_female
 
                     fetch(`/administrator/fetch_coach_groups/${data.coach}`)
                         .then(response => response.json())
@@ -175,15 +175,15 @@
                             // 👉 ВАЖНО: ставим значение после загрузки
                             groupSelect.value = data.group
                         })
-                    document.querySelector('[name="group"]').value = data.group
-                    document.querySelector('[name="sport_type"]').value = data.sport_type
-                    document.querySelector('[name="date_start"]').value = formatDate(data.date_start)
-                    document.querySelector('[name="date_end"]').value = formatDate(data.date_end)
+                    document.querySelector('[name="name"]').value = data.group
+                    document.querySelector('[name="stage"]').value = data.stage
+                    document.querySelector('[name="max_cor_male"]').value = data.max_cor_male
+                    document.querySelector('[name="max_cor_female"]').value = data.max_cor_female
 
 
                     // Указываем, что форма теперь в режиме редактирования
-                    document.getElementById('assessmentForm').dataset.mode = "edit"
-                    document.getElementById('assessmentForm').dataset.id = id
+                    document.getElementById('testItemForm').dataset.mode = "edit"
+                    document.getElementById('testItemForm').dataset.id = id
 
                 })
 
@@ -191,18 +191,18 @@
 
     })
     // Сохранение добавленных соревнований и редактирование соревнований с последующим охранением
-    document.getElementById('assessmentForm').onsubmit = function (e) {
+    document.getElementById('testItemForm').onsubmit = function (e) {
 
         e.preventDefault()
 
         const form = this
         const formData = new FormData(form)
 
-        let url = '/administrator/add_assessment/'
+        let url = '/administrator/add_test_items/'
         let methodType = "add"
 
         if (form.dataset.mode === "edit") {
-            url = '/administrator/edit_assessment/' + form.dataset.id + '/'
+            url = '/administrator/edit_test_item/' + form.dataset.id + '/'
             methodType = "edit"
         }
 
@@ -218,7 +218,7 @@
 
                 if (data.success) {
 
-                    const p = data.assessment
+                    const p = data.test
                     const buttons = `<td class="text-end">
                     <div class="dropdown">
                         <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
@@ -226,15 +226,15 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
-                                <a href="#" class="dropdown-item edit-assessment" data-id="${p.id}""
-                                    data-bs-toggle="modal" data-bs-target="#assessmentModal">
+                                <a href="#" class="dropdown-item edit-test-item" data-id="${p.id}""
+                                    data-bs-toggle="modal" data-bs-target="#testItemModal">
                                     <i class="bi bi-pencil"></i>
                                     Редактировать
                                 </a>
                             </li>
                             <li>
-                                <button type="button" class="dropdown-item delete-assessment-btn" data-bs-toggle="modal"
-                                    data-bs-target="#deleteAssessmentModal" id="${p.id}">
+                                <button type="button" class="dropdown-item delete-test-item-btn" data-bs-toggle="modal"
+                                    data-bs-target="#deleteTestItemModal" id="${p.id}">
                                     <i class="bi bi-trash"></i>
                                     Удалить
                                 </button>
@@ -246,36 +246,32 @@
                     if (methodType === "add") {
 
                         const row = `
-                    <tr id="assessment-${p.id}">
+                    <tr id="test_item-${p.id}">
                         <td>${p.id}</td>
                         <td>${p.name}</td>
-                        <td>${p.coach}</td>
-                        <td>${p.group}</td>
-                        <td>${p.sport_type}</td>
-                        <td>${formatDateTime(p.date_start)} - <br>
-                            ${formatDateTime(p.date_end)}</td>
+                        <td>${p.stage}</td>
+                        <td>${p.max_cor_male}</td>
+                        <td>${p.max_cor_female}</td>
                             ${buttons}
                     </tr>
                     `
 
-                        document.getElementById("assessmentTableBody")
+                        document.getElementById("testItemTableBody")
                             .insertAdjacentHTML("beforeend", row)
 
                     } else {
 
                         // Обновляем существующую строку
-                        const row = document.getElementById("assessment-" + p.id)
+                        const row = document.getElementById("test_item-" + p.id)
 
                         row.children[1].textContent = p.name
-                        row.children[2].textContent = p.coach
-                        row.children[3].textContent = p.group
-                        row.children[4].textContent = p.sport_type
-                        row.children[5].innerHTML = ` ${formatDateTime(p.date_start)} - <br>
-                            ${formatDateTime(p.date_end)}`
+                        row.children[2].textContent = p.stage
+                        row.children[3].textContent = p.max_cor_male
+                        row.children[4].textContent = p.max_cor_female
                     }
 
                     bootstrap.Modal.getInstance(
-                        document.getElementById('assessmentModal')
+                        document.getElementById('testItemModal')
                     ).hide()
 
                     form.reset()
@@ -290,14 +286,14 @@
     }
     //  удаление соревнования
     let id;
-    let assessmentDeleteForm = document.querySelector('#deleteAssessmentForm')
-    assessmentDeleteForm.onsubmit = function (event) {
+    let testItemDeleteForm = document.querySelector('#deleteTestItemForm')
+    testItemDeleteForm.onsubmit = function (event) {
 
         event.preventDefault()
 
         const id = this.dataset.id
 
-        fetch('/administrator/delete_assessment/' + id + '/', {
+        fetch('/administrator/delete_test-item/' + id + '/', {
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
@@ -305,71 +301,32 @@
         })
             .then(response => {
                 if (response.ok) {
-                    document.getElementById('assessment-' + id).remove()
+                    document.getElementById('test_item-' + id).remove()
                     bootstrap.Modal.getInstance(
-                        document.getElementById('deleteAssessmentModal')
+                        document.getElementById('deleteTestItemModal')
                     ).hide()
                 }
             })
     }
-    // Каскадный показ групп выбранного тренера
-    let coachSelect = document.querySelector('#id_coach')
-    let groupSelect = document.querySelector('#id_group')
-
-    coachSelect.addEventListener('change', function () {
-        let coachId = coachSelect.value;
-
-        if (!coachId) return
-
-        fetch(`/administrator/fetch_coach_groups/${coachId}`)
-            .then(response => response.json())
-            .then(data => {
-                groupSelect.innerHTML = '<option value="" selected disabled>Не выбрано</option>'
-
-                data.groups.forEach((item) => {
-                    let option = document.createElement('option')
-                    option.value = item.id
-                    option.textContent = item.group_name
-                    groupSelect.append(option)
-                })
-            })
-    })
-
     function getCookie(name) {
         let cookieValue = null;
+
         if (document.cookie && document.cookie !== '') {
             const cookies = document.cookie.split(';');
-            for (let cookie of cookies) {
-                cookie = cookie.trim();
-                if (cookie.startsWith(name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(
+                        cookie.substring(name.length + 1)
+                    );
                     break;
                 }
             }
         }
 
-
         return cookieValue;
-    }
-    function formatDateTime(datetime) {
-        const date = new Date(datetime);
-
-        const formatted = date.toLocaleString('ru-RU', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-        });
-        return formatted
-    }
-
-    function formatDate(dateString) {
-        const date = new Date(dateString)
-
-        const pad = (n) => n.toString().padStart(2, '0')
-
-        return date.getFullYear() + '-' +
-            pad(date.getMonth() + 1) + '-' +
-            pad(date.getDate())
     }
 </script>
 {% endblock %}
