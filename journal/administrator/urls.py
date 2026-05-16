@@ -52,4 +52,6 @@ urlpatterns =[
     path('test_items/', test_items, name='test_items'),
     path('add_test_items/', add_test_items, name='add_test_items'),
     path('get_test_items/<int:pk>/', get_test_items, name='get_test_items'),
+    path('edit_test_items/<int:pk>/', edit_test_items, name='edit_test_items'),
+    path('delete_test_items/<int:pk>/', delete_test_items, name='delete_test_items'),
 ]

@@ -37,14 +37,41 @@ def add_test_items(request):
     return JsonResponse({"success": False, "errors": form.errors}, status=400)
 
 def get_test_items(request, pk):
-    test = get_object_or_404(Assessment, pk=pk)
+    test = get_object_or_404(TestItem, pk=pk)
 
     return JsonResponse(
         {
             "id": test.id,
             "name": test.name,
-            "stage":test.stage,
+            "stage": test.stage,
             "max_cor_male":test.max_cor_male,
             "max_cor_female":test.max_cor_female
         }
     )
+
+def edit_test_items(request, pk):
+    test_item_data = TestItem.objects.get(pk=pk)
+    form = TestItemForm(request.POST or None, instance=test_item_data)
+
+    if request.method == "POST" and form.is_valid():
+        test = form.save()
+        return JsonResponse(
+            {
+                "success": True,
+                "test": {
+                    "id": test.id,
+                    "name": test.name,
+                    "stage": test.stage,
+                    "max_cor_male":test.max_cor_male,
+                    "max_cor_female":test.max_cor_female
+                },
+            }
+        )
+    return JsonResponse({"success": False, "errors": form.errors}, status=400)
+
+def delete_test_items(request, pk):
+    test_item_data = TestItem.objects.get(pk=pk)
+    if request.method == 'POST':
+        test_item_data.delete()
+
+        return HttpResponse()

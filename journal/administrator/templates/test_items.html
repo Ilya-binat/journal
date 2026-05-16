@@ -84,14 +84,14 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                        <button type="submit" class="btn btn-success save-hall">Сохранить</button>
+                        <button type="submit" class="btn btn-success save-test-item">Сохранить</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Модальное окно удаления соревнования -->
+    <!-- Модальное окно удаления тестов -->
     <div class="modal fade" id="deleteTestItemModal" tabindex="-1" aria-labelledby="deleteTestItemModalLabel"
         aria-hidden="true">
         <div class="modal-dialog">
@@ -142,54 +142,60 @@
 
     })
     // Выполнение функции редактироваия
-    document.querySelectorAll('.edit-test-item').forEach(function (btn) {
+    document.addEventListener('click', function (e) {
 
-        btn.addEventListener('click', function () {
+        const btn = e.target.closest('.edit-test-item')
 
-            const id = this.dataset.id
+        if (!btn) return
 
-            fetch('/administrator/get_test_item/' + id + '/')
-                .then(res => res.json())
-                .then(data => {
-                    console.log(data);
+        const id = btn.dataset.id
 
-                    document.getElementById('test-item-id').value = data.id
-                    document.querySelector('[name="name"]').value = data.name
-                    document.querySelector('[name="stage"]').value = data.stage
-                    document.querySelector('[name="max_cor_male"]').value = data.max_cor_male
-                    document.querySelector('[name="max_cor_female"]').value = data.max_cor_female
+        fetch('/administrator/get_test_items/' + id + '/')
+            .then(res => res.json())
+            .then(data => {
 
-                    fetch(`/administrator/fetch_coach_groups/${data.coach}`)
-                        .then(response => response.json())
-                        .then(groupsData => {
+                document.getElementById('test-item-id').value = data.id
+                document.getElementById('id_name').value = data.name
+                document.getElementById('id_stage').value = data.stage
+                document.getElementById('id_max_cor_male').value = data.max_cor_male
+                document.getElementById('id_max_cor_female').value = data.max_cor_female
 
-                            groupSelect.innerHTML = '<option value="" disabled>Не выбрано</option>'
-
-                            groupsData.groups.forEach((item) => {
-                                let option = document.createElement('option')
-                                option.value = item.id
-                                option.textContent = item.group_name
-                                groupSelect.append(option)
-                            })
-
-                            // 👉 ВАЖНО: ставим значение после загрузки
-                            groupSelect.value = data.group
-                        })
-                    document.querySelector('[name="name"]').value = data.group
-                    document.querySelector('[name="stage"]').value = data.stage
-                    document.querySelector('[name="max_cor_male"]').value = data.max_cor_male
-                    document.querySelector('[name="max_cor_female"]').value = data.max_cor_female
-
-
-                    // Указываем, что форма теперь в режиме редактирования
-                    document.getElementById('testItemForm').dataset.mode = "edit"
-                    document.getElementById('testItemForm').dataset.id = id
-
-                })
-
-        })
-
+                document.getElementById('testItemForm').dataset.mode = "edit"
+                document.getElementById('testItemForm').dataset.id = id
+            })
     })
+
+    // fetch(`/administrator/fetch_coach_groups/${data.coach}`)
+    //     .then(response => response.json())
+    //     .then(groupsData => {
+
+    //         groupSelect.innerHTML = '<option value="" disabled>Не выбрано</option>'
+
+    //         groupsData.groups.forEach((item) => {
+    //             let option = document.createElement('option')
+    //             option.value = item.id
+    //             option.textContent = item.group_name
+    //             groupSelect.append(option)
+    //         })
+
+    //         // 👉 ВАЖНО: ставим значение после загрузки
+    //         groupSelect.value = data.group
+    //     })
+    // document.querySelector('[name="name"]').value = data.name
+    // document.querySelector('[name="stage"]').value = data.stage
+    // document.querySelector('[name="max_cor_male"]').value = data.max_cor_male
+    // document.querySelector('[name="max_cor_female"]').value = data.max_cor_female
+
+
+    // Указываем, что форма теперь в режиме редактирования
+    // document.getElementById('testItemForm').dataset.mode = "edit"
+    // document.getElementById('testItemForm').dataset.id = id
+
+    //             })
+
+    //     })
+
+    // })
     // Сохранение добавленных соревнований и редактирование соревнований с последующим охранением
     document.getElementById('testItemForm').onsubmit = function (e) {
 
@@ -202,7 +208,7 @@
         let methodType = "add"
 
         if (form.dataset.mode === "edit") {
-            url = '/administrator/edit_test_item/' + form.dataset.id + '/'
+            url = '/administrator/edit_test_items/' + form.dataset.id + '/'
             methodType = "edit"
         }
 
@@ -226,7 +232,7 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
-                                <a href="#" class="dropdown-item edit-test-item" data-id="${p.id}""
+                                <a href="#" class="dropdown-item edit-test-item" data-id="${p.id}"
                                     data-bs-toggle="modal" data-bs-target="#testItemModal">
                                     <i class="bi bi-pencil"></i>
                                     Редактировать
@@ -284,7 +290,7 @@
 
             })
     }
-    //  удаление соревнования
+    //  удаление испытания
     let id;
     let testItemDeleteForm = document.querySelector('#deleteTestItemForm')
     testItemDeleteForm.onsubmit = function (event) {
@@ -293,7 +299,7 @@
 
         const id = this.dataset.id
 
-        fetch('/administrator/delete_test-item/' + id + '/', {
+        fetch('/administrator/delete_test_items/' + id + '/', {
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')

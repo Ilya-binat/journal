@@ -2,8 +2,9 @@ from datetime import date, timedelta, datetime
 from django.utils.formats import date_format
 from django.db.models import F, Sum, ExpressionWrapper, DurationField
 from administrator.models import Slot
+from django.utils import timezone
 
-
+# Вывод дней недели
 def get_week_days():
     today = date.today()
     monday = today - timedelta(days=today.weekday())
@@ -37,6 +38,9 @@ def count_training_time(coach):
             )
         )
     )["total"]
+
+    if not total_duration:
+        return '0 часов 0 минут'
     total_seconds = total_duration.total_seconds()
 
     hours = int(total_seconds // 3600)
@@ -49,11 +53,12 @@ def count_training_time(coach):
 #  Функция создания сетки тренировок
 
 def build_schedule_slots(trainings):
+    # Сортируем тренировки в порядке времени
     ordered_trainings = list(trainings.order_by('start_time'))
     
     if not ordered_trainings:
         return []
-    
+    # [10:00-11:30, 12:30-14:00, 14:00-15:00]
     slots = []
     cursor = time_to_mins(ordered_trainings[0].start_time)
 
@@ -73,7 +78,7 @@ def build_schedule_slots(trainings):
         slots.append({
             'type':'busy',
             'training':training,
-            'duration_label':format_duration(busy_time)
+            'duration_label':format_duration(busy_time),
         })
         cursor = training_end
     return slots        
@@ -93,5 +98,42 @@ def format_duration(m):
     hours,minutes = divmod(m,60)
 
     return f'{hours} ч.{minutes} мин.'
+
+# Функция для подсчета нагрузки за недклю о дням
+
+def get_week_training(request):
+    today = timezone.now().date()
+    start_week = today - timedelta(days=today.weekday())
+    end_week = start_week + timedelta(days=6)
+    slots = Slot.objects.filter(
+        date__range = [start_week, end_week],
+        coach = request.user
+    )
+    week_days = [
+        'Понедельник',
+        'Вторник',
+        'Среда',
+        'Четверг',
+        'Пятница',
+        'Суббота',
+        'Воскресенье',
+    ]
+    result = {
+         week_days[i]:0 for i in range(7)
+    }
+
+    for slot in slots:
+        day_index = slot.date.weekday()
+        day_name = week_days[day_index]
+
+        result[day_name]+=1
+
+    for day,count in result.items():
+        result [day] = {
+            'count':count,
+            'percent': round(count/6*100)
+        }
+
+    return result
     
 

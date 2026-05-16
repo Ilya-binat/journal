@@ -26,8 +26,6 @@
             </div>
         </div>
         {% endfor %}
-
-
     </div>
 
     <button class="btn btn-outline-secondary btn-sm rounded-circle" style="width:36px;height:36px;">
@@ -45,7 +43,7 @@
                     <i class="bi bi-calendar-check fs-5 text-primary"></i>
                 </div>
                 <div>
-                    <div class="fs-2 fw-bold lh-1">{{slots_count }}</div>
+                    <div class="fs-2 fw-bold lh-1">{{slots_count}}</div>
                     <div class="text-muted small">Тренировок сегодня</div>
                 </div>
             </div>
@@ -65,7 +63,6 @@
             </div>
         </div>
     </div>
-
 </div>
 
 <!-- MAIN CONTENT ROW -->
@@ -82,22 +79,48 @@
                 </div>
 
                 <!-- Timeline -->
-                <div class="position-relative" style="padding-left: 70px;">
+                <div class="position-relative">
                     {% for training in trainings %}
                     {% with tr=training.training %}
                     {% if training.type == 'busy' %}
-                    <!-- 07:00 - Утренняя растяжка -->
+
+                    <!-- Busy slot -->
                     <div class="d-flex mb-3">
-                        <div class="position-absolute start-0 text-muted small fw-semibold" style="width:60px;">
-                            {{ tr.start_time | time:'H:i' }}
-                        </div>
                         <div class="d-flex align-items-start gap-2 w-100">
-                            <div class="d-flex flex-column align-items-center me-2 mt-1">
-                                <div class="rounded-circle bg-success" style="width:10px;height:10px;"></div>
-                                <div class="bg-secondary" style="width:2px;height:50px;opacity:0.2;"></div>
+
+                            <!-- Time column + vertical line with two green dots -->
+                            <div class="d-flex me-2" style="flex-direction: row; align-items: stretch;">
+
+                                <!-- Time labels: start top, end bottom -->
+                                <div class="d-flex flex-column justify-content-between me-2"
+                                     style="min-width: 48px; text-align: right;">
+                                    <span class="text-muted fw-semibold" style="font-size: 14px; line-height: 1;">
+                                        {{ tr.start_time|time:'H:i' }}
+                                    </span>
+                                    <span class="text-muted fw-semibold" style="font-size: 14px; line-height: 1;">
+                                        {{ tr.end_time|time:'H:i' }}
+                                    </span>
+                                </div>
+
+                                <!-- Vertical line with two green dots -->
+                                <div class="d-flex flex-column align-items-center"
+                                     style="width: 12px; min-height: 64px;">
+                                    <!-- Top green dot -->
+                                    <div class="rounded-circle bg-success flex-shrink-0"
+                                         style="width:10px; height:10px;"></div>
+                                    <!-- Connecting line -->
+                                    <div class="flex-grow-1 bg-success"
+                                         style="width: 2px; opacity: 0.3; min-height: 44px;"></div>
+                                    <!-- Bottom green dot -->
+                                    <div class="rounded-circle bg-success flex-shrink-0"
+                                         style="width:10px; height:10px;"></div>
+                                </div>
+
                             </div>
+
+                            <!-- Card content -->
                             <div class="card border-0 w-100"
-                                 style="background:#F8FFFE;border-left:3px solid #22C55E !important;border-radius:10px;">
+                                 style="background:#F8FFFE; border-left:3px solid #22C55E !important; border-radius:10px;">
                                 <div class="card-body py-2 px-3">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div class="fw-semibold">{{ tr.group.group_name }}</div>
@@ -116,106 +139,59 @@
                                         <span class="text-danger">
                                             <i class="bi bi-x-circle-fill me-1"></i>Отменено</span>
                                         {% endif %}
-
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                     {% else %}
 
-                    <!-- 11:30 - Free -->
+                    <!-- Free slot -->
                     <div class="d-flex mb-3">
-                        <div class="position-absolute start-0 text-muted small fw-semibold" style="width:60px;">
-                            {{ training.start_time|time:'H:i' }}
-                        </div>
                         <div class="d-flex align-items-start gap-2 w-100">
-                            <div class="d-flex flex-column align-items-center me-2 mt-1">
-                                <div class="rounded-circle border"
-                                     style="width:10px;height:10px;border-color:#dee2e6!important;"></div>
-                                <div class="bg-secondary" style="width:2px;height:30px;opacity:0.2;"></div>
+
+                            <div class="d-flex me-2" style="flex-direction: row; align-items: stretch;">
+                                <!-- Time labels -->
+                                <div class="d-flex flex-column justify-content-between me-2"
+                                     style="min-width: 48px; text-align: right;">
+                                    <span class="text-muted fw-semibold" style="font-size: 14px; line-height: 1;">
+                                        {{ training.start_time|time:'H:i' }}
+                                    </span>
+                                    <span class="text-muted fw-semibold" style="font-size: 14px; line-height: 1;">
+                                        {{ training.end_time|time:'H:i' }}
+                                    </span>
+                                </div>
+
+                                <!-- Vertical line with empty dots -->
+                                <div class="d-flex flex-column align-items-center"
+                                     style="width: 12px; min-height: 40px;">
+                                    <div class="rounded-circle border flex-shrink-0"
+                                         style="width:10px; height:10px; border-color:#dee2e6 !important;"></div>
+                                    <div class="flex-grow-1 bg-secondary"
+                                         style="width: 2px; opacity: 0.2; min-height: 20px;"></div>
+                                    <div class="rounded-circle border flex-shrink-0"
+                                         style="width:10px; height:10px; border-color:#dee2e6 !important;"></div>
+                                </div>
                             </div>
-                            <div class="text-muted small py-1">
+
+                            <div class="text-muted small py-1 d-flex align-items-center" style="min-height: 40px;">
                                 <i class="bi bi-plus-circle me-1 text-primary"></i> Свободное время
                             </div>
                         </div>
                     </div>
+
                     {% endif %}
                     {% endwith %}
-
                     {% endfor %}
                 </div>
+
             </div>
         </div>
     </div>
 
     <!-- RIGHT: SIDEBAR PANELS -->
     <div class="col-lg-4">
-
-        <!-- CLIENTS TODAY -->
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="fw-semibold">Клиенты сегодня</span>
-                    <a href="#" class="text-primary small text-decoration-none">Все →</a>
-                </div>
-
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
-                         style="width:40px;height:40px;background:#EF4444;flex-shrink:0;">ЕК
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="fw-semibold small">Екатерина К.</div>
-                        <div class="text-muted" style="font-size:12px;">09:00 · Силовая</div>
-                    </div>
-                    <i class="bi bi-circle-fill text-success" style="font-size:8px;"></i>
-                </div>
-
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
-                         style="width:40px;height:40px;background:#3B82F6;flex-shrink:0;">ИВ
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="fw-semibold small">Иван В.</div>
-                        <div class="text-muted" style="font-size:12px;">10:30 · Кардио</div>
-                    </div>
-                    <i class="bi bi-circle-fill text-success" style="font-size:8px;"></i>
-                </div>
-
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
-                         style="width:40px;height:40px;background:#8B5CF6;flex-shrink:0;">МС
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="fw-semibold small">Мария С.</div>
-                        <div class="text-muted" style="font-size:12px;">12:00 · Йога</div>
-                    </div>
-                    <i class="bi bi-circle-fill" style="font-size:8px;color:#3B82F6;"></i>
-                </div>
-
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
-                         style="width:40px;height:40px;background:#F59E0B;flex-shrink:0;">АП
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="fw-semibold small">Андрей П.</div>
-                        <div class="text-muted" style="font-size:12px;">14:00 · HIIT</div>
-                    </div>
-                    <i class="bi bi-circle-fill text-success" style="font-size:8px;"></i>
-                </div>
-
-                <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
-                         style="width:40px;height:40px;background:#22C55E;flex-shrink:0;">ОЛ
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="fw-semibold small">Ольга Л.</div>
-                        <div class="text-muted" style="font-size:12px;">08:00 · Растяжка</div>
-                    </div>
-                    <i class="bi bi-circle-fill text-success" style="font-size:8px;"></i>
-                </div>
-            </div>
-        </div>
 
         <!-- WEEK OCCUPANCY -->
         <div class="card border-0 shadow-sm">
@@ -224,56 +200,17 @@
                     <i class="bi bi-bar-chart-fill text-primary"></i>
                     <span class="fw-semibold">Занятость недели</span>
                 </div>
-
+                {% for w,q in week_trainings.items %}
                 <div class="mb-3">
                     <div class="d-flex justify-content-between small mb-1">
-                        <span>Понедельник</span>
-                        <span class="text-muted">5/6</span>
+                        <span>{{ w }} ({{q.percent}}%)</span>
+                        <span class="text-muted">{{ q.count }}/6</span>
                     </div>
                     <div class="progress" style="height:8px;border-radius:4px;">
-                        <div class="progress-bar bg-primary" style="width:83%;"></div>
+                        <div class="progress-bar bg-primary" style="width:{{q.percent}}%;"></div>
                     </div>
                 </div>
-
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between small mb-1">
-                        <span>Вторник</span>
-                        <span class="text-muted">4/6</span>
-                    </div>
-                    <div class="progress" style="height:8px;border-radius:4px;">
-                        <div class="progress-bar" style="width:67%;background:#8B5CF6;"></div>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between small mb-1">
-                        <span>Среда</span>
-                        <span class="text-muted">6/6</span>
-                    </div>
-                    <div class="progress" style="height:8px;border-radius:4px;">
-                        <div class="progress-bar bg-success" style="width:100%;"></div>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between small mb-1">
-                        <span>Четверг</span>
-                        <span class="text-muted">3/6</span>
-                    </div>
-                    <div class="progress" style="height:8px;border-radius:4px;">
-                        <div class="progress-bar bg-warning" style="width:50%;"></div>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="d-flex justify-content-between small mb-1">
-                        <span>Пятница</span>
-                        <span class="text-muted">2/6</span>
-                    </div>
-                    <div class="progress" style="height:8px;border-radius:4px;">
-                        <div class="progress-bar bg-danger" style="width:33%;"></div>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
         </div>
 
