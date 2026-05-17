@@ -46,7 +46,7 @@ class Slot(models.Model):
     status = models.CharField(max_length=20, choices=SLOT_STATUS, default="planned")
     schedule = models.ForeignKey(
         "administrator.Schedule",
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
         related_name="slots",

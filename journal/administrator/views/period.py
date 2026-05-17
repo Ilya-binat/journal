@@ -2,7 +2,9 @@ from django.shortcuts import render, get_object_or_404
 from ..forms import *
 from django.http import HttpResponse, JsonResponse
 from ..models import *
+from users.decorators import role_required
 
+@role_required('Администратор')
 def periods(request):
     form = PeriodForm()
     periods = SchedulePeriod.objects.order_by(
@@ -10,7 +12,7 @@ def periods(request):
     )  # по дате начала по возрастанию
     return render(request, "periods.html", {"form": form, "periods": periods})
 
-
+@role_required('Администратор')
 def add_period(request):
     form = PeriodForm(request.POST or None)
 
@@ -30,7 +32,7 @@ def add_period(request):
 
     return JsonResponse({"success": False, "errors": form.errors}, status=400)
 
-
+@role_required('Администратор')
 def delete_period(request, pk):
     data_period = SchedulePeriod.objects.get(pk=pk)
     if request.method == "POST":
@@ -39,6 +41,7 @@ def delete_period(request, pk):
 
 
 # Берем период который будет редактироваться
+@role_required('Администратор')
 def get_period(request, pk):
     period = get_object_or_404(SchedulePeriod, pk=pk)
 
@@ -51,7 +54,7 @@ def get_period(request, pk):
         }
     )
 
-
+@role_required('Администратор')
 def edit_period(request, pk):
     period_data = SchedulePeriod.objects.get(pk=pk)
     form = PeriodForm(request.POST or None, instance=period_data)

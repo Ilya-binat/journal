@@ -2,15 +2,17 @@ from ..models import *
 from django.shortcuts import render, redirect, get_object_or_404
 from ..forms import *
 from django.http import HttpResponse, JsonResponse
+from users.decorators import role_required
 
 
+@role_required('Администратор')
 def assessments(request):
     form = AssessmentForm()
     data = Assessment.objects.all()
 
     return render(request, "assessments.html", {"assessments": data, "form": form})
 
-
+@role_required('Администратор')
 def add_assessment(request):
     form = AssessmentForm(request.POST or None)
 
@@ -35,7 +37,7 @@ def add_assessment(request):
 
     return JsonResponse({"success": False, "errors": form.errors}, status=400)
 
-
+@role_required('Администратор')
 def get_assessment(request, pk):
     assessment = get_object_or_404(Assessment, pk=pk)
 
@@ -53,6 +55,7 @@ def get_assessment(request, pk):
         }
     )
 
+@role_required('Администратор')
 def edit_assessment(request, pk):
     assessment_data = Assessment.objects.get(pk=pk)
     form = AssessmentForm(request.POST or None, instance=assessment_data)
@@ -75,6 +78,7 @@ def edit_assessment(request, pk):
         )
     return JsonResponse({"success": False, "errors": form.errors}, status=400)
 
+@role_required('Администратор')
 def delete_assessment(request, pk):
     assessment_data = Assessment.objects.get(pk=pk)
     if request.method == 'POST':

@@ -4,8 +4,9 @@ from administrator.models import *
 from datetime import datetime, date
 import json
 from django.utils import timezone
+from users.decorators import role_required
 
-
+@role_required('Тренер')
 def teacher_schedule(request):
     week_days = get_week_days()
     today = timezone.localdate()

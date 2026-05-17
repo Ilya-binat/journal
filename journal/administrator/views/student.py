@@ -3,7 +3,9 @@ from ..forms import *
 from django.http import JsonResponse
 import json
 from ..models import *
+from users.decorators import role_required
 
+@role_required('Администратор')
 def students(request):
     student_list = CustomUser.objects.filter(role="Спортсмен")
 
@@ -11,6 +13,7 @@ def students(request):
 
 
 # Отвечает за открытие модального окна и вывода информации и показ группы к которой студент прикреплен
+@role_required('Администратор')
 def student(request, pk):
     student_data = get_object_or_404(CustomUser, pk=pk)
 
@@ -32,7 +35,7 @@ def student(request, pk):
         }
     )
 
-
+@role_required('Администратор')
 def save_student_group(request, pk):
 
     student = get_object_or_404(CustomUser, pk=pk)
@@ -50,7 +53,7 @@ def save_student_group(request, pk):
 
     return JsonResponse({"status": "ok"})
 
-
+@role_required('Администратор')
 def delete_student_group(request, pk):
 
     student_group = get_object_or_404(StudentGroup, pk=pk)
@@ -60,7 +63,7 @@ def delete_student_group(request, pk):
 
     return JsonResponse({"status": "ok"})
 
-
+@role_required('Администратор')
 def get_students_list(request, pk):
     group = Group.objects.get(pk=pk)
 

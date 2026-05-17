@@ -2,17 +2,18 @@ from ..models import *
 from django.shortcuts import render, redirect, get_object_or_404
 from ..forms import *
 from django.http import HttpResponse, JsonResponse
+from users.decorators import role_required
 
 # Функция вывода соревнований
 
-
+@role_required('Администратор')
 def competitions(request):
     form = CompetitionForm()
     data = Competition.objects.all()
 
     return render(request, "competitions.html", {"competitions": data, "form": form})
 
-
+@role_required('Администратор')
 def add_competition(request):
     form = CompetitionForm(request.POST or None)
 
@@ -34,7 +35,7 @@ def add_competition(request):
 
     return JsonResponse({"success": False, "errors": form.errors}, status=400)
 
-
+@role_required('Администратор')
 def edit_competition(request, pk):
     competition_data = Competition.objects.get(pk=pk)
     form = CompetitionForm(request.POST or None, instance=competition_data)
@@ -56,7 +57,7 @@ def edit_competition(request, pk):
         )
     return JsonResponse({"success": False, "errors": form.errors}, status=400)
 
-
+@role_required('Администратор')
 def get_competition(request, pk):
     competition = get_object_or_404(Competition, pk=pk)
 
@@ -71,7 +72,7 @@ def get_competition(request, pk):
         }
     )
 
-
+@role_required('Администратор')
 def delete_competition(request, pk):
    
     competition_data = Competition.objects.get(pk=pk)

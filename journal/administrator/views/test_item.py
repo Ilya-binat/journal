@@ -2,7 +2,9 @@ from ..models import *
 from django.shortcuts import render, redirect, get_object_or_404
 from ..forms import *
 from django.http import HttpResponse, JsonResponse
+from users.decorators import role_required
 
+@role_required('Администратор')
 def test_items(request):
     data = TestItem.objects.all()
     form = TestItemForm()
@@ -16,6 +18,7 @@ def test_items(request):
         }
     )
 
+@role_required('Администратор')
 def add_test_items(request):
     form = TestItemForm(request.POST or None)
 
@@ -36,6 +39,7 @@ def add_test_items(request):
         )
     return JsonResponse({"success": False, "errors": form.errors}, status=400)
 
+@role_required('Администратор')
 def get_test_items(request, pk):
     test = get_object_or_404(TestItem, pk=pk)
 
@@ -49,6 +53,7 @@ def get_test_items(request, pk):
         }
     )
 
+@role_required('Администратор')
 def edit_test_items(request, pk):
     test_item_data = TestItem.objects.get(pk=pk)
     form = TestItemForm(request.POST or None, instance=test_item_data)
@@ -69,6 +74,7 @@ def edit_test_items(request, pk):
         )
     return JsonResponse({"success": False, "errors": form.errors}, status=400)
 
+@role_required('Администратор')
 def delete_test_items(request, pk):
     test_item_data = TestItem.objects.get(pk=pk)
     if request.method == 'POST':

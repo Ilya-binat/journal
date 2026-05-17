@@ -4,7 +4,9 @@ from django.http import JsonResponse
 import json
 from django.db.models import Count
 from ..models import *
+from users.decorators import role_required
 
+@role_required('Администратор')
 def coaches(request):
     coaches = CustomUser.objects.filter(role="Тренер").annotate(
         student_count=Count("coach_groups__group_students")
@@ -12,7 +14,7 @@ def coaches(request):
 
     return render(request, "coaches.html", {"coaches": coaches})
 
-
+@role_required('Администратор')
 def coach(request, pk):
     coach_data = get_object_or_404(CustomUser, pk=pk)
 
@@ -29,7 +31,7 @@ def coach(request, pk):
         }
     )
 
-
+@role_required('Администратор')
 def save_coach_groups(request, pk):
     # Находим трнера
     coach = get_object_or_404(CustomUser, pk=pk)

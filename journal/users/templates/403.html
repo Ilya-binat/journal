@@ -1,0 +1,119 @@
+{% extends 'teacher_base_layout.html' %}
+{% block content %}
+
+<div class="d-flex justify-content-center align-items-center" style="min-height:75vh;">
+    <div class="col-xl-5 col-lg-6 col-md-8">
+
+        <div class="card border-0 shadow-sm overflow-hidden">
+
+            <!-- TOP HEADER -->
+            <div class="p-4 text-white position-relative"
+                 style="background:linear-gradient(135deg,#F59E0B 0%, #D97706 100%);">
+
+                <div class="position-absolute top-0 end-0 opacity-10"
+                     style="font-size:120px; line-height:1; transform:translate(15px,-10px);">
+                    403
+                </div>
+
+                <div class="d-flex align-items-center gap-3 position-relative">
+
+                    <div class="rounded-3 d-flex align-items-center justify-content-center"
+                         style="width:64px;height:64px;background:rgba(255,255,255,.15);backdrop-filter:blur(4px);">
+                        <i class="bi bi-shield-fill-exclamation fs-2"></i>
+                    </div>
+
+                    <div>
+                        <div class="small text-white-50 fw-semibold text-uppercase">
+                            Ошибка доступа
+                        </div>
+
+                        <h2 class="fw-bold mb-0">
+                            403 Forbidden
+                        </h2>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- CONTENT -->
+            <div class="card-body p-4">
+
+                <!-- MESSAGE -->
+                <div class="text-center mb-4">
+
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width:72px;height:72px;background:#FEF3C7;">
+                        <i class="bi bi-slash-circle-fill text-warning fs-1"></i>
+                    </div>
+
+                    <h4 class="fw-bold mb-2">
+                        Доступ запрещён
+                    </h4>
+
+                    <p class="text-muted mb-0">
+                        У вас нет необходимых прав для доступа к этой странице.
+                        Некоторые разделы системы доступны только определённым
+                        ролям пользователей.
+                    </p>
+
+                </div>
+
+                <!-- INFO BLOCK -->
+                <div class="rounded-4 border p-3 mb-4"
+                     style="background:#FFFBEB;">
+
+                    <div class="d-flex align-items-start gap-3">
+
+                        <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                             style="width:42px;height:42px;background:#FDE68A;">
+                            <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                        </div>
+
+                        <div>
+                            <div class="fw-semibold mb-1">
+                                Возможные причины
+                            </div>
+
+                            <ul class="text-muted small mb-0 ps-3">
+                                <li>Недостаточно прав доступа</li>
+                                <li>Попытка открыть закрытый раздел</li>
+                                <li>Ограничение по роли пользователя</li>
+                                <li>Доступ к ресурсу временно запрещён</li>
+                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ACTION BUTTONS -->
+                <div class="d-flex flex-column flex-sm-row gap-2">
+
+                    <a href="{% url 'teacher:schedule' %}"
+                       class="btn btn-warning text-white flex-grow-1 rounded-3 py-2">
+                        <i class="bi bi-house-door-fill me-1"></i>
+                        На главную
+                    </a>
+
+                    <a href="javascript:history.back()"
+                       class="btn btn-outline-secondary flex-grow-1 rounded-3 py-2">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Назад
+                    </a>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="text-center mt-3">
+            <span class="text-muted small">
+                Если доступ должен быть открыт —
+                свяжитесь с администратором системы.
+            </span>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

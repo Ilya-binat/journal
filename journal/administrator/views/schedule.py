@@ -3,16 +3,19 @@ from ..forms import *
 from django.http import JsonResponse
 from ..models import *
 from ..helper import generate_slots
+from users.decorators import role_required
 
 # Расписание
 
 # Функция выводящая список всех расписаний
+@role_required('Администратор')
 def schedule(request):
     schedules = Schedule.objects.all()
 
     return render(request, "schedule.html", {"schedules": schedules})
 
 # Функция открытия страницы для добавления нового расписания 
+@role_required('Администратор')
 def add_schedule(request):
     coaches = CustomUser.objects.filter(role="Тренер")
     all_groups = Group.objects.all()
@@ -35,7 +38,7 @@ def add_schedule(request):
 
 # Функция сохранения созданного расписания
 
-
+@role_required('Администратор')
 def save_schedule(request):
 
     if request.method == "POST":
@@ -66,12 +69,14 @@ def save_schedule(request):
         return redirect('administrator:add_schedule')
 
 # Выбор тренера и после выбора тренера показываем группы 
+@role_required('Администратор')
 def fetch_coach_groups(request, pk):
     groups = Group.objects.filter(coach_id=pk).values()
 
     return JsonResponse({"groups": list(groups)})
 
 # Функция удвленеия расписания
+@role_required('Администратор')
 def delete_schedule(request, pk):
     schedule = Schedule.objects.get(pk=pk)
 
@@ -81,6 +86,7 @@ def delete_schedule(request, pk):
         return JsonResponse({"success": True})
 
 # Функции для редактирования расписания 
+@role_required('Администратор')
 def edit_schedule(request, pk):
     # Вывод старой информации
     schedule_data = Schedule.objects.get(pk=pk)
@@ -120,6 +126,7 @@ def edit_schedule(request, pk):
     )
 
 #  Функция которая сохраняет измения в расписании 
+@role_required('Администратор')
 def update_schedule(request, pk):
     schedule_data = get_object_or_404(Schedule, pk=pk)
 

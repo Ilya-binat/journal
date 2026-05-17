@@ -17,4 +17,6 @@ urlpatterns = [
     path('patch_user/<int:pk>', patch_user, name = 'patch_user'),# patch - не большое обновление данных пользователя
     path('index/', users, name = 'users'),
     path('change_password/<int:pk>', change_password, name = 'change_password'),
+    path('401/', get_401, name = '401'),
+    path('403/', get_403, name = '403'),
 ]

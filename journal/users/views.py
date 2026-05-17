@@ -133,3 +133,9 @@ def change_password(request, pk):
     update_session_auth_hash(request, user)
 
     return HttpResponse('Смена пароля')
+
+def get_401(request):
+    return render(request, '401.html')
+
+def get_403(request):
+    return render(request, '403.html')
