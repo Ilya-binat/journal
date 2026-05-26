@@ -60,7 +60,7 @@ body {
 
 /* Hover */
 .nav-btn.btn:hover {
-  background-color: lightblue (0, 0, 0, 0.06) !important;
+  background-color: rgba(0, 0, 0, 0.06) !important;
   /* темнее, но всё ещё серый */
   color: white !important;
   transform: scale(1.05);
@@ -137,4 +137,9 @@ body {
 
 .sidebar-bottom {
     background: #1e1e1e;
+}
+
+.week-day:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }

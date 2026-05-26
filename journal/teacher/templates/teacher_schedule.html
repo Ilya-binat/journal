@@ -7,30 +7,51 @@
 
 <!-- WEEK NAVIGATION -->
 <div class="d-flex align-items-center gap-2 mb-4">
-    <button class="btn btn-outline-secondary btn-sm rounded-circle" style="width:36px;height:36px;">
+    <a href="?date={{ prev_day|date:'Y-m-d' }}"
+       class="btn btn-outline-secondary btn-sm rounded-circle"
+       style="width:36px;height:36px;">
         <i class="bi bi-chevron-left"></i>
-    </button>
-
+    </a>
     <div class="d-flex gap-2 flex-grow-1 overflow-auto">
         {% for day in week_days %}
-        <div class="text-center px-3 py-2 rounded-3 flex-grow-1 {% if day.is_today %}border border-primary bg-primary text-white{% else %}bg-white border{% endif %}"
-             style="min-width:90px;cursor:pointer;">
-            <div class="small text-uppercase fw-semibold {% if not day.is_today %}text-muted{% endif %}">
-                {{ day.weekday}}
+        <a href="?date={{ day.full_date }}"
+           class="week-day text-center text-decoration-none px-2 py-1 rounded-3 flex-grow-1
+       {% if day.is_today %}
+            border border-primary bg-primary text-white
+       {% else %}
+            bg-white border text-dark
+       {% endif %}"
+           style="min-width:60px;cursor:pointer;display:block;transition:0.2s;">
+            <div class="small text-uppercase fw-semibold
+            {% if not day.is_today %}text-muted{% endif %}">
+                {{ day.weekday }}
             </div>
-            <div class="fs-3 fw-bold lh-1">{{ day.day }}</div>
-            <div class="small {% if not day.is_today %}text-muted{% endif %}">{{ day.month }}</div>
+            <div class="fs-5 fw-bold lh-1">
+                {{ day.day }}
+            </div>
+            <div class="small {% if not day.is_today %}text-muted{% endif %}">
+                {{ day.month }}
+            </div>
             <div class="mt-1">
                 <i class="bi bi-circle-fill"
-                   style="font-size:6px; color:{% if day.is_today %}white{% else %}#3B82F6{% endif %};"></i>
+                   style="font-size:6px;color:{% if day.is_today %}white{% else %}#3B82F6{% endif %};">
+                </i>
             </div>
-        </div>
+        </a>
+        <style>
+            .week-day:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            }
+        </style>
         {% endfor %}
     </div>
 
-    <button class="btn btn-outline-secondary btn-sm rounded-circle" style="width:36px;height:36px;">
+    <a href="?date={{ next_day|date:'Y-m-d' }}"
+       class="btn btn-outline-secondary btn-sm rounded-circle"
+       style="width:36px;height:36px;">
         <i class="bi bi-chevron-right"></i>
-    </button>
+    </a>
 </div>
 
 <!-- STATS CARDS -->
@@ -133,7 +154,7 @@
                                         <span class="text-primary">
                                             <i class="bi bi-calendar-event-fill me-1"></i>В процессе</span>
                                         <a href="{% url 'teacher:mark_attendance' tr.id %}"
-                                           class="btn btn-outline-primary btn-sm">
+                                           class="btn btn-outline-primary btn-sm border-0">
                                             <i class="bi bi-pencil-square me-1"></i>
                                             Отметить
                                         </a>
@@ -146,7 +167,7 @@
                                         <span class="text-primary">
                                             <i class="bi bi-calendar-event-fill me-1"></i>Завершено</span>
                                         <a href="{% url 'teacher:mark_attendance' tr.id %}"
-                                           class="btn btn-outline-primary btn-sm">
+                                           class="btn btn-outline-primary btn-sm border-0">
                                             <i class="bi bi-pencil-square me-1"></i>
                                             Отметить / Исправить
                                         </a>

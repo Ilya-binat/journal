@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from .utils import *
 from administrator.models import *
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import json
 from django.utils import timezone
 from users.decorators import role_required
@@ -9,23 +9,42 @@ from users.decorators import role_required
 
 @role_required('Тренер')
 def teacher_schedule(request):
-    week_days = get_week_days()
-    today = timezone.localdate()
-    slots = Slot.objects.filter(date=today, coach=request.user)
+    # Получаем дату из URL
+    date_str = request.GET.get('date')
+
+    # Если дата есть -> используем её
+    if date_str:
+        current_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    else:
+        current_date = timezone.localdate()
+
+    # Предыдущий и следующий день
+    prev_day = current_date - timedelta(days=1)
+    next_day = current_date + timedelta(days=1)
+
+    # Слоты на выбранный день
+    slots = Slot.objects.filter(
+        date=current_date,
+        coach=request.user
+    )
+
+    week_days = get_week_days(current_date)
     slots_count = slots.count()
     total_duration = count_training_time(request.user) or 0
     trainings = build_schedule_slots(slots) if slots.exists() else []
     week_trainings = get_week_training(request)
 
-    return render(request, 'teacher_schedule.html',
-                  {'week_days': week_days,
-                   'slots': slots,
-                   'slots_count': slots_count,
-                   "current_date": date.today(),
-                   'total_duration': total_duration,
-                   'trainings': trainings,
-                   'week_trainings': week_trainings,
-                   })
+    return render(request, 'teacher_schedule.html', {
+        'week_days': week_days,
+        'slots': slots,
+        'slots_count': slots_count,
+        'current_date': current_date,
+        'prev_day': prev_day,
+        'next_day': next_day,
+        'total_duration': total_duration,
+        'trainings': trainings,
+        'week_trainings': week_trainings,
+    })
 
 
 # Функция отметки студентов
