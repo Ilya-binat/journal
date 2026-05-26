@@ -59,7 +59,7 @@ class Slot(models.Model):
 
     @property
     def current_status(self):
-        now = timezone.now().time()
+        now = timezone.localtime().time()
         if self.start_time <= now <= self.end_time:
             return 'active'
         elif self.start_time > now:

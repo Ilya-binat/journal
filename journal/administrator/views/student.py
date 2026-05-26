@@ -5,6 +5,7 @@ import json
 from ..models import *
 from users.decorators import role_required
 
+
 @role_required('Администратор')
 def students(request):
     student_list = CustomUser.objects.filter(role="Спортсмен")
@@ -17,32 +18,47 @@ def students(request):
 def student(request, pk):
     student_data = get_object_or_404(CustomUser, pk=pk)
 
-    try:
-        student_group = student_data.current_groups
+    student_group = student_data.current_groups.first()
+
+    if student_group:
         current_group = [
-            {"id": student_group.group.id, "group_name": student_group.group.group_name}
+            {
+                "id": student_group.group.id,
+                "group_name": student_group.group.group_name
+            }
         ]
-    except StudentGroup.DoesNotExist:
+    else:
         current_group = []
 
-    all_groups = list(Group.objects.values("id", "group_name"))
-
-    return JsonResponse(
-        {
-            "student_id": student_data.id,
-            "current_group": current_group,
-            "all_groups": all_groups,
-        }
+    all_groups = list(
+        Group.objects.values("id", "group_name")
     )
+
+    return JsonResponse({
+        "student_id": student_data.id,
+        "current_group": current_group,
+        "all_groups": all_groups,
+    })
+
 
 @role_required('Администратор')
 def save_student_group(request, pk):
-
     student = get_object_or_404(CustomUser, pk=pk)
 
     data = json.loads(request.body)
 
-    group_id = data.get("group")[0]
+    groups = data.get("group", [])
+
+    if not groups:
+        return JsonResponse(
+
+            {"error": "Группа не выбрана"},
+
+            status=400
+
+        )
+
+    group_id = groups[0]
 
     student_group = StudentGroup.objects.filter(student=student).exists()
     if student_group:
@@ -53,9 +69,9 @@ def save_student_group(request, pk):
 
     return JsonResponse({"status": "ok"})
 
+
 @role_required('Администратор')
 def delete_student_group(request, pk):
-
     student_group = get_object_or_404(StudentGroup, pk=pk)
 
     if request.method == "POST":
@@ -63,11 +79,14 @@ def delete_student_group(request, pk):
 
     return JsonResponse({"status": "ok"})
 
+
 @role_required('Администратор')
 def get_students_list(request, pk):
-    group = Group.objects.get(pk=pk)
+    group = get_object_or_404(Group, pk=pk)
 
-    student_list = group.group_students.all()
+    student_list = StudentGroup.objects.filter(
+        group=group
+    ).select_related("student")
 
     response = []
 
@@ -81,6 +100,6 @@ def get_students_list(request, pk):
 
     response = sorted(
         response, key=lambda x: x["full_name"]
-    )  # Сортировка списа студентов по имени
+    )
 
     return JsonResponse({"students": response, "group_name": group.group_name})

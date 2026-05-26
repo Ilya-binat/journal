@@ -10,65 +10,143 @@
 
     <table class="table table-striped table-hover align-middle">
         <thead class="table-light">
-            <tr>
-                <th scope="col">ID</th>
-                <th scope="col">ФИО</th>
-                <th scope="col">Дата рождения</th>
-                <th scope="col">Возраст</th>
-                <th scope="col">Разряд</th>
-                <th scope="col">Группа</th>
-                <th scope="col">Тренер</th>
-                <th scope="col" class="text-end">Действия</th>
-            </tr>
+        <tr>
+            <th scope="col">ID</th>
+            <th scope="col">ФИО</th>
+            <th scope="col">Дата рождения</th>
+            <th scope="col">Возраст</th>
+            <th scope="col">Разряд</th>
+            <th scope="col">Группа</th>
+            <th scope="col">Тренер</th>
+            <th scope="col" class="text-end">Действия</th>
+        </tr>
         </thead>
         <tbody>
-            {% for student in students %}
-            <tr>
-                <td>{{ student.id }}</td>
-                <td>{{ student.get_full_name|default:"-" }}</td>
-                <td>{{ student.birth_date|date:"d.m.Y" }}</td>
-                <td>{{ student.get_age }}</td>
-                <td></td>
-                <td>
-                    {% if student.current_groups %}
-                    {{student.current_groups.group.group_name}}
-                    {% else %}
-                    Не состоит
-                    {% endif %}
-                </td>
-                <td>{{student.current_groups.group.coach.get_short_name}}</td>
-                <td class="text-end">
+        {% for student in students %}
+        <tr>
+            <td>{{ student.id }}</td>
 
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-three-dots-vertical"></i>
-                        </button>
+            <td>{{ student.get_full_name|default:"-" }}</td>
 
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <button class="btn btn-sm show-groups-btn " data-bs-toggle="modal"
-                                    data-bs-target="#studentModal" data-id="{{ student.pk }}">
-                                    <i class="bi bi-plus-lg"></i>
-                                    {% if student.current_groups %}
-                                    Выбрать группу
-                                    {% else %}
-                                    Добавить в группу
-                                    {% endif %}
-                                </button>
-                            </li>
-                            <li>
-                                <button type="button" class="dropdown-item delete-group-btn" data-bs-toggle="modal"
-                                    data-bs-target="#deleteGroupModal" id="{{ student.current_groups.pk }}"
-                                    data-group-name="{{ group.group_name }}">
-                                    <i class="bi bi-trash"></i>
-                                    Удалить
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
+            <td>{{ student.birth_date|date:"d.m.Y" }}</td>
+
+            <td>{{ student.get_age }}</td>
+
+            <td></td>
+
+            <td>
+
+                {% with student.current_groups.first as student_group %}
+
+                {% if student_group %}
+
+                {{ student_group.group.group_name }}
+
+                {% else %}
+
+                Не состоит
+
+                {% endif %}
+
+                {% endwith %}
+
+            </td>
+
+            <td>
+
+                {% with student.current_groups.first as student_group %}
+
+                {% if student_group %}
+
+                {{ student_group.group.coach.get_short_name }}
+
+                {% else %}
+
+                -
+
+                {% endif %}
+
+                {% endwith %}
+
+            </td>
+
+            <!-- ВАЖНО -->
+
+            <td class="text-end">
+
+                <div class="dropdown">
+
+                    <button class="btn btn-sm btn-light"
+
+                            type="button"
+
+                            data-bs-toggle="dropdown">
+
+                        <i class="bi bi-three-dots-vertical"></i>
+
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end">
+
+                        <li>
+
+                            <button class="dropdown-item show-groups-btn"
+
+                                    data-bs-toggle="modal"
+
+                                    data-bs-target="#studentModal"
+
+                                    data-id="{{ student.pk }}">
+
+                                <i class="bi bi-plus-lg"></i>
+
+                                {% with student.current_groups.first as student_group %}
+                                {% if student_group %}
+                                Выбрать группу
+                                {% else %}
+                                Добавить в группу
+                                {% endif %}
+                                {% endwith %}
+
+                            </button>
+
+                        </li>
+
+                        <li>
+
+                            {% with student.current_groups.first as student_group %}
+
+                            <button type="button"
+
+                                    class="dropdown-item delete-group-btn"
+
+                                    data-bs-toggle="modal"
+
+                                    data-bs-target="#deleteGroupModal"
+
+                                    {% if student_group %}
+
+                                    id="{{ student_group.pk }}"
+
+                                    {% endif %}>
+
+                                <i class="bi bi-trash"></i>
+
+                                Удалить
+
+                            </button>
+
+                            {% endwith %}
+
+                        </li>
+
+                    </ul>
+
+                </div>
+
+            </td>
+        </tr>
+        {% endfor %}
         </tbody>
 
     </table>
@@ -161,12 +239,13 @@
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')// getCookie - вернет тот параметр который мы запросим, в данном случае она возвращает csrf - токен
             },
-            body: JSON.stringify({ group: selectedGroups })
+            body: JSON.stringify({group: selectedGroups})
         })
             .then(response => location.reload())  // promise - действия которые выполняются раз за разом.
             .catch(error => console.log(error))
 
     }
+
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -183,6 +262,7 @@
 
         return cookieValue;
     }
+
     // открытие модалки удаления
     let deleteButtons = document.querySelectorAll('.delete-group-btn')
 

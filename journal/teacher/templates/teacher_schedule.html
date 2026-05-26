@@ -129,10 +129,15 @@
                                     </div>
                                     <div class="d-flex gap-3 mt-1 small text-muted align-items-center">
                                         <span><i class="bi bi-clock me-1"></i>{{ training.duration_label }}</span>
-                                        {% if tr.is_active %}
+                                        {% if tr.current_status == 'active' %}
                                         <span class="text-primary">
                                             <i class="bi bi-calendar-event-fill me-1"></i>В процессе</span>
-                                        <a href="{% url 'teacher:mark_attendance' tr.id %}" class="btn btn-primary w-10">Отметить</a>
+                                        <a href="{% url 'teacher:mark_attendance' tr.id %}"
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-pencil-square me-1"></i>
+                                            Отметить
+                                        </a>
+
 
                                         {% elif tr.current_status == 'planned' %}
                                         <span class="text-primary">
@@ -140,7 +145,11 @@
                                         {% elif tr.current_status == 'past' %}
                                         <span class="text-primary">
                                             <i class="bi bi-calendar-event-fill me-1"></i>Завершено</span>
-                                        <button class="btn btn-primary w-10">Отметить/Исправить</button>
+                                        <a href="{% url 'teacher:mark_attendance' tr.id %}"
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-pencil-square me-1"></i>
+                                            Отметить / Исправить
+                                        </a>
                                         {% elif tr.status == 'cancelled' %}
                                         <span class="text-danger">
                                             <i class="bi bi-x-circle-fill me-1"></i>Отменено</span>
