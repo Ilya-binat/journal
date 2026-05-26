@@ -127,14 +127,20 @@
                                         <span class="badge rounded-pill"
                                               style="background:#DCFCE7;color:#15803D;">{{ tr.hall.training_type }}</span>
                                     </div>
-                                    <div class="d-flex gap-3 mt-1 small text-muted">
+                                    <div class="d-flex gap-3 mt-1 small text-muted align-items-center">
                                         <span><i class="bi bi-clock me-1"></i>{{ training.duration_label }}</span>
-                                        {% if tr.status == 'planned' %}
+                                        {% if tr.is_active %}
                                         <span class="text-primary">
-                                            <i class="bi bi-calendar-event-fill me-1"></i>Запланирован</span>
-                                        {% elif tr.status == 'completed' %}
-                                        <span class="text-success">
-                                            <i class="bi bi-check-circle-fill me-1"></i>Завершено</span>
+                                            <i class="bi bi-calendar-event-fill me-1"></i>В процессе</span>
+                                        <a href="{% url 'teacher:mark_attendance' tr.id %}" class="btn btn-primary w-10">Отметить</a>
+
+                                        {% elif tr.current_status == 'planned' %}
+                                        <span class="text-primary">
+                                            <i class="bi bi-calendar-event-fill me-1"></i>Запланировано</span>
+                                        {% elif tr.current_status == 'past' %}
+                                        <span class="text-primary">
+                                            <i class="bi bi-calendar-event-fill me-1"></i>Завершено</span>
+                                        <button class="btn btn-primary w-10">Отметить/Исправить</button>
                                         {% elif tr.status == 'cancelled' %}
                                         <span class="text-danger">
                                             <i class="bi bi-x-circle-fill me-1"></i>Отменено</span>

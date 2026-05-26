@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 SLOT_STATUS = [
     ("planned", "Запланирована"),
@@ -55,6 +56,22 @@ class Slot(models.Model):
 
     def __str__(self):
         return f"{self.date} - {self.coach.get_short_name()}"
+
+    @property
+    def current_status(self):
+        now = timezone.now().time()
+        if self.start_time <= now <= self.end_time:
+            return 'active'
+        elif self.start_time > now:
+            return 'planned'
+        else:
+            return 'past'
+
+    @property
+    def is_active(self):
+        now_local = timezone.localtime(timezone.now())
+        now = now_local.time()
+        return self.start_time <= now <= self.end_time
 
 
 stage_choices = [

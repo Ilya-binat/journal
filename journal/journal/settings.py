@@ -139,3 +139,6 @@ AUTHENTICATION_BACKENDS = ['users.backends.EmailBackend']
 # Локализация дней недели
 LANGUAGE_CODE = 'ru'
 USE_L10N = True
+
+TIME_ZONE = 'Europe/Moscow'
+USE_TZ = True

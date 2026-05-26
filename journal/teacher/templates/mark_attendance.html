@@ -1,0 +1,366 @@
+{% extends 'teacher_base_layout.html' %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Посещаемость тренировки</h2>
+        <div class="text-muted small">
+            Группа: <span class="fw-semibold text-dark">{{ group_name }}</span>
+            • {{ start_time }} - {{end_time}}
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button class="btn btn-light border rounded-3 px-3">
+            <i class="bi bi-arrow-left me-1"></i> Назад
+        </button>
+
+        <button class="btn btn-primary rounded-3 px-4">
+            <i class="bi bi-check2-circle me-1"></i> Сохранить
+        </button>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <!-- LEFT SIDE -->
+    <div class="col-lg-8">
+
+        <!-- TRAINING INFO -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <div class="rounded-4 p-3 h-100"
+                             style="background:#EFF6FF;">
+                            <div class="small text-muted mb-1">
+                                Дата
+                            </div>
+
+                            <div class="fw-bold fs-5">
+                                {{ slot_date }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="rounded-4 p-3 h-100"
+                             style="background:#F0FDF4;">
+                            <div class="small text-muted mb-1">
+                                Зал
+                            </div>
+
+                            <div class="fw-bold fs-5">
+                                {{ hall }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- STUDENTS LIST -->
+        <div class="card border-0 shadow-sm">
+
+            <div class="card-body">
+
+                <!-- HEADER -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+
+                    <div>
+                        <h5 class="fw-bold mb-1">
+                            Список спортсменов
+                        </h5>
+
+                        <div class="text-muted small">
+                            Отметьте посещаемость тренировки
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+
+                        <button class="btn btn-success rounded-3">
+                            <i class="bi bi-check-all me-1"></i>
+                            Все присутствуют
+                        </button>
+
+                        <button class="btn btn-danger rounded-3">
+                            <i class="bi bi-check-all me-1"></i>
+                            Все отсутствуют
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <!-- SEARCH -->
+                <div class="position-relative mb-4">
+
+                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+
+                    <input type="text"
+                           class="form-control rounded-4 ps-5 py-2"
+                           placeholder="Поиск спортсмена...">
+
+                </div>
+
+                <!-- STUDENTS -->
+
+                {% for student in group_members %}
+
+                <div class="border rounded-4 p-3 mb-3">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div class="d-flex align-items-center gap-3">
+
+                            <!-- AVATAR -->
+                            <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
+                                 style="width:52px;height:52px;background:#3B82F6;">
+                                А
+                            </div>
+
+                            <!-- INFO -->
+                            <div>
+
+                                <div class="fw-semibold">
+                                    {{ student.get_full_name }}
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- ACTIONS -->
+                        <div class="d-flex align-items-center gap-3">
+
+                            <!-- PRESENT -->
+                            <label class="attendance-card">
+                                <input type="radio"
+                                       data-id="{{ student.pk }}"
+                                       data-action="present"
+                                       name="student_{{ forloop.counter }}">
+
+                                <div class="attendance-option success">
+
+                                    <i class="bi bi-check-circle-fill"></i>
+
+                                    <span>
+                                        Был
+                                    </span>
+
+                                </div>
+                            </label>
+
+                            <!-- ABSENT -->
+                            <label class="attendance-card">
+                                <input type="radio"
+                                       data-id="{{ student.pk }}"
+                                       data-action="absent"
+                                       name="student_{{ forloop.counter }}">
+
+                                <div class="attendance-option danger">
+
+                                    <i class="bi bi-x-circle-fill"></i>
+
+                                    <span>
+                                        Не был
+                                    </span>
+
+                                </div>
+                            </label>
+
+                            <!-- EXCUSED -->
+                            <label class="attendance-card">
+                                <input type="radio"
+                                       data-id="{{ student.pk }}"
+                                       data-action="excused"
+                                       name="student_{{ forloop.counter }}">
+
+                                <div class="attendance-option warning">
+
+                                    <i class="bi bi-exclamation-circle-fill"></i>
+
+                                    <span>
+                                        Справка
+                                    </span>
+
+                                </div>
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                    <!-- COMMENT -->
+                    <div class="mt-3">
+
+                        <textarea class="form-control rounded-4"
+                                  rows="2"
+                                  placeholder="Комментарий тренера..."></textarea>
+
+                    </div>
+
+                </div>
+
+                {% endfor %}
+                <button class="btn btn-info rounded-3" id="save-btn">
+                    Сохранить
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="col-lg-4">
+
+        <!-- STATS -->
+        <div class="card border-0 shadow-sm mb-4">
+
+            <div class="card-body">
+
+                <h5 class="fw-bold mb-4">
+                    Статистика посещения
+                </h5>
+
+                <div class="row g-3">
+
+                    <div class="col-12">
+
+                        <div class="rounded-4 p-3 d-flex align-items-center justify-content-between"
+                             style="background:#F0FDF4;">
+
+                            <div>
+
+                                <div class="small text-muted">
+                                    Присутствуют
+                                </div>
+
+                                <div class="fs-3 fw-bold text-success">
+                                    0
+                                </div>
+
+                            </div>
+
+                            <i class="bi bi-check-circle-fill text-success fs-2"></i>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-12">
+
+                        <div class="rounded-4 p-3 d-flex align-items-center justify-content-between"
+                             style="background:#FEF2F2;">
+
+                            <div>
+
+                                <div class="small text-muted">
+                                    Отсутствуют
+                                </div>
+
+                                <div class="fs-3 fw-bold text-danger">
+                                    0
+                                </div>
+
+                            </div>
+
+                            <i class="bi bi-x-circle-fill text-danger fs-2"></i>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-12">
+
+                        <div class="rounded-4 p-3 d-flex align-items-center justify-content-between"
+                             style="background:#FFF7ED;">
+
+                            <div>
+
+                                <div class="small text-muted">
+                                    По справке
+                                </div>
+
+                                <div class="fs-3 fw-bold text-warning">
+                                    0
+                                </div>
+
+                            </div>
+
+                            <i class="bi bi-exclamation-circle-fill text-warning fs-2"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- QUICK ACTIONS -->
+    </div>
+
+</div>
+
+<style>
+
+    .attendance-card input {
+        display: none;
+    }
+
+    .attendance-option {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 14px;
+        border-radius: 14px;
+        cursor: pointer;
+        border: 1px solid #E5E7EB;
+        transition: 0.2s;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .attendance-option.success {
+        background: #F0FDF4;
+        color: #15803D;
+    }
+
+    .attendance-option.danger {
+        background: #FEF2F2;
+        color: #DC2626;
+    }
+
+    .attendance-option.warning {
+        background: #FFF7ED;
+        color: #EA580C;
+    }
+
+    .attendance-card input:checked + .attendance-option {
+        transform: scale(1.04);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        border-color: #3B82F6;
+    }
+
+</style>
+
+
+{% endblock %}
+{% block js %}
+<script>
+    let slotData={{slot|safe}}
+    let saveBtn=document.querySelector('#save-btn')
+    saveBtn.addEventListener('click',()=>{
+
+    })
+
+</script>
+
+{% endblock %}
