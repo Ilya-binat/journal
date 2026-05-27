@@ -7,48 +7,44 @@
 
 <!-- WEEK NAVIGATION -->
 <div class="d-flex align-items-center gap-2 mb-4">
-    <a href="?date={{ prev_day|date:'Y-m-d' }}"
-       class="btn btn-outline-secondary btn-sm rounded-circle"
+    <a href="?date={{ prev_week|date:'Y-m-d' }}&nav=week"
+       class="week-nav prev btn btn-outline-secondary btn-sm rounded-circle"
        style="width:36px;height:36px;">
         <i class="bi bi-chevron-left"></i>
     </a>
-    <div class="d-flex gap-2 flex-grow-1 overflow-auto">
-        {% for day in week_days %}
-        <a href="?date={{ day.full_date }}"
-           class="week-day text-center text-decoration-none px-2 py-1 rounded-3 flex-grow-1
+    <div class="week-slider overflow-hidden flex-grow-1">
+        <div id="weekDaysWrapper"
+             class="d-flex gap-2">
+            {% for day in week_days %}
+            <a href="?date={{ day.full_date }}&nav=day"
+               class="week-day text-center text-decoration-none px-2 py-1 rounded-3 flex-grow-1
        {% if day.is_today %}
             border border-primary bg-primary text-white
        {% else %}
             bg-white border text-dark
        {% endif %}"
-           style="min-width:60px;cursor:pointer;display:block;transition:0.2s;">
-            <div class="small text-uppercase fw-semibold
+               style="min-width:60px;cursor:pointer;display:block;transition:0.2s;">
+                <div class="small text-uppercase fw-semibold
             {% if not day.is_today %}text-muted{% endif %}">
-                {{ day.weekday }}
-            </div>
-            <div class="fs-5 fw-bold lh-1">
-                {{ day.day }}
-            </div>
-            <div class="small {% if not day.is_today %}text-muted{% endif %}">
-                {{ day.month }}
-            </div>
-            <div class="mt-1">
-                <i class="bi bi-circle-fill"
-                   style="font-size:6px;color:{% if day.is_today %}white{% else %}#3B82F6{% endif %};">
-                </i>
-            </div>
-        </a>
-        <style>
-            .week-day:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            }
-        </style>
-        {% endfor %}
+                    {{ day.weekday }}
+                </div>
+                <div class="fs-5 fw-bold lh-1">
+                    {{ day.day }}
+                </div>
+                <div class="small {% if not day.is_today %}text-muted{% endif %}">
+                    {{ day.month }}
+                </div>
+                <div class="mt-1">
+                    <i class="bi bi-circle-fill"
+                       style="font-size:6px;color:{% if day.is_today %}white{% else %}#3B82F6{% endif %};">
+                    </i>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
     </div>
-
-    <a href="?date={{ next_day|date:'Y-m-d' }}"
-       class="btn btn-outline-secondary btn-sm rounded-circle"
+    <a href="?date={{ next_week|date:'Y-m-d' }}&nav=week"
+       class="week-nav next btn btn-outline-secondary btn-sm rounded-circle"
        style="width:36px;height:36px;">
         <i class="bi bi-chevron-right"></i>
     </a>
@@ -252,4 +248,90 @@
 
     </div>
 </div>
+<style>
+    .week-slider {
+        position: relative;
+        overflow: hidden;
+    }
+
+    #weekDaysWrapper {
+        transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.55s ease;
+
+        will-change: transform;
+        backface-visibility: hidden;
+    }
+
+    .slide-next {
+        transform: translateX(-35%);
+        opacity: 0.15;
+    }
+
+    .slide-prev {
+        transform: translateX(35%);
+        opacity: 0.15;
+    }
+
+    .week-day {
+        min-width: 60px;
+
+        transition: transform 0.25s ease,
+        box-shadow 0.25s ease;
+    }
+
+    .week-day:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    .slide-in {
+        animation: slideIn 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(15%);
+            opacity: 0.2;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+</style>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const wrapper = document.getElementById("weekDaysWrapper");
+        const params = new URLSearchParams(window.location.search);
+
+        // Если пришли по стрелке — анимация въезда
+        if (params.get("nav") === "week") {
+            wrapper.classList.add("slide-in");
+            requestAnimationFrame(() => {
+                wrapper.classList.remove("slide-in");
+            });
+        }
+
+        // СТРЕЛКИ
+        document.querySelectorAll(".week-nav").forEach(btn => {
+            btn.addEventListener("click", function (e) {
+                e.preventDefault();
+                const url = this.href;
+                wrapper.style.pointerEvents = "none";
+                wrapper.classList.add(this.classList.contains("next") ? "slide-next" : "slide-prev");
+                setTimeout(() => {
+                    window.location.href = url;
+                }, 520);
+            });
+        });
+
+        // ДНИ — просто переход
+        document.querySelectorAll(".week-day").forEach(day => {
+            day.addEventListener("click", function (e) {
+                e.preventDefault();
+                window.location.href = this.href;
+            });
+        });
+    });
+</script>
 {% endblock %}

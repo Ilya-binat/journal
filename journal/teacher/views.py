@@ -19,8 +19,8 @@ def teacher_schedule(request):
         current_date = timezone.localdate()
 
     # Предыдущий и следующий день
-    prev_day = current_date - timedelta(days=1)
-    next_day = current_date + timedelta(days=1)
+    prev_week = current_date - timedelta(days=7)
+    next_week = current_date + timedelta(days=7)
 
     # Слоты на выбранный день
     slots = Slot.objects.filter(
@@ -39,8 +39,8 @@ def teacher_schedule(request):
         'slots': slots,
         'slots_count': slots_count,
         'current_date': current_date,
-        'prev_day': prev_day,
-        'next_day': next_day,
+        'prev_week': prev_week,
+        'next_week': next_week,
         'total_duration': total_duration,
         'trainings': trainings,
         'week_trainings': week_trainings,
