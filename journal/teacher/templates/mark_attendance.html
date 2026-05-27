@@ -174,262 +174,442 @@
 </div>
 
 <style>
-/* ── LAYOUT ─────────────────────────────────────────── */
-.att-topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 1.25rem;
-}
-.att-title {
-    font-size: 20px;
-    font-weight: 600;
-    margin: 0 0 2px;
-    color: #111827;
-}
-.att-subtitle {
-    font-size: 13px;
-    color: #6B7280;
-    margin: 0;
-}
-.att-topbar-actions {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
-}
-.att-layout {
-    display: grid;
-    grid-template-columns: 1fr 240px;
-    gap: 16px;
-    align-items: start;
-}
-@media (max-width: 768px) {
-    .att-layout { grid-template-columns: 1fr; }
-    .att-right { order: -1; }
-    .att-chips { flex-wrap: wrap; }
-}
+    /* ── LAYOUT ─────────────────────────────────────────── */
+    .att-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 1.25rem;
+    }
 
-/* ── BUTTONS ────────────────────────────────────────── */
-.att-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 7px 14px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    border: 1px solid #D1D5DB;
-    background: #fff;
-    color: #374151;
-    transition: background .15s;
-    white-space: nowrap;
-}
-.att-btn:hover { background: #F3F4F6; }
-.att-btn-primary { background: #2563EB; color: #fff; border-color: #2563EB; }
-.att-btn-primary:hover { background: #1D4ED8; }
-.att-btn-success { background: #D1FAE5; color: #065F46; border-color: #6EE7B7; }
-.att-btn-success:hover { background: #A7F3D0; }
-.att-btn-danger  { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
-.att-btn-danger:hover  { background: #FECACA; }
-.att-btn-sm  { padding: 5px 10px; font-size: 12px; }
-.att-btn-icon {
-    padding: 5px 8px;
-    border-radius: 8px;
-    border: 1px solid #E5E7EB;
-    background: transparent;
-    color: #9CA3AF;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: background .15s, color .15s;
-}
-.att-btn-icon:hover { background: #F3F4F6; color: #374151; }
-.att-btn-group { display: flex; gap: 6px; }
+    .att-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0 0 2px;
+        color: #111827;
+    }
 
-/* ── CARDS ──────────────────────────────────────────── */
-.att-card {
-    background: #fff;
-    border: 1px solid #E5E7EB;
-    border-radius: 12px;
-    padding: 1rem 1.125rem;
-    margin-bottom: 14px;
-}
-.att-card-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
-}
-.att-card-title { font-size: 14px; font-weight: 600; color: #111827; margin: 0 0 2px; }
-.att-card-sub   { font-size: 12px; color: #6B7280; margin: 0; }
+    .att-subtitle {
+        font-size: 13px;
+        color: #6B7280;
+        margin: 0;
+    }
 
-/* ── INFO TILES ─────────────────────────────────────── */
-.att-info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 14px;
-}
-.att-tile { border-radius: 10px; padding: 10px 14px; }
-.att-tile-blue  { background: #EFF6FF; }
-.att-tile-green { background: #F0FDF4; }
-.att-tile-label { font-size: 11px; color: #6B7280; margin-bottom: 2px; }
-.att-tile-value { font-size: 15px; font-weight: 600; color: #111827; }
+    .att-topbar-actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+    }
 
-/* ── SEARCH ─────────────────────────────────────────── */
-.att-search-wrap { position: relative; margin-bottom: 10px; }
-.att-search-icon {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 14px;
-    color: #9CA3AF;
-    pointer-events: none;
-}
-.att-search-input {
-    width: 100%;
-    padding: 7px 10px 7px 30px;
-    font-size: 13px;
-    border: 1px solid #E5E7EB;
-    border-radius: 8px;
-    background: #F9FAFB;
-    color: #111827;
-    outline: none;
-    transition: border-color .15s;
-    box-sizing: border-box;
-}
-.att-search-input:focus { border-color: #93C5FD; background: #fff; }
+    .att-layout {
+        display: grid;
+        grid-template-columns: 1fr 240px;
+        gap: 16px;
+        align-items: start;
+    }
 
-/* ── STUDENT ROW ────────────────────────────────────── */
-.att-row {
-    border-bottom: 1px solid #F3F4F6;
-    padding: 7px 0;
-}
-.att-row:last-child { border-bottom: none; }
-.att-row-main {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.att-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #DBEAFE;
-    color: #1D4ED8;
-    font-size: 11px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    text-transform: uppercase;
-}
-.att-name {
-    font-size: 13px;
-    font-weight: 500;
-    color: #111827;
-    flex: 1;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+    @media (max-width: 768px) {
+        .att-layout {
+            grid-template-columns: 1fr;
+        }
 
-/* ── RADIO CHIPS ────────────────────────────────────── */
-.att-chips { display: flex; gap: 4px; flex-shrink: 0; }
-.att-chip-label { cursor: pointer; }
-.att-chip-label input.att-radio { display: none; }
-.att-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 9px;
-    border-radius: 20px;
-    border: 1px solid #E5E7EB;
-    font-size: 12px;
-    font-weight: 500;
-    color: #6B7280;
-    background: #F9FAFB;
-    transition: all .15s;
-    white-space: nowrap;
-    user-select: none;
-}
-.att-chip:hover { background: #F3F4F6; border-color: #D1D5DB; }
+        .att-right {
+            order: -1;
+        }
 
-/* selected states */
-.att-radio:checked + .att-chip-present {
-    background: #D1FAE5; color: #065F46; border-color: #6EE7B7;
-}
-.att-radio:checked + .att-chip-absent {
-    background: #FEE2E2; color: #991B1B; border-color: #FCA5A5;
-}
-.att-radio:checked + .att-chip-excused {
-    background: #FEF3C7; color: #92400E; border-color: #FCD34D;
-}
+        .att-chips {
+            flex-wrap: wrap;
+        }
+    }
 
-/* ── COMMENT ────────────────────────────────────────── */
-.att-comment {
-    display: none;
-    padding: 6px 0 6px 40px;
-}
-.att-comment.open { display: block; }
-.att-textarea {
-    width: 100%;
-    box-sizing: border-box;
-    font-size: 12px;
-    padding: 6px 10px;
-    border: 1px solid #E5E7EB;
-    border-radius: 8px;
-    background: #F9FAFB;
-    color: #111827;
-    resize: none;
-    outline: none;
-    transition: border-color .15s;
-}
-.att-textarea:focus { border-color: #93C5FD; background: #fff; }
+    /* ── BUTTONS ────────────────────────────────────────── */
+    .att-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 7px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        border: 1px solid #D1D5DB;
+        background: #fff;
+        color: #374151;
+        transition: background .15s;
+        white-space: nowrap;
+    }
 
-/* ── STATS ──────────────────────────────────────────── */
-.att-prog-label { font-size: 11px; color: #6B7280; margin: 8px 0 4px; }
-.att-prog-bar {
-    height: 6px;
-    border-radius: 3px;
-    background: #E5E7EB;
-    margin-bottom: 14px;
-    overflow: hidden;
-}
-.att-prog-fill {
-    height: 100%;
-    border-radius: 3px;
-    background: #16A34A;
-    transition: width .3s;
-}
-.att-stat {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-radius: 10px;
-    padding: 10px 12px;
-    margin-bottom: 8px;
-}
-.att-stat:last-child { margin-bottom: 0; }
-.att-stat-label { font-size: 12px; color: #6B7280; margin-bottom: 1px; }
-.att-stat-num   { font-size: 22px; font-weight: 600; }
-.att-stat-icon  { font-size: 20px; }
-.att-stat-present { background: #F0FDF4; }
-.att-stat-present .att-stat-num  { color: #15803D; }
-.att-stat-present .att-stat-icon { color: #16A34A; }
-.att-stat-absent  { background: #FEF2F2; }
-.att-stat-absent .att-stat-num   { color: #DC2626; }
-.att-stat-absent .att-stat-icon  { color: #DC2626; }
-.att-stat-excused { background: #FFFBEB; }
-.att-stat-excused .att-stat-num  { color: #D97706; }
-.att-stat-excused .att-stat-icon { color: #D97706; }
+    .att-btn:hover {
+        background: #F3F4F6;
+    }
+
+    .att-btn-primary {
+        background: #2563EB;
+        color: #fff;
+        border-color: #2563EB;
+    }
+
+    .att-btn-primary:hover {
+        background: #1D4ED8;
+    }
+
+    .att-btn-success {
+        background: #D1FAE5;
+        color: #065F46;
+        border-color: #6EE7B7;
+    }
+
+    .att-btn-success:hover {
+        background: #A7F3D0;
+    }
+
+    .att-btn-danger {
+        background: #FEE2E2;
+        color: #991B1B;
+        border-color: #FCA5A5;
+    }
+
+    .att-btn-danger:hover {
+        background: #FECACA;
+    }
+
+    .att-btn-sm {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+
+    .att-btn-icon {
+        padding: 5px 8px;
+        border-radius: 8px;
+        border: 1px solid #E5E7EB;
+        background: transparent;
+        color: #9CA3AF;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background .15s, color .15s;
+    }
+
+    .att-btn-icon:hover {
+        background: #F3F4F6;
+        color: #374151;
+    }
+
+    .att-btn-group {
+        display: flex;
+        gap: 6px;
+    }
+
+    /* ── CARDS ──────────────────────────────────────────── */
+    .att-card {
+        background: #fff;
+        border: 1px solid #E5E7EB;
+        border-radius: 12px;
+        padding: 1rem 1.125rem;
+        margin-bottom: 14px;
+    }
+
+    .att-card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+
+    .att-card-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111827;
+        margin: 0 0 2px;
+    }
+
+    .att-card-sub {
+        font-size: 12px;
+        color: #6B7280;
+        margin: 0;
+    }
+
+    /* ── INFO TILES ─────────────────────────────────────── */
+    .att-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .att-tile {
+        border-radius: 10px;
+        padding: 10px 14px;
+    }
+
+    .att-tile-blue {
+        background: #EFF6FF;
+    }
+
+    .att-tile-green {
+        background: #F0FDF4;
+    }
+
+    .att-tile-label {
+        font-size: 11px;
+        color: #6B7280;
+        margin-bottom: 2px;
+    }
+
+    .att-tile-value {
+        font-size: 15px;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    /* ── SEARCH ─────────────────────────────────────────── */
+    .att-search-wrap {
+        position: relative;
+        margin-bottom: 10px;
+    }
+
+    .att-search-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 14px;
+        color: #9CA3AF;
+        pointer-events: none;
+    }
+
+    .att-search-input {
+        width: 100%;
+        padding: 7px 10px 7px 30px;
+        font-size: 13px;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        background: #F9FAFB;
+        color: #111827;
+        outline: none;
+        transition: border-color .15s;
+        box-sizing: border-box;
+    }
+
+    .att-search-input:focus {
+        border-color: #93C5FD;
+        background: #fff;
+    }
+
+    /* ── STUDENT ROW ────────────────────────────────────── */
+    .att-row {
+        border-bottom: 1px solid #F3F4F6;
+        padding: 7px 0;
+    }
+
+    .att-row:last-child {
+        border-bottom: none;
+    }
+
+    .att-row-main {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .att-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #DBEAFE;
+        color: #1D4ED8;
+        font-size: 11px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        text-transform: uppercase;
+    }
+
+    .att-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: #111827;
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* ── RADIO CHIPS ────────────────────────────────────── */
+    .att-chips {
+        display: flex;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+
+    .att-chip-label {
+        cursor: pointer;
+    }
+
+    .att-chip-label input.att-radio {
+        display: none;
+    }
+
+    .att-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 9px;
+        border-radius: 20px;
+        border: 1px solid #E5E7EB;
+        font-size: 12px;
+        font-weight: 500;
+        color: #6B7280;
+        background: #F9FAFB;
+        transition: all .15s;
+        white-space: nowrap;
+        user-select: none;
+    }
+
+    .att-chip:hover {
+        background: #F3F4F6;
+        border-color: #D1D5DB;
+    }
+
+    /* selected states */
+    .att-radio:checked + .att-chip-present {
+        background: #D1FAE5;
+        color: #065F46;
+        border-color: #6EE7B7;
+    }
+
+    .att-radio:checked + .att-chip-absent {
+        background: #FEE2E2;
+        color: #991B1B;
+        border-color: #FCA5A5;
+    }
+
+    .att-radio:checked + .att-chip-excused {
+        background: #FEF3C7;
+        color: #92400E;
+        border-color: #FCD34D;
+    }
+
+    /* ── COMMENT ────────────────────────────────────────── */
+    .att-comment {
+        display: none;
+        padding: 6px 0 6px 40px;
+    }
+
+    .att-comment.open {
+        display: block;
+    }
+
+    .att-textarea {
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 12px;
+        padding: 6px 10px;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        background: #F9FAFB;
+        color: #111827;
+        resize: none;
+        outline: none;
+        transition: border-color .15s;
+    }
+
+    .att-textarea:focus {
+        border-color: #93C5FD;
+        background: #fff;
+    }
+
+    /* ── STATS ──────────────────────────────────────────── */
+    .att-prog-label {
+        font-size: 11px;
+        color: #6B7280;
+        margin: 8px 0 4px;
+    }
+
+    .att-prog-bar {
+        height: 6px;
+        border-radius: 3px;
+        background: #E5E7EB;
+        margin-bottom: 14px;
+        overflow: hidden;
+    }
+
+    .att-prog-fill {
+        height: 100%;
+        border-radius: 3px;
+        background: #16A34A;
+        transition: width .3s;
+    }
+
+    .att-stat {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-radius: 10px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+    }
+
+    .att-stat:last-child {
+        margin-bottom: 0;
+    }
+
+    .att-stat-label {
+        font-size: 12px;
+        color: #6B7280;
+        margin-bottom: 1px;
+    }
+
+    .att-stat-num {
+        font-size: 22px;
+        font-weight: 600;
+    }
+
+    .att-stat-icon {
+        font-size: 20px;
+    }
+
+    .att-stat-present {
+        background: #F0FDF4;
+    }
+
+    .att-stat-present .att-stat-num {
+        color: #15803D;
+    }
+
+    .att-stat-present .att-stat-icon {
+        color: #16A34A;
+    }
+
+    .att-stat-absent {
+        background: #FEF2F2;
+    }
+
+    .att-stat-absent .att-stat-num {
+        color: #DC2626;
+    }
+
+    .att-stat-absent .att-stat-icon {
+        color: #DC2626;
+    }
+
+    .att-stat-excused {
+        background: #FFFBEB;
+    }
+
+    .att-stat-excused .att-stat-num {
+        color: #D97706;
+    }
+
+    .att-stat-excused .att-stat-icon {
+        color: #D97706;
+    }
 </style>
 
 {% endblock %}
@@ -438,6 +618,9 @@
 <script>
     const slotData = {{ slot|safe }};
     const totalStudents = document.querySelectorAll('.att-row').length;
+
+    let allPresentActive = false;
+    let allAbsentActive  = false;
 
     function updateStats() {
         const present = document.querySelectorAll('input[data-action="present"]:checked').length;
@@ -455,10 +638,9 @@
     }
 
     function collectData() {
-        const rows = document.querySelectorAll('.att-row');
         const result = [];
-        rows.forEach(row => {
-            const checked = row.querySelector('input.att-radio:checked');
+        document.querySelectorAll('.att-row').forEach(row => {
+            const checked  = row.querySelector('input.att-radio:checked');
             const textarea = row.querySelector('textarea.att-textarea');
             if (checked) {
                 result.push({
@@ -471,26 +653,68 @@
         return result;
     }
 
-    document.querySelectorAll('input.att-radio').forEach(r => {
-        r.addEventListener('change', updateStats);
+    // Чипы: установка / снятие отметки
+    document.querySelectorAll('.att-chip-label').forEach(label => {
+        label.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            allPresentActive = false;
+            allAbsentActive  = false;
+
+            const radio      = this.querySelector('input.att-radio');
+            const wasChecked = radio.checked;
+
+            // Сбрасываем всю группу вручную
+            document.querySelectorAll(`input[name="${radio.name}"]`).forEach(r => r.checked = false);
+
+            if (!wasChecked) radio.checked = true;
+
+            updateStats();
+        });
     });
 
+    // Открытие / закрытие комментария
     document.querySelectorAll('.att-comment-toggle').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const target = document.getElementById(btn.dataset.target);
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const target = document.getElementById(this.dataset.target);
             if (target) target.classList.toggle('open');
         });
     });
 
+    // Все присутствуют (повторный клик — сброс)
     document.getElementById('all-present').addEventListener('click', () => {
-        document.querySelectorAll('input[data-action="present"]').forEach(r => r.checked = true);
-        updateStats();
-    });
-    document.getElementById('all-absent').addEventListener('click', () => {
-        document.querySelectorAll('input[data-action="absent"]').forEach(r => r.checked = true);
+        if (allPresentActive) {
+            document.querySelectorAll('input[data-action="present"]').forEach(r => r.checked = false);
+            allPresentActive = false;
+        } else {
+            document.querySelectorAll('input[data-action="present"]').forEach(r => r.checked = true);
+            document.querySelectorAll('input[data-action="absent"]').forEach(r => r.checked = false);
+            document.querySelectorAll('input[data-action="excused"]').forEach(r => r.checked = false);
+            allPresentActive = true;
+            allAbsentActive  = false;
+        }
         updateStats();
     });
 
+    // Все отсутствуют (повторный клик — сброс)
+    document.getElementById('all-absent').addEventListener('click', () => {
+        if (allAbsentActive) {
+            document.querySelectorAll('input[data-action="absent"]').forEach(r => r.checked = false);
+            allAbsentActive = false;
+        } else {
+            document.querySelectorAll('input[data-action="absent"]').forEach(r => r.checked = true);
+            document.querySelectorAll('input[data-action="present"]').forEach(r => r.checked = false);
+            document.querySelectorAll('input[data-action="excused"]').forEach(r => r.checked = false);
+            allAbsentActive  = true;
+            allPresentActive = false;
+        }
+        updateStats();
+    });
+
+    // Поиск
     document.getElementById('att-search').addEventListener('input', function () {
         const q = this.value.toLowerCase();
         document.querySelectorAll('.att-row').forEach(row => {
@@ -498,9 +722,10 @@
         });
     });
 
+    // Сохранение
     document.getElementById('save-btn').addEventListener('click', () => {
         const data = collectData();
-        const btn = document.getElementById('save-btn');
+        const btn  = document.getElementById('save-btn');
 
         fetch(`/teacher/save_attendance/${slotData.id}/`, {
             method: 'POST',

@@ -135,54 +135,78 @@
 
                             </div>
 
-                            <!-- Card content -->
+                            <!-- CARD CONTENT -->
                             <div class="card border-0 w-100"
-                                 style="background:#F8FFFE; border-left:3px solid #22C55E !important; border-radius:10px;">
+                                 style="background:#F8FFFE;border-left:3px solid #22C55E !important;border-radius:10px;">
                                 <div class="card-body py-2 px-3">
+                                    <!-- HEADER -->
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <div class="fw-semibold">{{ tr.group.group_name }}</div>
+                                        <div class="fw-semibold">
+                                            {{ tr.group.group_name }}
+                                        </div>
                                         <span class="badge rounded-pill"
-                                              style="background:#DCFCE7;color:#15803D;">{{ tr.hall.training_type }}</span>
-                                    </div>
-                                    <div class="d-flex gap-3 mt-1 small text-muted align-items-center">
-                                        <span><i class="bi bi-clock me-1"></i>{{ training.duration_label }}</span>
-                                        {% if tr.current_status == 'active' %}
-                                        <span class="text-primary">
-                                            <i class="bi bi-calendar-event-fill me-1"></i>В процессе</span>
-                                        <a href="{% url 'teacher:mark_attendance' tr.id %}"
-                                           class="btn btn-outline-primary btn-sm border-0">
-                                            <i class="bi bi-pencil-square me-1"></i>
-                                            Отметить
-                                        </a>
-                                        {% elif tr.current_status == 'planned' %}
-                                        <span class="text-primary">
-                                            <i class="bi bi-calendar-event-fill me-1"></i>Запланировано</span>
-                                        {% elif tr.current_status == 'past' %}
-                                        <span class="text-primary">
-                                            <i class="bi bi-calendar-event-fill me-1"></i>Завершено</span>
-                                        <a href="{% url 'teacher:mark_attendance' tr.id %}"
-                                           class="btn btn-outline-primary btn-sm border-0">
-                                            <i class="bi bi-pencil-square me-1"></i>
-                                            Отметить / Исправить
-                                        </a>
-                                        {% elif tr.status == 'cancelled' %}
-                                        <span class="text-danger">
-                                            <i class="bi bi-x-circle-fill me-1"></i>Отменено</span>
-                                        {% endif %}
-                                    </div>
-                                    {% if tr.notes %}
-
-                                    <div class="mt-2 p-2 rounded-3"
-
-                                         style="background:#F8FAFC;font-size:13px;">
-
-                                        <i class="bi bi-sticky me-1 text-warning"></i>
-
-                                        {{ tr.notes }}
-
+                                              style="background:#DCFCE7;color:#15803D;">{{ tr.hall.training_type }}
+                                        </span>
                                     </div>
 
-                                    {% endif %}
+                                    <!-- INFO -->
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <div class="d-flex gap-3 small text-muted align-items-center"><span>
+                                            <i class="bi bi-clock me-1"></i>
+                                            {{ training.duration_label }}</span>
+                                            {% if tr.current_status == 'active' %}
+                                            <span class="text-primary">
+                                            <i class="bi bi-calendar-event-fill me-1"></i>
+                                                В процессе
+                                            </span>
+                                            {% elif tr.current_status == 'planned' %}
+                                            <span class="text-primary">
+                                            <i class="bi bi-calendar-event-fill me-1"></i>
+                                            Запланировано
+                                            </span>
+
+                                            {% elif tr.current_status == 'past' %}
+                                            <span class="text-primary">
+                                            <i class="bi bi-calendar-event-fill me-1"></i>
+                                            Завершено
+                                            </span>
+
+                                            {% elif tr.status == 'cancelled' %}
+                                            <span class="text-danger">
+                                            <i class="bi bi-x-circle-fill me-1"></i>
+                                            Отменено</span>
+                                            {% endif %}
+                                        </div>
+                                        <!-- ACTIONS -->
+                                        <div class="d-flex align-items-center gap-2">
+
+                                            {% if tr.current_status == 'active' %}
+                                            <a href="{% url 'teacher:mark_attendance' tr.id %}"
+                                               class="btn btn-outline-primary btn-sm border-0">
+                                                <i class="bi bi-pencil-square me-1"></i>
+                                                Отметить
+                                            </a>
+                                            {% elif tr.current_status == 'past' %}
+                                                     <a href="{% url 'teacher:mark_attendance' tr.id %}"
+                                               class="btn btn-outline-primary btn-sm border-0">
+                                                <i class="bi bi-pencil-square me-1"></i>
+                                                Отметить/Исправить
+                                            </a>
+                                            {% endif %}
+
+                                            <!-- COMMENT BUTTON -->
+                                            <button type="button"
+                                                    class="comment-toggle-btn">
+                                                <i class="bi bi-chat-left-text"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <!-- COMMENT -->
+                                    <div class="comment-box"
+                                         id="comment-{{ tr.id }}">
+                                    <textarea class="form-control" rows="2"
+                                              placeholder="Введите комментарий...">{{ tr.notes }}</textarea>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -309,13 +333,52 @@
             opacity: 1;
         }
     }
+
+    .comment-toggle-btn {
+        width: 34px;
+        height: 34px;
+        border: none;
+        border-radius: 10px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+    }
+    .comment-toggle-btn:hover {
+        background: #EFF6FF;
+        color: #3B82F6;
+    }
+    .comment-box {
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition: max-height 0.35s ease,
+        opacity 0.25s ease,
+        margin-top 0.25s ease;
+    }
+    .comment-box.open {
+        max-height: 120px;
+        opacity: 1;
+        margin-top: 12px;
+    }
+    .comment-box textarea {
+        resize: none;
+        border-radius: 12px;
+        font-size: 14px;
+        border: 1px solid #E5E7EB;
+        box-shadow: none;
+    }
+    .comment-box textarea:focus {
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
 </style>
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         const wrapper = document.getElementById("weekDaysWrapper");
         const params = new URLSearchParams(window.location.search);
-
-        // Если пришли по стрелке — анимация въезда
+        // АНИМАЦИЯ НЕДЕЛИ
         if (params.get("nav") === "week") {
             wrapper.classList.add("slide-in");
             requestAnimationFrame(() => {
@@ -329,18 +392,29 @@
                 e.preventDefault();
                 const url = this.href;
                 wrapper.style.pointerEvents = "none";
-                wrapper.classList.add(this.classList.contains("next") ? "slide-next" : "slide-prev");
+                wrapper.classList.add(
+                    this.classList.contains("next")
+                        ? "slide-next"
+                        : "slide-prev"
+                );
                 setTimeout(() => {
                     window.location.href = url;
                 }, 520);
             });
         });
-
-        // ДНИ — просто переход
+        // ДНИ
         document.querySelectorAll(".week-day").forEach(day => {
             day.addEventListener("click", function (e) {
                 e.preventDefault();
                 window.location.href = this.href;
+            });
+        });
+        // COMMENTS
+        document.querySelectorAll(".comment-toggle-btn").forEach(btn => {
+            btn.addEventListener("click", function () {
+                const card = this.closest(".card-body");
+                const box = card.querySelector(".comment-box");
+                box.classList.toggle("open");
             });
         });
     });
