@@ -126,6 +126,12 @@
                                   rows="2"
                                   data-id="{{ student.pk }}"
                                   placeholder="Комментарий тренера..."></textarea>
+                        <div class="d-flex justify-content-end mt-2">
+                            <button class="btn btn-primary btn-sm px-3 save-comment-btn">
+                                <i class="bi bi-check2 me-1"></i>
+                                Сохранить
+                            </button>
+                        </div>
                     </div>
 
                 </div>
@@ -610,26 +616,36 @@
     .att-stat-excused .att-stat-icon {
         color: #D97706;
     }
+
+    .save-comment-btn {
+        border-radius: 10px;
+        font-weight: 500;
+        transition: 0.2s;
+    }
+
+    .save-comment-btn:hover {
+        transform: translateY(-1px);
+    }
 </style>
 
 {% endblock %}
 
 {% block js %}
 <script>
-    const slotData = {{ slot|safe }};
+    const slotData = {{ slot | safe }};
     const totalStudents = document.querySelectorAll('.att-row').length;
 
     let allPresentActive = false;
-    let allAbsentActive  = false;
+    let allAbsentActive = false;
 
     function updateStats() {
         const present = document.querySelectorAll('input[data-action="present"]:checked').length;
-        const absent  = document.querySelectorAll('input[data-action="absent"]:checked').length;
+        const absent = document.querySelectorAll('input[data-action="absent"]:checked').length;
         const excused = document.querySelectorAll('input[data-action="excused"]:checked').length;
-        const marked  = present + absent + excused;
+        const marked = present + absent + excused;
 
         document.getElementById('cnt-present').textContent = present;
-        document.getElementById('cnt-absent').textContent  = absent;
+        document.getElementById('cnt-absent').textContent = absent;
         document.getElementById('cnt-excused').textContent = excused;
         document.getElementById('att-prog-label').textContent = `${marked} из ${totalStudents} отмечено`;
         document.getElementById('att-prog-fill').style.width = totalStudents
@@ -640,13 +656,13 @@
     function collectData() {
         const result = [];
         document.querySelectorAll('.att-row').forEach(row => {
-            const checked  = row.querySelector('input.att-radio:checked');
+            const checked = row.querySelector('input.att-radio:checked');
             const textarea = row.querySelector('textarea.att-textarea');
             if (checked) {
                 result.push({
                     student_id: checked.dataset.id,
-                    status:     checked.dataset.action,
-                    comment:    textarea ? textarea.value : ''
+                    status: checked.dataset.action,
+                    comment: textarea ? textarea.value : ''
                 });
             }
         });
@@ -660,9 +676,9 @@
             e.stopPropagation();
 
             allPresentActive = false;
-            allAbsentActive  = false;
+            allAbsentActive = false;
 
-            const radio      = this.querySelector('input.att-radio');
+            const radio = this.querySelector('input.att-radio');
             const wasChecked = radio.checked;
 
             // Сбрасываем всю группу вручную
@@ -694,7 +710,7 @@
             document.querySelectorAll('input[data-action="absent"]').forEach(r => r.checked = false);
             document.querySelectorAll('input[data-action="excused"]').forEach(r => r.checked = false);
             allPresentActive = true;
-            allAbsentActive  = false;
+            allAbsentActive = false;
         }
         updateStats();
     });
@@ -708,7 +724,7 @@
             document.querySelectorAll('input[data-action="absent"]').forEach(r => r.checked = true);
             document.querySelectorAll('input[data-action="present"]').forEach(r => r.checked = false);
             document.querySelectorAll('input[data-action="excused"]').forEach(r => r.checked = false);
-            allAbsentActive  = true;
+            allAbsentActive = true;
             allPresentActive = false;
         }
         updateStats();
@@ -725,7 +741,7 @@
     // Сохранение
     document.getElementById('save-btn').addEventListener('click', () => {
         const data = collectData();
-        const btn  = document.getElementById('save-btn');
+        const btn = document.getElementById('save-btn');
 
         fetch(`/teacher/save_attendance/${slotData.id}/`, {
             method: 'POST',
@@ -733,19 +749,19 @@
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
             },
-            body: JSON.stringify({ attendance: data })
+            body: JSON.stringify({attendance: data})
         })
-        .then(response => {
-            if (response.ok) {
-                btn.innerHTML = '<i class="bi bi-check2-circle"></i> Сохранено';
-                btn.style.background = '#16A34A';
-                setTimeout(() => {
-                    btn.innerHTML = '<i class="bi bi-check2-circle"></i> Сохранить';
-                    btn.style.background = '';
-                }, 2000);
-            }
-        })
-        .catch(err => console.error(err));
+            .then(response => {
+                if (response.ok) {
+                    btn.innerHTML = '<i class="bi bi-check2-circle"></i> Сохранено';
+                    btn.style.background = '#16A34A';
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="bi bi-check2-circle"></i> Сохранить';
+                        btn.style.background = '';
+                    }, 2000);
+                }
+            })
+            .catch(err => console.error(err));
     });
 
     function getCookie(name) {
