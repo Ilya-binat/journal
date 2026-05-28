@@ -1,10 +1,12 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from .utils import *
 from administrator.models import *
 from datetime import datetime, date, timedelta
 import json
 from django.utils import timezone
 from users.decorators import role_required
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
 
 
 @role_required('Тренер')
@@ -75,3 +77,23 @@ def mark_attendance(request, slot_id):
         'slot': slot_data,
 
     })
+
+
+@require_POST
+@role_required('Тренер')
+def save_slot_notes(request, slot_id):
+
+    slot = get_object_or_404(Slot, id=slot_id, coach=request.user)
+
+    if request.method == "POST":
+        # УДАЛЕНИЕ
+        if "delete" in request.POST:
+            slot.notes = ""
+            slot.save()
+            return redirect(request.META.get("HTTP_REFERER"))
+        # СОХРАНЕНИЕ
+        notes = request.POST.get("notes", "").strip()
+        slot.notes = notes
+        slot.save()
+
+    return redirect(request.META.get("HTTP_REFERER"))

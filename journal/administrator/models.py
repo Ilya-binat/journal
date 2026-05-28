@@ -87,6 +87,11 @@ class Slot(models.Model):
 
         return start_datetime <= now <= end_datetime
 
+    @property
+    def has_notes(self):
+
+        return bool(self.notes and self.notes.strip())
+
 
 stage_choices = [
     ("НП1", "НП1"),
@@ -306,3 +311,4 @@ class AssessmentResult(models.Model):
 
     def __str__(self):
         return f"{self.athlete} - {self.test_item} ({self.score})"
+
