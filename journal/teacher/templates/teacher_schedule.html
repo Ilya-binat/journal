@@ -195,10 +195,12 @@
                                             {% endif %}
 
                                             <!-- COMMENT BUTTON -->
+                                            {% if not tr.notes %}
                                             <button type="button"
                                                     class="comment-toggle-btn">
                                                 <i class="bi bi-chat-left-text"></i>
                                             </button>
+                                            {% endif %}
                                         </div>
                                     </div>
                                     <!-- COMMENT -->
@@ -207,95 +209,127 @@
                                           class="comment-box"
                                           id="comment-{{ tr.id }}">
                                         {% csrf_token %}
-                                        <textarea name="notes" class="form-control" rows="2" placeholder="Введите комментарий...">{{ tr.notes }}</textarea>
+                                        <textarea name="notes" class="form-control" rows="2"
+                                                  placeholder="Введите комментарий...">{{ tr.notes }}</textarea>
                                         <div class="d-flex justify-content-end mt-2 gap-2">
-                                            {% if tr.notes %}
-                                            <button type="submit" name="delete" value="1" class="btn btn-outline-danger btn-sm">
-                                                <i class="bi bi-trash"></i>
-                                                Удалить
-                                            </button>
-                                            {% endif %}
                                             <button type="submit" class="btn btn-primary btn-sm px-3">
                                                 <i class="bi bi-check2 me-1"></i>
                                                 Сохранить
                                             </button>
                                         </div>
                                     </form>
+                                    {% if tr.notes %}
+                                    <div class="card border-0 shadow-sm mt-2">
+                                        <div class="card-body py-2 px-3">
+
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div class="d-flex align-items-center text-primary">
+                                                    <i class="bi bi-chat-square-text me-2"></i>
+                                                    <small class="fw-semibold">Комментарий тренера</small>
+                                                </div>
+                                                <form method="POST"
+                                                      action="{% url 'teacher:save_slot_notes' tr.id %}">
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button
+                                                                type="button"
+                                                                class="btn btn-outline-primary btn-edit"
+                                                                data-target="comment-{{ tr.id }}">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </button>
+
+                                                        {% csrf_token %}
+                                                        <button type="submit"
+                                                                class="btn btn-outline-danger btn-delete"
+                                                                data-target="comment-{{ tr.id }}"
+                                                                title="Удалить">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                </form>
+                                            </div>
+                                        </div>
+
+                                        <p class="mb-0 small">
+                                            {{ tr.notes }}
+                                        </p>
+
+                                    </div>
                                 </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    {% else %}
+                {% else %}
 
-                    <!-- Free slot -->
-                    <div class="d-flex mb-3">
-                        <div class="d-flex align-items-start gap-2 w-100">
+                <!-- Free slot -->
+                <div class="d-flex mb-3">
+                    <div class="d-flex align-items-start gap-2 w-100">
 
-                            <div class="d-flex me-2" style="flex-direction: row; align-items: stretch;">
-                                <!-- Time labels -->
-                                <div class="d-flex flex-column justify-content-between me-2"
-                                     style="min-width: 48px; text-align: right;">
+                        <div class="d-flex me-2" style="flex-direction: row; align-items: stretch;">
+                            <!-- Time labels -->
+                            <div class="d-flex flex-column justify-content-between me-2"
+                                 style="min-width: 48px; text-align: right;">
                                     <span class="text-muted fw-semibold" style="font-size: 14px; line-height: 1;">
                                         {{ training.start_time|time:'H:i' }}
                                     </span>
-                                    <span class="text-muted fw-semibold" style="font-size: 14px; line-height: 1;">
+                                <span class="text-muted fw-semibold" style="font-size: 14px; line-height: 1;">
                                         {{ training.end_time|time:'H:i' }}
                                     </span>
-                                </div>
-
-                                <!-- Vertical line with empty dots -->
-                                <div class="d-flex flex-column align-items-center"
-                                     style="width: 12px; min-height: 40px;">
-                                    <div class="rounded-circle border flex-shrink-0"
-                                         style="width:10px; height:10px; border-color:#dee2e6 !important;"></div>
-                                    <div class="flex-grow-1 bg-secondary"
-                                         style="width: 2px; opacity: 0.2; min-height: 20px;"></div>
-                                    <div class="rounded-circle border flex-shrink-0"
-                                         style="width:10px; height:10px; border-color:#dee2e6 !important;"></div>
-                                </div>
                             </div>
 
-                            <div class="text-muted small py-1 d-flex align-items-center" style="min-height: 40px;">
-                                <i class="bi bi-plus-circle me-1 text-primary"></i> Свободное время
+                            <!-- Vertical line with empty dots -->
+                            <div class="d-flex flex-column align-items-center"
+                                 style="width: 12px; min-height: 40px;">
+                                <div class="rounded-circle border flex-shrink-0"
+                                     style="width:10px; height:10px; border-color:#dee2e6 !important;"></div>
+                                <div class="flex-grow-1 bg-secondary"
+                                     style="width: 2px; opacity: 0.2; min-height: 20px;"></div>
+                                <div class="rounded-circle border flex-shrink-0"
+                                     style="width:10px; height:10px; border-color:#dee2e6 !important;"></div>
                             </div>
                         </div>
-                    </div>
 
-                    {% endif %}
-                    {% endwith %}
-                    {% endfor %}
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- RIGHT: SIDEBAR PANELS -->
-    <div class="col-lg-4">
-
-        <!-- WEEK OCCUPANCY -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center gap-2 mb-3">
-                    <i class="bi bi-bar-chart-fill text-primary"></i>
-                    <span class="fw-semibold">Занятость недели</span>
-                </div>
-                {% for w,q in week_trainings.items %}
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between small mb-1">
-                        <span>{{ w }} ({{q.percent}}%)</span>
-                        <span class="text-muted">{{ q.count }}/6</span>
-                    </div>
-                    <div class="progress" style="height:8px;border-radius:4px;">
-                        <div class="progress-bar bg-primary" style="width:{{q.percent}}%;"></div>
+                        <div class="text-muted small py-1 d-flex align-items-center" style="min-height: 40px;">
+                            <i class="bi bi-plus-circle me-1 text-primary"></i> Свободное время
+                        </div>
                     </div>
                 </div>
+
+                {% endif %}
+                {% endwith %}
                 {% endfor %}
             </div>
-        </div>
 
+        </div>
     </div>
+</div>
+
+<!-- RIGHT: SIDEBAR PANELS -->
+<div class="col-lg-4">
+
+    <!-- WEEK OCCUPANCY -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-bar-chart-fill text-primary"></i>
+                <span class="fw-semibold">Занятость недели</span>
+            </div>
+            {% for w,q in week_trainings.items %}
+            <div class="mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>{{ w }} ({{q.percent}}%)</span>
+                    <span class="text-muted">{{ q.count }}/6</span>
+                </div>
+                <div class="progress" style="height:8px;border-radius:4px;">
+                    <div class="progress-bar bg-primary" style="width:{{q.percent}}%;"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
 </div>
 <style>
     .week-slider {
@@ -446,6 +480,17 @@
                 box.classList.toggle("open");
             });
         });
+        //    EDIT COMMENT
+        document.querySelectorAll(".btn-edit").forEach(btn => {
+            btn.addEventListener("click", function () {
+                const box = document.getElementById(
+                    this.dataset.target
+                );
+
+                box.classList.toggle("open");
+            });
+        });
     });
+
 </script>
 {% endblock %}
