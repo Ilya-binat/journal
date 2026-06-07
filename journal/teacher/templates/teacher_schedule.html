@@ -232,14 +232,14 @@
                                                     <div class="btn-group btn-group-sm">
                                                         <button
                                                                 type="button"
-                                                                class="btn btn-outline-primary btn-edit"
+                                                                class="btn btn-sm btn-edit"
                                                                 data-target="comment-{{ tr.id }}">
                                                             <i class="bi bi-pencil"></i>
                                                         </button>
 
                                                         {% csrf_token %}
                                                         <button type="submit"
-                                                                class="btn btn-outline-danger btn-delete"
+                                                                class="btn btn-sm btn-delete"
                                                                 data-target="comment-{{ tr.id }}"
                                                                 title="Удалить">
                                                             <i class="bi bi-trash"></i>
@@ -435,6 +435,32 @@
 
     .save-comment-btn:hover {
         transform: translateY(-1px);
+    }
+
+    .btn-edit,
+    .btn-delete {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 4px 6px;
+    }
+
+    .btn-edit {
+        color: #3B82F6;
+    }
+
+    .btn-delete {
+        color: #EF4444;
+    }
+
+    .btn-edit:hover,
+    .btn-delete:hover {
+        transform: scale(1.08);
+    }
+
+    .btn-edit:focus,
+    .btn-delete:focus {
+        box-shadow: none !important;
     }
 </style>
 <script>

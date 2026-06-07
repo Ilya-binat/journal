@@ -82,7 +82,6 @@ def mark_attendance(request, slot_id):
 @require_POST
 @role_required('Тренер')
 def save_slot_notes(request, slot_id):
-
     slot = get_object_or_404(Slot, id=slot_id, coach=request.user)
 
     if request.method == "POST":
@@ -97,3 +96,23 @@ def save_slot_notes(request, slot_id):
         slot.save()
 
     return redirect(request.META.get("HTTP_REFERER"))
+
+
+@role_required('Тренер')
+def mark_student(request, slot_id, student_id):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        status = data.get('status')
+        note = data.get('note')
+        arrival_time = data.get('arrival_time')
+        Attendance.objects.create(
+            slot_id=slot_id,
+            student_id=student_id,
+            note=note,
+            status=status,
+            marked_by=request.user,
+            arrival_time=arrival_time
+        )
+
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'})

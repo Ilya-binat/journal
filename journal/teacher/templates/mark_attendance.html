@@ -13,9 +13,6 @@
         <button class="att-btn" onclick="history.back()">
             <i class="bi bi-arrow-left"></i> Назад
         </button>
-        <button class="att-btn att-btn-primary" id="save-btn">
-            <i class="bi bi-check2-circle"></i> Сохранить
-        </button>
     </div>
 </div>
 
@@ -127,7 +124,8 @@
                                   data-id="{{ student.pk }}"
                                   placeholder="Комментарий тренера..."></textarea>
                         <div class="d-flex justify-content-end mt-2">
-                            <button class="btn btn-primary btn-sm px-3 save-comment-btn">
+                            <button class="btn btn-primary btn-sm px-3 save-comment-btn"
+                                    data-target="cmnt-{{ student.pk }}">
                                 <i class="bi bi-check2 me-1"></i>
                                 Сохранить
                             </button>
@@ -137,7 +135,11 @@
                 </div>
                 {% endfor %}
             </div>
-
+            <hr>
+            <button class="btn btn-primary btn-sm px-3 save-attendance-btn" id="save-btn">
+                <i class="bi bi-check2 me-1"></i>
+                Сохранить
+            </button>
         </div>
     </div>
 
@@ -179,460 +181,132 @@
 
 </div>
 
-<style>
-    /* ── LAYOUT ─────────────────────────────────────────── */
-    .att-topbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 12px;
-        flex-wrap: wrap;
-        margin-bottom: 1.25rem;
-    }
-
-    .att-title {
-        font-size: 20px;
-        font-weight: 600;
-        margin: 0 0 2px;
-        color: #111827;
-    }
-
-    .att-subtitle {
-        font-size: 13px;
-        color: #6B7280;
-        margin: 0;
-    }
-
-    .att-topbar-actions {
-        display: flex;
-        gap: 8px;
-        flex-shrink: 0;
-    }
-
-    .att-layout {
-        display: grid;
-        grid-template-columns: 1fr 240px;
-        gap: 16px;
-        align-items: start;
-    }
-
-    @media (max-width: 768px) {
-        .att-layout {
-            grid-template-columns: 1fr;
-        }
-
-        .att-right {
-            order: -1;
-        }
-
-        .att-chips {
-            flex-wrap: wrap;
-        }
-    }
-
-    /* ── BUTTONS ────────────────────────────────────────── */
-    .att-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 7px 14px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-        border: 1px solid #D1D5DB;
-        background: #fff;
-        color: #374151;
-        transition: background .15s;
-        white-space: nowrap;
-    }
-
-    .att-btn:hover {
-        background: #F3F4F6;
-    }
-
-    .att-btn-primary {
-        background: #2563EB;
-        color: #fff;
-        border-color: #2563EB;
-    }
-
-    .att-btn-primary:hover {
-        background: #1D4ED8;
-    }
-
-    .att-btn-success {
-        background: #D1FAE5;
-        color: #065F46;
-        border-color: #6EE7B7;
-    }
-
-    .att-btn-success:hover {
-        background: #A7F3D0;
-    }
-
-    .att-btn-danger {
-        background: #FEE2E2;
-        color: #991B1B;
-        border-color: #FCA5A5;
-    }
-
-    .att-btn-danger:hover {
-        background: #FECACA;
-    }
-
-    .att-btn-sm {
-        padding: 5px 10px;
-        font-size: 12px;
-    }
-
-    .att-btn-icon {
-        padding: 5px 8px;
-        border-radius: 8px;
-        border: 1px solid #E5E7EB;
-        background: transparent;
-        color: #9CA3AF;
-        cursor: pointer;
-        flex-shrink: 0;
-        transition: background .15s, color .15s;
-    }
-
-    .att-btn-icon:hover {
-        background: #F3F4F6;
-        color: #374151;
-    }
-
-    .att-btn-group {
-        display: flex;
-        gap: 6px;
-    }
-
-    /* ── CARDS ──────────────────────────────────────────── */
-    .att-card {
-        background: #fff;
-        border: 1px solid #E5E7EB;
-        border-radius: 12px;
-        padding: 1rem 1.125rem;
-        margin-bottom: 14px;
-    }
-
-    .att-card-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-bottom: 12px;
-    }
-
-    .att-card-title {
-        font-size: 14px;
-        font-weight: 600;
-        color: #111827;
-        margin: 0 0 2px;
-    }
-
-    .att-card-sub {
-        font-size: 12px;
-        color: #6B7280;
-        margin: 0;
-    }
-
-    /* ── INFO TILES ─────────────────────────────────────── */
-    .att-info-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin-bottom: 14px;
-    }
-
-    .att-tile {
-        border-radius: 10px;
-        padding: 10px 14px;
-    }
-
-    .att-tile-blue {
-        background: #EFF6FF;
-    }
-
-    .att-tile-green {
-        background: #F0FDF4;
-    }
-
-    .att-tile-label {
-        font-size: 11px;
-        color: #6B7280;
-        margin-bottom: 2px;
-    }
-
-    .att-tile-value {
-        font-size: 15px;
-        font-weight: 600;
-        color: #111827;
-    }
-
-    /* ── SEARCH ─────────────────────────────────────────── */
-    .att-search-wrap {
-        position: relative;
-        margin-bottom: 10px;
-    }
-
-    .att-search-icon {
-        position: absolute;
-        left: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 14px;
-        color: #9CA3AF;
-        pointer-events: none;
-    }
-
-    .att-search-input {
-        width: 100%;
-        padding: 7px 10px 7px 30px;
-        font-size: 13px;
-        border: 1px solid #E5E7EB;
-        border-radius: 8px;
-        background: #F9FAFB;
-        color: #111827;
-        outline: none;
-        transition: border-color .15s;
-        box-sizing: border-box;
-    }
-
-    .att-search-input:focus {
-        border-color: #93C5FD;
-        background: #fff;
-    }
-
-    /* ── STUDENT ROW ────────────────────────────────────── */
-    .att-row {
-        border-bottom: 1px solid #F3F4F6;
-        padding: 7px 0;
-    }
-
-    .att-row:last-child {
-        border-bottom: none;
-    }
-
-    .att-row-main {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .att-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: #DBEAFE;
-        color: #1D4ED8;
-        font-size: 11px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        text-transform: uppercase;
-    }
-
-    .att-name {
-        font-size: 13px;
-        font-weight: 500;
-        color: #111827;
-        flex: 1;
-        min-width: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    /* ── RADIO CHIPS ────────────────────────────────────── */
-    .att-chips {
-        display: flex;
-        gap: 4px;
-        flex-shrink: 0;
-    }
-
-    .att-chip-label {
-        cursor: pointer;
-    }
-
-    .att-chip-label input.att-radio {
-        display: none;
-    }
-
-    .att-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 4px 9px;
-        border-radius: 20px;
-        border: 1px solid #E5E7EB;
-        font-size: 12px;
-        font-weight: 500;
-        color: #6B7280;
-        background: #F9FAFB;
-        transition: all .15s;
-        white-space: nowrap;
-        user-select: none;
-    }
-
-    .att-chip:hover {
-        background: #F3F4F6;
-        border-color: #D1D5DB;
-    }
-
-    /* selected states */
-    .att-radio:checked + .att-chip-present {
-        background: #D1FAE5;
-        color: #065F46;
-        border-color: #6EE7B7;
-    }
-
-    .att-radio:checked + .att-chip-absent {
-        background: #FEE2E2;
-        color: #991B1B;
-        border-color: #FCA5A5;
-    }
-
-    .att-radio:checked + .att-chip-excused {
-        background: #FEF3C7;
-        color: #92400E;
-        border-color: #FCD34D;
-    }
-
-    /* ── COMMENT ────────────────────────────────────────── */
-    .att-comment {
-        display: none;
-        padding: 6px 0 6px 40px;
-    }
-
-    .att-comment.open {
-        display: block;
-    }
-
-    .att-textarea {
-        width: 100%;
-        box-sizing: border-box;
-        font-size: 12px;
-        padding: 6px 10px;
-        border: 1px solid #E5E7EB;
-        border-radius: 8px;
-        background: #F9FAFB;
-        color: #111827;
-        resize: none;
-        outline: none;
-        transition: border-color .15s;
-    }
-
-    .att-textarea:focus {
-        border-color: #93C5FD;
-        background: #fff;
-    }
-
-    /* ── STATS ──────────────────────────────────────────── */
-    .att-prog-label {
-        font-size: 11px;
-        color: #6B7280;
-        margin: 8px 0 4px;
-    }
-
-    .att-prog-bar {
-        height: 6px;
-        border-radius: 3px;
-        background: #E5E7EB;
-        margin-bottom: 14px;
-        overflow: hidden;
-    }
-
-    .att-prog-fill {
-        height: 100%;
-        border-radius: 3px;
-        background: #16A34A;
-        transition: width .3s;
-    }
-
-    .att-stat {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-radius: 10px;
-        padding: 10px 12px;
-        margin-bottom: 8px;
-    }
-
-    .att-stat:last-child {
-        margin-bottom: 0;
-    }
-
-    .att-stat-label {
-        font-size: 12px;
-        color: #6B7280;
-        margin-bottom: 1px;
-    }
-
-    .att-stat-num {
-        font-size: 22px;
-        font-weight: 600;
-    }
-
-    .att-stat-icon {
-        font-size: 20px;
-    }
-
-    .att-stat-present {
-        background: #F0FDF4;
-    }
-
-    .att-stat-present .att-stat-num {
-        color: #15803D;
-    }
-
-    .att-stat-present .att-stat-icon {
-        color: #16A34A;
-    }
-
-    .att-stat-absent {
-        background: #FEF2F2;
-    }
-
-    .att-stat-absent .att-stat-num {
-        color: #DC2626;
-    }
-
-    .att-stat-absent .att-stat-icon {
-        color: #DC2626;
-    }
-
-    .att-stat-excused {
-        background: #FFFBEB;
-    }
-
-    .att-stat-excused .att-stat-num {
-        color: #D97706;
-    }
-
-    .att-stat-excused .att-stat-icon {
-        color: #D97706;
-    }
-
-    .save-comment-btn {
-        border-radius: 10px;
-        font-weight: 500;
-        transition: 0.2s;
-    }
-
-    .save-comment-btn:hover {
-        transform: translateY(-1px);
-    }
-</style>
-
 {% endblock %}
 
 {% block js %}
+<style>
+.att-toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+.att-toast {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px 16px;
+    min-width: 300px;
+    max-width: 380px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    pointer-events: all;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: transform 0.35s cubic-bezier(.22,.68,0,1.2), opacity 0.3s ease;
+}
+.att-toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+.att-toast.hide {
+    transform: translateX(120%);
+    opacity: 0;
+}
+.att-toast-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+.att-toast-icon.success { background: #dcfce7; color: #16a34a; }
+.att-toast-icon.error   { background: #fee2e2; color: #dc2626; }
+.att-toast-icon.warning { background: #fef9c3; color: #ca8a04; }
+.att-toast-body { flex: 1; min-width: 0; }
+.att-toast-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    margin: 0 0 2px;
+}
+.att-toast-msg {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.45;
+}
+.att-toast-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #9ca3af;
+    font-size: 16px;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+    align-self: flex-start;
+}
+.att-toast-close:hover { color: #374151; }
+.att-toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    border-radius: 0 0 12px 12px;
+    background: #16a34a;
+    transition: width linear;
+}
+.att-toast.error .att-toast-progress   { background: #dc2626; }
+.att-toast.warning .att-toast-progress { background: #ca8a04; }
+</style>
+
+<div class="att-toast-container" id="att-toast-container" aria-live="polite" aria-atomic="false"></div>
+
 <script>
-    const slotData = {{ slot | safe }};
+    function showToast({ type = 'success', title, message, duration = 4000 }) {
+        const container = document.getElementById('att-toast-container');
+        const icons = { success: 'bi bi-check-circle-fill', error: 'bi bi-x-circle-fill', warning: 'bi bi-exclamation-circle-fill' };
+        const toast = document.createElement('div');
+        toast.className = `att-toast ${type}`;
+        toast.style.position = 'relative';
+        toast.innerHTML = `
+            <div class="att-toast-icon ${type}"><i class="${icons[type]}"></i></div>
+            <div class="att-toast-body">
+                <p class="att-toast-title">${title}</p>
+                ${message ? `<p class="att-toast-msg">${message}</p>` : ''}
+            </div>
+            <button class="att-toast-close" aria-label="Закрыть"><i class="bi bi-x"></i></button>
+            <div class="att-toast-progress" style="width:100%"></div>
+        `;
+        container.appendChild(toast);
+        requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
+
+        const progress = toast.querySelector('.att-toast-progress');
+        progress.style.transition = `width ${duration}ms linear`;
+        requestAnimationFrame(() => requestAnimationFrame(() => { progress.style.width = '0%'; }));
+
+        const dismiss = () => {
+            toast.classList.remove('show');
+            toast.classList.add('hide');
+            setTimeout(() => toast.remove(), 400);
+        };
+        toast.querySelector('.att-toast-close').addEventListener('click', dismiss);
+        const timer = setTimeout(dismiss, duration);
+        toast.addEventListener('mouseenter', () => clearTimeout(timer));
+        toast.addEventListener('mouseleave', () => setTimeout(dismiss, 1500));
+    }
+
+    const slotData = {{slot | safe}}
     const totalStudents = document.querySelectorAll('.att-row').length;
 
     let allPresentActive = false;
@@ -699,6 +373,15 @@
             if (target) target.classList.toggle('open');
         });
     });
+    //  Закрытие блока комментариев
+    document.querySelectorAll('.save-comment-btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const target = document.getElementById(this.dataset.target);
+            if (target) target.classList.toggle('open');
+        });
+    });
 
     // Все присутствуют (повторный клик — сброс)
     document.getElementById('all-present').addEventListener('click', () => {
@@ -738,32 +421,6 @@
         });
     });
 
-    // Сохранение
-    document.getElementById('save-btn').addEventListener('click', () => {
-        const data = collectData();
-        const btn = document.getElementById('save-btn');
-
-        fetch(`/teacher/save_attendance/${slotData.id}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({attendance: data})
-        })
-            .then(response => {
-                if (response.ok) {
-                    btn.innerHTML = '<i class="bi bi-check2-circle"></i> Сохранено';
-                    btn.style.background = '#16A34A';
-                    setTimeout(() => {
-                        btn.innerHTML = '<i class="bi bi-check2-circle"></i> Сохранить';
-                        btn.style.background = '';
-                    }, 2000);
-                }
-            })
-            .catch(err => console.error(err));
-    });
-
     function getCookie(name) {
         let value = null;
         if (document.cookie) {
@@ -777,5 +434,93 @@
         }
         return value;
     }
+
+    // Сохранение информации о посещении
+    const saveAttendance = document.querySelector('.save-attendance-btn');
+    saveAttendance.addEventListener('click', async () => {
+        const checkedStudents = document.querySelectorAll('.att-radio:checked');
+
+        if (checkedStudents.length === 0) {
+            showToast({
+                type: 'warning',
+                title: 'Нет отмеченных',
+                message: 'Отметьте хотя бы одного спортсмена перед сохранением.'
+            });
+            return;
+        }
+
+        const unmarked = totalStudents - (
+            document.querySelectorAll('input[data-action="present"]:checked').length +
+            document.querySelectorAll('input[data-action="absent"]:checked').length +
+            document.querySelectorAll('input[data-action="excused"]:checked').length
+        );
+
+        const saveBtn = document.getElementById('save-btn');
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Сохранение...';
+
+        const now = new Date();
+        const arrivalTime = now.toTimeString().slice(0, 8);
+        const requests = [];
+
+        checkedStudents.forEach(input => {
+            const textarea = input.closest('.att-row').querySelector('.att-textarea').value;
+            requests.push(
+                saveAttendanceHandler({
+                    status: input.dataset.action,
+                    note: textarea,
+                    arrival_time: arrivalTime
+                }, input.dataset.id)
+            );
+        });
+
+        try {
+            const results = await Promise.allSettled(requests);
+            const failed = results.filter(r => r.status === 'rejected' || (r.value && !r.value.ok)).length;
+            const saved = results.length - failed;
+
+            if (failed === 0) {
+                const msg = unmarked > 0
+                    ? `Сохранено ${saved} чел. · ${unmarked} не отмечено`
+                    : `Все ${saved} спортсменов отмечены`;
+                showToast({ type: 'success', title: 'Посещаемость сохранена', message: msg });
+            } else if (saved > 0) {
+                showToast({
+                    type: 'warning',
+                    title: 'Сохранено частично',
+                    message: `${saved} сохранено, ${failed} ошибок. Попробуйте ещё раз.`
+                });
+            } else {
+                showToast({
+                    type: 'error',
+                    title: 'Ошибка сохранения',
+                    message: 'Не удалось сохранить данные. Проверьте соединение и попробуйте снова.'
+                });
+            }
+        } catch (err) {
+            showToast({
+                type: 'error',
+                title: 'Ошибка',
+                message: 'Произошла непредвиденная ошибка. Попробуйте ещё раз.'
+            });
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="bi bi-check2 me-1"></i> Сохранить';
+        }
+    });
+
+    // Сохранение одного студента
+    function saveAttendanceHandler(student, studentId) {
+        return fetch(`/teacher/mark_student/${slotData.id}/${studentId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(student)
+        });
+    }
+
+
 </script>
 {% endblock %}
