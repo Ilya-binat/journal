@@ -54,17 +54,39 @@ def teacher_schedule(request):
 def mark_attendance(request, slot_id):
     # Вывод слота со всей связанной информацией
     slot = get_object_or_404(Slot, pk=slot_id)
+    group_members = [member.student for member in slot.group.group_students.all()]
+
+    existing = Attendance.objects.filter(slot=slot)
+    attendance_map = {
+        a.student_id: {
+            'status': a.status,
+            'note': a.note
+        }
+        for a in existing
+
+    }
+
+    # Создание списка без использования гениратора словарей(a.)
+
+    # attendance_map = {}
+    # for a in existing:
+    #     attendance_map [a.student_id] = {
+    #         'status': a.status,
+    #         'note': a.note
+    #     }
+
     group_name = slot.group.group_name
     start_time = slot.start_time
     end_time = slot.end_time
     slot_date = slot.date
     hall = slot.hall.hall_name
-    group_members = [member.student for member in slot.group.group_students.all()]
+
     slot_data = json.dumps({
         'id': slot.id,
         'date': str(slot.date),
         'start_time': str(slot.start_time),
         'end_time': str(slot.end_time),
+        'attendance': attendance_map
     })
 
     return render(request, 'mark_attendance.html', {
@@ -98,21 +120,19 @@ def save_slot_notes(request, slot_id):
     return redirect(request.META.get("HTTP_REFERER"))
 
 
+@require_POST
 @role_required('Тренер')
-def mark_student(request, slot_id, student_id):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        status = data.get('status')
-        note = data.get('note')
-        arrival_time = data.get('arrival_time')
-        Attendance.objects.create(
+def save_all_attendance(request, slot_id):
+    data = json.loads(request.body)  # список [{student_id, status, note, arrival_time}]
+    for item in data:
+        Attendance.objects.update_or_create(
             slot_id=slot_id,
-            student_id=student_id,
-            note=note,
-            status=status,
-            marked_by=request.user,
-            arrival_time=arrival_time
+            student_id=item['student_id'],
+            defaults={
+                'status': item['status'],
+                'note': item.get('note', ''),
+                'arrival_time': item.get('arrival_time'),
+                'marked_by': request.user,
+            }
         )
-
-        return JsonResponse({'status': 'success'})
-    return JsonResponse({'status': 'error'})
+    return JsonResponse({'status': 'success'})

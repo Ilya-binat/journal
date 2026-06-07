@@ -5,6 +5,6 @@ urlpatterns = [
     path('schedule/', teacher_schedule, name='schedule'),
     path('mark_attendance/<int:slot_id>', mark_attendance, name='mark_attendance'),
     path('save_slot_notes/<int:slot_id>', save_slot_notes, name="save_slot_notes"),
-    path('mark_student/<int:slot_id>/<int:student_id>', mark_student, name="mark_student"),
+    path('save_attendance/<int:slot_id>', save_all_attendance, name='save_all_attendance'),
 
 ]

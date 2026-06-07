@@ -185,97 +185,134 @@
 
 {% block js %}
 <style>
-.att-toast-container {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    pointer-events: none;
-}
-.att-toast {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 14px 16px;
-    min-width: 300px;
-    max-width: 380px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-    pointer-events: all;
-    transform: translateX(120%);
-    opacity: 0;
-    transition: transform 0.35s cubic-bezier(.22,.68,0,1.2), opacity 0.3s ease;
-}
-.att-toast.show {
-    transform: translateX(0);
-    opacity: 1;
-}
-.att-toast.hide {
-    transform: translateX(120%);
-    opacity: 0;
-}
-.att-toast-icon {
-    flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-}
-.att-toast-icon.success { background: #dcfce7; color: #16a34a; }
-.att-toast-icon.error   { background: #fee2e2; color: #dc2626; }
-.att-toast-icon.warning { background: #fef9c3; color: #ca8a04; }
-.att-toast-body { flex: 1; min-width: 0; }
-.att-toast-title {
-    font-weight: 600;
-    font-size: 14px;
-    color: #111827;
-    margin: 0 0 2px;
-}
-.att-toast-msg {
-    font-size: 13px;
-    color: #6b7280;
-    margin: 0;
-    line-height: 1.45;
-}
-.att-toast-close {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #9ca3af;
-    font-size: 16px;
-    padding: 0;
-    line-height: 1;
-    flex-shrink: 0;
-    align-self: flex-start;
-}
-.att-toast-close:hover { color: #374151; }
-.att-toast-progress {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 3px;
-    border-radius: 0 0 12px 12px;
-    background: #16a34a;
-    transition: width linear;
-}
-.att-toast.error .att-toast-progress   { background: #dc2626; }
-.att-toast.warning .att-toast-progress { background: #ca8a04; }
+    .att-toast-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        pointer-events: none;
+    }
+
+    .att-toast {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 14px 16px;
+        min-width: 300px;
+        max-width: 380px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        pointer-events: all;
+        transform: translateX(120%);
+        opacity: 0;
+        transition: transform 0.35s cubic-bezier(.22, .68, 0, 1.2), opacity 0.3s ease;
+    }
+
+    .att-toast.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    .att-toast.hide {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+
+    .att-toast-icon {
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .att-toast-icon.success {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .att-toast-icon.error {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .att-toast-icon.warning {
+        background: #fef9c3;
+        color: #ca8a04;
+    }
+
+    .att-toast-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .att-toast-title {
+        font-weight: 600;
+        font-size: 14px;
+        color: #111827;
+        margin: 0 0 2px;
+    }
+
+    .att-toast-msg {
+        font-size: 13px;
+        color: #6b7280;
+        margin: 0;
+        line-height: 1.45;
+    }
+
+    .att-toast-close {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #9ca3af;
+        font-size: 16px;
+        padding: 0;
+        line-height: 1;
+        flex-shrink: 0;
+        align-self: flex-start;
+    }
+
+    .att-toast-close:hover {
+        color: #374151;
+    }
+
+    .att-toast-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        border-radius: 0 0 12px 12px;
+        background: #16a34a;
+        transition: width linear;
+    }
+
+    .att-toast.error .att-toast-progress {
+        background: #dc2626;
+    }
+
+    .att-toast.warning .att-toast-progress {
+        background: #ca8a04;
+    }
 </style>
 
 <div class="att-toast-container" id="att-toast-container" aria-live="polite" aria-atomic="false"></div>
 
 <script>
-    function showToast({ type = 'success', title, message, duration = 4000 }) {
+    function showToast({type = 'success', title, message, duration = 4000}) {
         const container = document.getElementById('att-toast-container');
-        const icons = { success: 'bi bi-check-circle-fill', error: 'bi bi-x-circle-fill', warning: 'bi bi-exclamation-circle-fill' };
+        const icons = {
+            success: 'bi bi-check-circle-fill',
+            error: 'bi bi-x-circle-fill',
+            warning: 'bi bi-exclamation-circle-fill'
+        };
         const toast = document.createElement('div');
         toast.className = `att-toast ${type}`;
         toast.style.position = 'relative';
@@ -293,7 +330,9 @@
 
         const progress = toast.querySelector('.att-toast-progress');
         progress.style.transition = `width ${duration}ms linear`;
-        requestAnimationFrame(() => requestAnimationFrame(() => { progress.style.width = '0%'; }));
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            progress.style.width = '0%';
+        }));
 
         const dismiss = () => {
             toast.classList.remove('show');
@@ -435,92 +474,88 @@
         return value;
     }
 
-    // Сохранение информации о посещении
-    const saveAttendance = document.querySelector('.save-attendance-btn');
-    saveAttendance.addEventListener('click', async () => {
-        const checkedStudents = document.querySelectorAll('.att-radio:checked');
+   // Сохранение информации о посещении
+const saveAttendance = document.querySelector('.save-attendance-btn');
+saveAttendance.addEventListener('click', async () => {
+    const checkedStudents = document.querySelectorAll('.att-radio:checked');
 
-        if (checkedStudents.length === 0) {
-            showToast({
-                type: 'warning',
-                title: 'Нет отмеченных',
-                message: 'Отметьте хотя бы одного спортсмена перед сохранением.'
-            });
-            return;
-        }
-
-        const unmarked = totalStudents - (
-            document.querySelectorAll('input[data-action="present"]:checked').length +
-            document.querySelectorAll('input[data-action="absent"]:checked').length +
-            document.querySelectorAll('input[data-action="excused"]:checked').length
-        );
-
-        const saveBtn = document.getElementById('save-btn');
-        saveBtn.disabled = true;
-        saveBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Сохранение...';
-
-        const now = new Date();
-        const arrivalTime = now.toTimeString().slice(0, 8);
-        const requests = [];
-
-        checkedStudents.forEach(input => {
-            const textarea = input.closest('.att-row').querySelector('.att-textarea').value;
-            requests.push(
-                saveAttendanceHandler({
-                    status: input.dataset.action,
-                    note: textarea,
-                    arrival_time: arrivalTime
-                }, input.dataset.id)
-            );
+    if (checkedStudents.length === 0) {
+        showToast({
+            type: 'warning',
+            title: 'Нет отмеченных',
+            message: 'Отметьте хотя бы одного спортсмена перед сохранением.'
         });
+        return;
+    }
 
-        try {
-            const results = await Promise.allSettled(requests);
-            const failed = results.filter(r => r.status === 'rejected' || (r.value && !r.value.ok)).length;
-            const saved = results.length - failed;
+    const unmarked = totalStudents - checkedStudents.length;
+    const saveBtn = document.getElementById('save-btn');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Сохранение...';
 
-            if (failed === 0) {
-                const msg = unmarked > 0
-                    ? `Сохранено ${saved} чел. · ${unmarked} не отмечено`
-                    : `Все ${saved} спортсменов отмечены`;
-                showToast({ type: 'success', title: 'Посещаемость сохранена', message: msg });
-            } else if (saved > 0) {
-                showToast({
-                    type: 'warning',
-                    title: 'Сохранено частично',
-                    message: `${saved} сохранено, ${failed} ошибок. Попробуйте ещё раз.`
-                });
-            } else {
-                showToast({
-                    type: 'error',
-                    title: 'Ошибка сохранения',
-                    message: 'Не удалось сохранить данные. Проверьте соединение и попробуйте снова.'
-                });
-            }
-        } catch (err) {
-            showToast({
-                type: 'error',
-                title: 'Ошибка',
-                message: 'Произошла непредвиденная ошибка. Попробуйте ещё раз.'
-            });
-        } finally {
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = '<i class="bi bi-check2 me-1"></i> Сохранить';
-        }
-    });
+    const now = new Date();
+    const arrivalTime = now.toTimeString().slice(0, 8);
+    const payload = [...checkedStudents].map(input => ({
+        student_id: input.dataset.id,
+        status: input.dataset.action,
+        note: input.closest('.att-row').querySelector('.att-textarea').value,
+        arrival_time: arrivalTime
+    }));
 
-    // Сохранение одного студента
-    function saveAttendanceHandler(student, studentId) {
-        return fetch(`/teacher/mark_student/${slotData.id}/${studentId}`, {
+    try {
+        const response = await fetch(`/teacher/save_attendance/${slotData.id}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
             },
-            body: JSON.stringify(student)
+            body: JSON.stringify(payload)
         });
-    }
 
+        if (response.ok) {
+            const msg = unmarked > 0
+                ? `Сохранено ${checkedStudents.length} чел. · ${unmarked} не отмечено`
+                : `Все ${checkedStudents.length} спортсменов отмечены`;
+            showToast({ type: 'success', title: 'Посещаемость сохранена', message: msg });
+        } else {
+            showToast({
+                type: 'error',
+                title: 'Ошибка сохранения',
+                message: 'Сервер вернул ошибку. Попробуйте ещё раз.'
+            });
+        }
+    } catch (err) {
+        showToast({
+            type: 'error',
+            title: 'Ошибка',
+            message: 'Нет соединения с сервером. Проверьте сеть.'
+        });
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="bi bi-check2 me-1"></i> Сохранить';
+    }
+});
+
+    //Предзаполнение данных
+    let attendance = slotData.attendance
+    document.querySelectorAll('.att-row').forEach(
+        (row) => {
+            let radio = row.querySelector('input.att-radio')
+            if (!radio) return
+
+            let studentId = radio.dataset.id
+            let saved = attendance[studentId]
+            if (!saved) return
+
+            const target = row.querySelector(`input[data-action="${saved.status}"]`)
+            if (target) target.checked = true
+            if (saved.note) {
+                let textarea = row.querySelector('.att-textarea')
+                if (textarea) textarea.value = saved.note
+            }
+        }
+    )
+    updateStats()
 
 </script>
 {% endblock %}
