@@ -136,3 +136,6 @@ def save_all_attendance(request, slot_id):
             }
         )
     return JsonResponse({'status': 'success'})
+
+def attendance_report(request):
+    return render (request, 'group_attendance.html',{})

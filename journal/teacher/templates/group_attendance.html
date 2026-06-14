@@ -1,0 +1,108 @@
+{% extends 'teacher_base_layout.html' %}
+{% load static %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Посещение групп</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'custom-css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'custom-css/group_attendance.css' %}">
+    <script defer src="{% static 'custom-js/group_attendance.js' %}"></script>
+
+</head>
+<body>
+<div class="pg">
+    <h1>Посещение групп</h1>
+
+    <!-- FILTERS -->
+    <div class="filters-bar">
+        <div class="filter-group">
+            <span class="filter-label">Группа</span>
+            <select class="filter-select" id="groupSel">
+                <option>Ушу Таолу (старшая группа)</option>
+                <option>Ушу Саньшоу (юниоры)</option>
+                <option>Кунг-фу (дети)</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Период</span>
+            <div class="period-tabs">
+                <button class="period-tab">1 день</button>
+                <button class="period-tab">Неделя</button>
+                <button class="period-tab on">Месяц</button>
+                <button class="period-tab">Весь период</button>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-label">Месяц</span>
+            <div class="month-nav">
+                <button id="prevM" aria-label="Предыдущий месяц"><i class="bi bi-chevron-left"></i></button>
+                <span id="monthLabel">Июнь 2026</span>
+                <button id="nextM" aria-label="Следующий месяц"><i class="bi bi-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stat-row">
+        <div class="stat-card green">
+            <div class="stat-ico green"><i class="bi bi-check-circle-fill"></i></div>
+            <div>
+                <div class="stat-lbl">Посещений</div>
+                <div class="stat-num" id="s-present">—</div>
+                <div class="stat-pct" id="s-present-pct"></div>
+            </div>
+        </div>
+        <div class="stat-card red">
+            <div class="stat-ico red"><i class="bi bi-x-circle-fill"></i></div>
+            <div>
+                <div class="stat-lbl">Пропусков</div>
+                <div class="stat-num" id="s-absent">—</div>
+                <div class="stat-pct" id="s-absent-pct"></div>
+            </div>
+        </div>
+        <div class="stat-card amber">
+            <div class="stat-ico amber"><i class="bi bi-exclamation-circle-fill"></i></div>
+            <div>
+                <div class="stat-lbl">По справке</div>
+                <div class="stat-num" id="s-excused">—</div>
+                <div class="stat-pct" id="s-excused-pct"></div>
+            </div>
+        </div>
+        <div class="stat-card blue">
+            <div class="stat-ico blue"><i class="bi bi-people-fill"></i></div>
+            <div>
+                <div class="stat-lbl">Всего тренировок</div>
+                <div class="stat-num" id="s-total">—</div>
+                <div class="stat-pct" id="s-total-sub" style="color:#6B7280"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+        <div style="overflow-x:auto">
+            <table class="att-table" id="attTable">
+                <thead id="tHead"></thead>
+                <tbody id="tBody"></tbody>
+            </table>
+        </div>
+        <div class="legend">
+            <div class="legend-item"><i class="bi bi-check-circle-fill dot present"></i> Был</div>
+            <div class="legend-item"><i class="bi bi-x-circle-fill dot absent"></i> Отсутствовал</div>
+            <div class="legend-item"><i class="bi bi-exclamation-circle-fill dot excused"></i> По справке</div>
+            <div class="legend-item"><i class="bi bi-circle-fill dot none"></i> Тренировки не было</div>
+        </div>
+    </div>
+</div>
+
+
+</body>
+</html>
+{% endblock %}
