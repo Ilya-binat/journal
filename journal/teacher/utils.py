@@ -1,8 +1,8 @@
 from datetime import date, timedelta, datetime
-from django.utils.formats import date_format
 from django.db.models import F, Sum, ExpressionWrapper, DurationField
-from administrator.models import Slot
 from django.utils import timezone
+from administrator.models import *
+from django.db.models import Count
 
 # Вывод дней недели
 from datetime import timedelta
@@ -137,5 +137,43 @@ def get_week_training(request):
             'count': count,
             'percent': round(count / 6 * 100)
         }
+
+    return result
+
+def count_attendance_percent(target_count):
+    slot = (
+        Slot.objects
+            .select_related("group")
+            .annotate(
+            students_count=Count("group__group_students")
+        )
+            .get(id=2858)
+    )
+
+    students_count = slot.students_count
+
+    attendance_percent = 0
+
+    if students_count > 0:
+        attendance_percent = round(
+            target_count / students_count * 100,
+            1
+        )
+    return attendance_percent
+
+
+def get_attendance_count(slot_id):
+    counts = (
+        Attendance.objects
+            .filter(slot_id=slot_id)
+            .values("status")
+            .annotate(count=Count("id"))
+    )
+
+    result = {item["status"]: item["count"] for item in counts}
+
+    # Гарантируем наличие всех статусов
+    for status in ("present", "absent", "excused"):
+        result.setdefault(status, 0)
 
     return result

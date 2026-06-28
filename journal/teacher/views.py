@@ -9,6 +9,7 @@ from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 
 
+
 @role_required('Тренер')
 def teacher_schedule(request):
     # Получаем дату из URL
@@ -137,5 +138,38 @@ def save_all_attendance(request, slot_id):
         )
     return JsonResponse({'status': 'success'})
 
+
+
+@role_required('Тренер')
 def attendance_report(request):
-    return render (request, 'group_attendance.html',{})
+    groups = Group.objects.all()
+    attendances = (
+        Attendance.objects
+            .filter(slot_id=2858)
+            .select_related(
+            "student",
+            "slot",
+            "slot__group",
+            "marked_by",
+        )
+    )
+    present_count = get_attendance_count(2858).get('present')
+    absent_count = get_attendance_count(2858).get('absent')
+    excused_count = get_attendance_count(2858).get('excused')
+
+    present_prt = count_attendance_percent(present_count)
+    absent_prt = count_attendance_percent(absent_count)
+    excused_prt = count_attendance_percent(excused_count)
+    slots = Slot.objects.filter(pk=2858)
+
+    return render(request, 'group_attendance.html', {
+        'groups': groups,
+        'attendances': attendances,
+        'present_prt': present_prt,
+        'present_count': present_count,
+        'absent_prt': absent_prt,
+        'absent_count': absent_count,
+        'excused_prt': excused_prt,
+        'excused_count': excused_count,
+        'slots':slots,
+        })

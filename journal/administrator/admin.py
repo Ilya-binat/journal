@@ -13,5 +13,6 @@ admin.site.register(Competition)
 admin.site.register(Assessment)
 admin.site.register(TestItem)
 admin.site.register(AssessmentResult)
+admin.site.register(Attendance)
 
 # Register your models here.
