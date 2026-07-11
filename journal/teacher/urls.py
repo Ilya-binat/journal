@@ -7,4 +7,5 @@ urlpatterns = [
     path('save_slot_notes/<int:slot_id>', save_slot_notes, name="save_slot_notes"),
     path('save_attendance/<int:slot_id>', save_all_attendance, name='save_all_attendance'),
     path('attendance_report/', attendance_report, name = 'attendance_report'),
+    path('attendance/data/', attendance_report_data, name='attendance_report_data'),
 ]

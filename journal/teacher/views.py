@@ -7,7 +7,7 @@ from django.utils import timezone
 from users.decorators import role_required
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
-
+from collections import defaultdict
 
 
 @role_required('Тренер')
@@ -139,37 +139,117 @@ def save_all_attendance(request, slot_id):
     return JsonResponse({'status': 'success'})
 
 
-
 @role_required('Тренер')
 def attendance_report(request):
+    """Главная страница — только рендер шаблона"""
     groups = Group.objects.all()
+    return render(request, 'group_attendance.html', {'groups': groups})
+
+
+@role_required('Тренер')
+def attendance_report_data(request):
+    group_id = request.GET.get('group')
+    period = request.GET.get('period', 'month')
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+
+    today = date.today()
+    if period == 'day':
+        d = _parse_date(date_from) or today
+        from_date, to_date = d, d
+    elif period == 'week':
+        d = _parse_date(date_from) or today
+        from_date = d - timedelta(days=d.weekday())
+        to_date = from_date + timedelta(days=6)
+    elif period == 'range':
+        from_date = _parse_date(date_from) or today
+        to_date = _parse_date(date_to) or today
+        if from_date > to_date:
+            from_date, to_date = to_date, from_date
+    else:
+        year = int(request.GET.get('year', today.year))
+        month = int(request.GET.get('month', today.month))
+        from_date = date(year, month, 1)
+        to_date = (date(year, month + 1, 1) - timedelta(days=1)) \
+            if month < 12 else date(year, 12, 31)
+
+    slots = Slot.objects.filter(date__range=(from_date, to_date))
+
+    if group_id:
+        slots = slots.filter(group_id=group_id)
+
+    slots = slots.order_by('date')
+    slots_id = list(slots.values_list('id', flat=True))
     attendances = (
         Attendance.objects
-            .filter(slot_id=2858)
-            .select_related(
-            "student",
-            "slot",
-            "slot__group",
-            "marked_by",
-        )
+            .filter(slot_id__in=slots_id)
+            .select_related('student', 'slot')
+            .order_by('student__last_name', 'student__first_name', 'slot__date')
     )
-    present_count = get_attendance_count(2858).get('present')
-    absent_count = get_attendance_count(2858).get('absent')
-    excused_count = get_attendance_count(2858).get('excused')
 
-    present_prt = count_attendance_percent(present_count)
-    absent_prt = count_attendance_percent(absent_count)
-    excused_prt = count_attendance_percent(excused_count)
-    slots = Slot.objects.filter(pk=2858)
+    student_map = {}
+    status_grid = defaultdict(dict)
+    for attendance in attendances:
+        student_id = attendance.student_id
+        if student_id not in student_map:
+            first_name = attendance.student.first_name or ''
+            last_name = attendance.student.last_name or ''
+            student_map[student_id] = {
+                'id': student_id,
+                'name': attendance.student.get_full_name(),
+                'init': (first_name[:1] + last_name[:1]).upper()
+            }
+        status_grid[student_id][attendance.slot_id] = attendance.status
 
-    return render(request, 'group_attendance.html', {
-        'groups': groups,
-        'attendances': attendances,
-        'present_prt': present_prt,
-        'present_count': present_count,
-        'absent_prt': absent_prt,
-        'absent_count': absent_count,
-        'excused_prt': excused_prt,
-        'excused_count': excused_count,
-        'slots':slots,
-        })
+    present_count = 0
+    excused_count = 0
+    absent_count = 0
+
+    for attendance in attendances:
+        if attendance.status == 'present':
+            present_count += 1
+        elif attendance.status == 'excused':
+            excused_count += 1
+        elif attendance.status == 'absent':
+            absent_count += 1
+
+    total = present_count + excused_count + absent_count
+
+    slots_data = [
+        {'id':s.id,'date':s.date.strftime('%Y-%m-%d'),'dow':s.date.weekday()}
+        for s in slots
+    ]
+
+    rows = []
+    for student_id, info in student_map.items():
+        statuses = []
+        for s in slots:
+            statuses.append(status_grid[student_id].get(s.id, 'None'))
+        rows.append({'student':info,'statuses':statuses})
+
+
+    return JsonResponse({
+        'slots': slots_data,
+        'rows': rows,
+        'stats': {
+            'present': present_count, 'present_pct': percent(present_count,total),
+            'absent': absent_count, 'absent_pct': percent(absent_count,total),
+            'excused': excused_count, 'excused_pct': percent(excused_count,total),
+            'training_days': len(slots_id),
+            'students': len(student_map),
+        }
+    })
+
+
+
+def _parse_date(s):
+    if not s:
+        return None
+    try:
+        return date.fromisoformat(s)  # 'YYYY-MM-DD'
+    except ValueError:
+        return None
+
+
+def percent(n, total):
+    return round(n / total * 100) if total else 0

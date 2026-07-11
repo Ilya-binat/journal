@@ -1,20 +1,6 @@
-const MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-const MONTHS_SHORT = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
-const DAYS_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-const TRAINING_DAYS = [1, 3, 5]; // Mon, Wed, Fri
-
-const STUDENTS = [
-    {name: 'Иван Иванов', init: 'ИИ'},
-    {name: 'Пётр Петров', init: 'ПП'},
-    {name: 'Сергей Сидоров', init: 'СС'},
-    {name: 'Андрей Кузнецов', init: 'АК'},
-    {name: 'Дмитрий Морозов', init: 'ДМ'},
-    {name: 'Алексей Волков', init: 'АВ'},
-    {name: 'Никита Борисов', init: 'НБ'},
-    {name: 'Максим Швецов', init: 'МШ'},
-    {name: 'Владимир Комаров', init: 'ВК'},
-    {name: 'Егор Васильев', init: 'ЕВ'},
-];
+const MONTHS       = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const MONTHS_SHORT = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+const DAYS_SHORT   = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
 
 // ─── State ────────────────────────────────────────────────────────────────────
 const today = new Date();
@@ -22,43 +8,19 @@ let mode = 'month';  // '1day' | 'week' | 'month' | 'period'
 
 let state = {
     // month
-    monthYear: today.getFullYear(),
+    monthYear:  today.getFullYear(),
     monthMonth: today.getMonth(),
     // 1day
     dayDate: new Date(today),
     // week
     weekYear: today.getFullYear(),
-    weekNum: getISOWeek(today),
+    weekNum:  getISOWeek(today),
     // period
     periodFrom: null,
-    periodTo: null,
+    periodTo:   null,
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function seed(s) {
-    let h = 0;
-    for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
-    return Math.abs(h);
-}
-
-function rand(s) {
-    let x = seed(s);
-    return () => {
-        x ^= x << 13;
-        x ^= x >> 17;
-        x ^= x << 5;
-        return (x >>> 0) / 4294967296;
-    };
-}
-
-function statusFor(student, day, month, year) {
-    const r = rand(student + day + month * 31 + year * 365);
-    const v = r();
-    if (v < 0.72) return 'present';
-    if (v < 0.88) return 'absent';
-    return 'excused';
-}
-
 function getISOWeek(date) {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
     const dayNum = d.getUTCDay() || 7;
@@ -68,17 +30,16 @@ function getISOWeek(date) {
 }
 
 function getWeeksInYear(year) {
-    const dec28 = new Date(year, 11, 28);
-    return getISOWeek(dec28);
+    return getISOWeek(new Date(year, 11, 28));
 }
 
-// Returns [startDate, endDate] for an ISO week
+// Возвращает [startDate, endDate] для ISO-недели
 function isoWeekRange(year, week) {
     const simple = new Date(year, 0, 1 + (week - 1) * 7);
     const dow = simple.getDay();
     const ISOweekStart = new Date(simple);
     if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
-    else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+    else          ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
     const ISOweekEnd = new Date(ISOweekStart);
     ISOweekEnd.setDate(ISOweekStart.getDate() + 6);
     return [ISOweekStart, ISOweekEnd];
@@ -93,26 +54,155 @@ function ymdToDate(s) {
     return new Date(y, m - 1, d);
 }
 
-// Generate array of {d, dow, isTraining, date} for a date range [from, to]
-function getDaysRange(from, to) {
-    const days = [];
-    const cur = new Date(from);
-    while (cur <= to) {
-        const dow = cur.getDay();
-        days.push({
-            d: cur.getDate(),
-            dow,
-            isTraining: TRAINING_DAYS.includes(dow),
-            date: new Date(cur),
-            month: cur.getMonth(),
-            year: cur.getFullYear(),
-        });
-        cur.setDate(cur.getDate() + 1);
+// ─── Сборка параметров для запроса ───────────────────────────────────────────
+function buildParams() {
+    const group = document.getElementById('groupSel')?.value || '';
+    const p = { group, period: mode };
+
+
+    if (mode === 'month') {
+        p.year  = state.monthYear;
+        p.month = state.monthMonth + 1;   // JS 0-based → Django 1-based
+    } else if (mode === '1day') {
+        p.date_from = dateToYMD(state.dayDate);
+    } else if (mode === 'week') {
+        const [ws] = isoWeekRange(state.weekYear, state.weekNum);
+        p.date_from = dateToYMD(ws);      // Django сам вычислит пн–вс
+    } else if (mode === 'period') {
+        if (state.periodFrom) p.date_from = dateToYMD(state.periodFrom);
+        if (state.periodTo)   p.date_to   = dateToYMD(state.periodTo);
     }
-    return days;
+    console.log(p)
+    return p;
 }
 
-// ─── Period Picker UI ─────────────────────────────────────────────────────────
+// ─── AJAX запрос на бэк ───────────────────────────────────────────────────────
+async function renderTable() {
+    setLoading(true);
+
+    const params = buildParams();
+    const qs = new URLSearchParams(params).toString();
+    const url = `/teacher/attendance/data/?${qs}`;
+
+    try {
+        const res = await fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        });
+
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        applyData(data);
+    } catch (err) {
+        console.error('Ошибка загрузки данных:', err);
+        showError();
+    } finally {
+        setLoading(false);
+    }
+}
+
+// ─── Применение данных из ответа ─────────────────────────────────────────────
+function applyData({ slots, rows, stats }) {
+    renderHead(slots);
+    renderBody(rows, slots);
+    renderStats(stats);
+}
+
+function renderHead(slots) {
+    const todayYMD = dateToYMD(today);
+
+    // Определяем, нужно ли показывать метку месяца (период охватывает >1 месяца)
+    const months = new Set(slots.map(s => s.date.slice(0, 7)));
+    const showMonth = months.size > 1;
+
+    let htr = '<tr><th class="name-col">Спортсмены</th>';
+    for (const slot of slots) {
+        const d   = new Date(slot.date + 'T00:00:00');   // локальная дата без смещения
+        const dow = d.getDay();
+        const isToday = slot.date === todayYMD;
+        const cls = isToday ? 'day-hd today' : 'day-hd';
+        const monthMark = showMonth
+            ? `<span class="dm">${MONTHS_SHORT[d.getMonth()]}</span>`
+            : '';
+        htr += `<th class="day-col">
+                  <div class="${cls}">
+                    ${monthMark}
+                    <span class="dn">${DAYS_SHORT[dow]}</span>
+                    <span class="dd">${d.getDate()}</span>
+                  </div>
+                </th>`;
+    }
+    htr += '</tr>';
+    document.getElementById('tHead').innerHTML = htr;
+}
+
+function renderBody(rows, slots) {
+    const STATUS_ICON = {
+        present: ['check-circle-fill',      'present', 'Был'],
+        absent:  ['x-circle-fill',          'absent',  'Отсутствовал'],
+        excused: ['exclamation-circle-fill', 'excused', 'По справке'],
+        none:    ['circle-fill',             'none',    'Тренировки не было'],
+    };
+
+    if (!rows || rows.length === 0) {
+        document.getElementById('tBody').innerHTML =
+            `<tr><td colspan="100" style="text-align:center;padding:32px;color:#9CA3AF">Нет данных</td></tr>`;
+        return;
+    }
+
+    let body = '';
+    rows.forEach(({ student, statuses }, si) => {
+        body += `<tr>
+          <td class="name-cell">
+            <div class="name-cell-inner">
+              <div class="av c${si % 10}">${student.init}</div>
+              <span class="sn">${student.name}</span>
+            </div>
+          </td>`;
+
+        statuses.forEach(st => {
+            const [icon, cls, title] = STATUS_ICON[st] ?? STATUS_ICON.none;
+            body += `<td><i class="bi bi-${icon} dot ${cls}" title="${title}"></i></td>`;
+        });
+
+        body += '</tr>';
+    });
+
+    document.getElementById('tBody').innerHTML = body;
+}
+
+function renderStats({ present, present_pct, absent, absent_pct, excused, excused_pct, training_days, students }) {
+    document.getElementById('s-present').textContent     = present.toLocaleString();
+    document.getElementById('s-absent').textContent      = absent.toLocaleString();
+    document.getElementById('s-excused').textContent     = excused.toLocaleString();
+    document.getElementById('s-total').textContent       = training_days;
+    document.getElementById('s-present-pct').textContent = present_pct + '%';
+    document.getElementById('s-absent-pct').textContent  = absent_pct  + '%';
+    document.getElementById('s-excused-pct').textContent = excused_pct + '%';
+    document.getElementById('s-total-sub').textContent   = students + ' спортсменов';
+}
+
+// ─── UI: лоадер и ошибка ─────────────────────────────────────────────────────
+function setLoading(on) {
+    const tbody = document.getElementById('tBody');
+    if (on) {
+        tbody.innerHTML =
+            `<tr><td colspan="100" style="text-align:center;padding:32px;color:#9CA3AF">
+               <span class="spinner-border spinner-border-sm me-2" role="status"></span>Загрузка…
+             </td></tr>`;
+    }
+}
+
+function showError() {
+    document.getElementById('tBody').innerHTML =
+        `<tr><td colspan="100" style="text-align:center;padding:32px;color:#EF4444">
+           <i class="bi bi-exclamation-triangle me-1"></i>Ошибка загрузки данных
+         </td></tr>`;
+}
+
+// ─── Пикер периода ───────────────────────────────────────────────────────────
 function renderPickerArea() {
     const area = document.getElementById('pickerArea');
 
@@ -123,6 +213,7 @@ function renderPickerArea() {
             <span id="monthLabel">${MONTHS[state.monthMonth]} ${state.monthYear}</span>
             <button id="nextM" aria-label="Следующий месяц"><i class="bi bi-chevron-right"></i></button>
           </div>`;
+
         document.getElementById('prevM').addEventListener('click', () => {
             if (state.monthMonth === 0) { state.monthYear--; state.monthMonth = 11; }
             else state.monthMonth--;
@@ -138,12 +229,9 @@ function renderPickerArea() {
 
     } else if (mode === '1day') {
         const val = dateToYMD(state.dayDate);
-        area.innerHTML = `<input type="date" class="filter-select" id="dayPicker" name="day" value="${val}" style="min-width:160px">`;
+        area.innerHTML = `<input type="date" class="filter-select" id="dayPicker" value="${val}" style="min-width:160px">`;
         document.getElementById('dayPicker').addEventListener('change', function () {
-            if (this.value) {
-                state.dayDate = ymdToDate(this.value);
-                renderTable();
-            }
+            if (this.value) { state.dayDate = ymdToDate(this.value); renderTable(); }
         });
 
     } else if (mode === 'week') {
@@ -163,6 +251,7 @@ function renderPickerArea() {
             </div>
             <select class="filter-select" id="weekSel" style="min-width:280px">${options}</select>
           </div>`;
+
         document.getElementById('prevWY').addEventListener('click', () => {
             state.weekYear--;
             const maxW = getWeeksInYear(state.weekYear);
@@ -184,19 +273,20 @@ function renderPickerArea() {
 
     } else if (mode === 'period') {
         const fromVal = state.periodFrom ? dateToYMD(state.periodFrom) : '';
-        const toVal = state.periodTo ? dateToYMD(state.periodTo) : '';
+        const toVal   = state.periodTo   ? dateToYMD(state.periodTo)   : '';
         area.innerHTML = `
           <div class="period-range">
             <div class="filter-group">
               <span class="filter-label">С</span>
-              <input type="date" class="filter-select" id="periodFrom" name="date_from" value="${fromVal}" style="min-width:160px">
+              <input type="date" class="filter-select" id="periodFrom" value="${fromVal}" style="min-width:160px">
             </div>
             <div class="period-range-sep">—</div>
             <div class="filter-group">
               <span class="filter-label">По</span>
-              <input type="date" class="filter-select" id="periodTo" name="date_to" value="${toVal}" style="min-width:160px">
+              <input type="date" class="filter-select" id="periodTo" value="${toVal}" style="min-width:160px">
             </div>
           </div>`;
+
         document.getElementById('periodFrom').addEventListener('change', function () {
             state.periodFrom = this.value ? ymdToDate(this.value) : null;
             renderTable();
@@ -208,88 +298,8 @@ function renderPickerArea() {
     }
 }
 
-
-// ─── Table Render ─────────────────────────────────────────────────────────────
-function getActiveDays() {
-    if (mode === 'month') {
-        const from = new Date(state.monthYear, state.monthMonth, 1);
-        const to = new Date(state.monthYear, state.monthMonth + 1, 0);
-        return getDaysRange(from, to);
-    } else if (mode === '1day') {
-        return getDaysRange(state.dayDate, state.dayDate);
-    } else if (mode === 'week') {
-        const [from, to] = isoWeekRange(state.weekYear, state.weekNum);
-        return getDaysRange(from, to);
-    } else if (mode === 'period') {
-        if (!state.periodFrom || !state.periodTo) return [];
-        const from = state.periodFrom <= state.periodTo ? state.periodFrom : state.periodTo;
-        const to = state.periodFrom <= state.periodTo ? state.periodTo : state.periodFrom;
-        return getDaysRange(from, to);
-    }
-    return [];
-}
-
-function renderTable() {
-    const days = getActiveDays();
-    const trainingDays = days.filter(x => x.isTraining);
-
-    /* HEAD */
-    const thead = document.getElementById('tHead');
-    let htr = '<tr><th class="name-col">Спортсмены</th>';
-    for (const {d, dow, date} of days) {
-        const isToday = dateToYMD(date) === dateToYMD(today);
-        const cls = isToday ? 'day-hd today' : 'day-hd';
-        // For multi-month range show month above date
-        const showMonth = (mode === 'period' && days.some(x => x.month !== days[0].month));
-        const monthMark = showMonth ? `<span class="dm">${MONTHS_SHORT[date.getMonth()]}</span>` : '';
-        htr += `<th class="day-col"><div class="${cls}">${monthMark}<span class="dn">${DAYS_SHORT[dow]}</span><span class="dd">${d}</span></div></th>`;
-    }
-    htr += '</tr>';
-    thead.innerHTML = htr;
-
-    /* BODY */
-    let totalP = 0, totalA = 0, totalE = 0;
-    let rows = '';
-
-    if (days.length === 0) {
-        rows = `<tr><td colspan="100" style="text-align:center;padding:32px;color:#9CA3AF">Выберите период</td></tr>`;
-    } else {
-        STUDENTS.forEach((st, si) => {
-            rows += `<tr><td class="name-cell"><div class="name-cell-inner"><div class="av c${si % 10}">${st.init}</div><span class="sn">${st.name}</span></div></td>`;
-            for (const {d, date, isTraining} of days) {
-                const m = date.getMonth(), y = date.getFullYear();
-                if (!isTraining) {
-                    rows += `<td><i class="bi bi-circle-fill dot none" title="Тренировки не было"></i></td>`;
-                } else {
-                    const s = statusFor(st.name, d, m, y);
-                    const icon = s === 'present' ? 'check-circle-fill' : s === 'absent' ? 'x-circle-fill' : 'exclamation-circle-fill';
-                    const title = s === 'present' ? 'Был' : s === 'absent' ? 'Отсутствовал' : 'По справке';
-                    rows += `<td><i class="bi bi-${icon} dot ${s}" title="${title}"></i></td>`;
-                    if (s === 'present') totalP++;
-                    else if (s === 'absent') totalA++;
-                    else totalE++;
-                }
-            }
-            rows += '</tr>';
-        });
-    }
-
-    document.getElementById('tBody').innerHTML = rows;
-
-    const total = totalP + totalA + totalE;
-    const pct = n => total ? Math.round(n / total * 100) + '%' : '0%';
-    document.getElementById('s-present').textContent = totalP.toLocaleString();
-    document.getElementById('s-absent').textContent = totalA.toLocaleString();
-    document.getElementById('s-excused').textContent = totalE.toLocaleString();
-    document.getElementById('s-total').textContent = trainingDays.length;
-    document.getElementById('s-present-pct').textContent = pct(totalP);
-    document.getElementById('s-absent-pct').textContent = pct(totalA);
-    document.getElementById('s-excused-pct').textContent = pct(totalE);
-    document.getElementById('s-total-sub').textContent = STUDENTS.length + ' спортсменов';
-}
-
-// ─── Period Tab Switch ────────────────────────────────────────────────────────
-const modeMap = {'1 день': '1day', 'Неделя': 'week', 'Месяц': 'month', 'Период': 'period'};
+// ─── Переключение режима (табы) ───────────────────────────────────────────────
+const modeMap = { '1 день': '1day', 'Неделя': 'week', 'Месяц': 'month', 'Период': 'period' };
 
 document.querySelectorAll('.period-tab').forEach(btn => {
     btn.addEventListener('click', function () {
@@ -300,6 +310,9 @@ document.querySelectorAll('.period-tab').forEach(btn => {
         renderTable();
     });
 });
+
+// Смена группы → перезагрузка
+document.getElementById('groupSel')?.addEventListener('change', renderTable);
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 renderPickerArea();
