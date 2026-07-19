@@ -4,9 +4,15 @@ from django.http import HttpResponse
 from ..models import *
 from users.decorators import role_required
 
-@role_required('Администратор')
+@role_required('Администратор', 'Тренер')
 def group(request):
-    groups = Group.objects.all()
+    role = request.user.role
+
+    if role == 'Администратор':
+        groups = Group.objects.all()
+    elif role == 'Тренер':
+        groups = Group.objects.filter(coach=request.user.id)
+
     return render(request, "group.html", {"groups": groups})
 
 @role_required('Администратор')

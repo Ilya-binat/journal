@@ -1,6 +1,6 @@
-const MONTHS       = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-const MONTHS_SHORT = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
-const DAYS_SHORT   = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+const MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+const MONTHS_SHORT = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+const DAYS_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
 // ─── State ────────────────────────────────────────────────────────────────────
 const today = new Date();
@@ -8,16 +8,16 @@ let mode = 'month';  // '1day' | 'week' | 'month' | 'period'
 
 let state = {
     // month
-    monthYear:  today.getFullYear(),
+    monthYear: today.getFullYear(),
     monthMonth: today.getMonth(),
     // 1day
     dayDate: new Date(today),
     // week
     weekYear: today.getFullYear(),
-    weekNum:  getISOWeek(today),
+    weekNum: getISOWeek(today),
     // period
     periodFrom: null,
-    periodTo:   null,
+    periodTo: null,
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -39,7 +39,7 @@ function isoWeekRange(year, week) {
     const dow = simple.getDay();
     const ISOweekStart = new Date(simple);
     if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
-    else          ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+    else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
     const ISOweekEnd = new Date(ISOweekStart);
     ISOweekEnd.setDate(ISOweekStart.getDate() + 6);
     return [ISOweekStart, ISOweekEnd];
@@ -55,13 +55,16 @@ function ymdToDate(s) {
 }
 
 // ─── Сборка параметров для запроса ───────────────────────────────────────────
+
+const periodParamMap = {'1day': 'day', 'week': 'week', 'month': 'month', 'period': 'range'}
+
 function buildParams() {
     const group = document.getElementById('groupSel')?.value || '';
-    const p = { group, period: mode };
+    const p = {group, period: periodParamMap[mode] || 'month'};
 
 
     if (mode === 'month') {
-        p.year  = state.monthYear;
+        p.year = state.monthYear;
         p.month = state.monthMonth + 1;   // JS 0-based → Django 1-based
     } else if (mode === '1day') {
         p.date_from = dateToYMD(state.dayDate);
@@ -70,7 +73,7 @@ function buildParams() {
         p.date_from = dateToYMD(ws);      // Django сам вычислит пн–вс
     } else if (mode === 'period') {
         if (state.periodFrom) p.date_from = dateToYMD(state.periodFrom);
-        if (state.periodTo)   p.date_to   = dateToYMD(state.periodTo);
+        if (state.periodTo) p.date_to = dateToYMD(state.periodTo);
     }
     console.log(p)
     return p;
@@ -86,7 +89,7 @@ async function renderTable() {
 
     try {
         const res = await fetch(url, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            headers: {'X-Requested-With': 'XMLHttpRequest'},
         });
 
         if (!res.ok) {
@@ -104,10 +107,58 @@ async function renderTable() {
 }
 
 // ─── Применение данных из ответа ─────────────────────────────────────────────
-function applyData({ slots, rows, stats }) {
+function applyData({slots, rows, stats}) {
     renderHead(slots);
     renderBody(rows, slots);
     renderStats(stats);
+    renderLeaderboard(rows)
+}
+
+function computeLeaderboard(rows) {
+    return rows.map(({student, statuses}) => {
+        let present = 0
+        let absent = 0
+        let excused = 0
+        statuses.forEach(status => {
+            if (status === 'present') present++
+            else if (status === 'absent') absent++
+            else if (status === 'excused') excused++
+        })
+        const total = present + absent + excused
+        const percent = total ? Math.round((present / total) * 100) : 0
+        return {student, present, absent, excused, total, percent}
+    })
+        .sort((a, b) => b.present - a.present || b.percent - a.percent)
+        .slice(0, 5)
+}
+
+function renderLeaderboard(rows) {
+    const tbody = document.getElementById('lbBody');
+    if (!tbody) return;
+
+    const leaders = computeLeaderboard(rows);
+
+    if (!leaders.length) {
+        tbody.innerHTML =
+            `<tr><td colspan="6" style="text-align:center;padding:24px;color:#9CA3AF">Нет данных</td></tr>`;
+        return;
+    }
+
+    const MEDALS = ['🥇', '🥈', '🥉'];
+
+    tbody.innerHTML = leaders.map((r, i) => `
+        <tr>
+            <td class="lb-rank">${MEDALS[i] || (i + 1)}</td>
+            <td class="lb-name">${r.student.name}</td>
+            <td class="lb-num lb-present">${r.present}</td>
+            <td class="lb-num lb-absent">${r.absent}</td>
+            <td class="lb-num lb-excused">${r.excused}</td>
+            <td class="lb-pct-cell">
+                <div class="lb-bar"><div class="lb-bar-fill" style="width:${r.pct}%"></div></div>
+                <span class="lb-pct-val">${r.percent}%</span>
+            </td>
+        </tr>
+    `).join('');
 }
 
 function renderHead(slots) {
@@ -119,7 +170,7 @@ function renderHead(slots) {
 
     let htr = '<tr><th class="name-col">Спортсмены</th>';
     for (const slot of slots) {
-        const d   = new Date(slot.date + 'T00:00:00');   // локальная дата без смещения
+        const d = new Date(slot.date + 'T00:00:00');   // локальная дата без смещения
         const dow = d.getDay();
         const isToday = slot.date === todayYMD;
         const cls = isToday ? 'day-hd today' : 'day-hd';
@@ -140,10 +191,10 @@ function renderHead(slots) {
 
 function renderBody(rows, slots) {
     const STATUS_ICON = {
-        present: ['check-circle-fill',      'present', 'Был'],
-        absent:  ['x-circle-fill',          'absent',  'Отсутствовал'],
+        present: ['check-circle-fill', 'present', 'Был'],
+        absent: ['x-circle-fill', 'absent', 'Отсутствовал'],
         excused: ['exclamation-circle-fill', 'excused', 'По справке'],
-        none:    ['circle-fill',             'none',    'Тренировки не было'],
+        none: ['circle-fill', 'none', 'Тренировки не было'],
     };
 
     if (!rows || rows.length === 0) {
@@ -153,7 +204,7 @@ function renderBody(rows, slots) {
     }
 
     let body = '';
-    rows.forEach(({ student, statuses }, si) => {
+    rows.forEach(({student, statuses}, si) => {
         body += `<tr>
           <td class="name-cell">
             <div class="name-cell-inner">
@@ -173,15 +224,15 @@ function renderBody(rows, slots) {
     document.getElementById('tBody').innerHTML = body;
 }
 
-function renderStats({ present, present_pct, absent, absent_pct, excused, excused_pct, training_days, students }) {
-    document.getElementById('s-present').textContent     = present.toLocaleString();
-    document.getElementById('s-absent').textContent      = absent.toLocaleString();
-    document.getElementById('s-excused').textContent     = excused.toLocaleString();
-    document.getElementById('s-total').textContent       = training_days;
+function renderStats({present, present_pct, absent, absent_pct, excused, excused_pct, training_days, students}) {
+    document.getElementById('s-present').textContent = present.toLocaleString();
+    document.getElementById('s-absent').textContent = absent.toLocaleString();
+    document.getElementById('s-excused').textContent = excused.toLocaleString();
+    document.getElementById('s-total').textContent = training_days;
     document.getElementById('s-present-pct').textContent = present_pct + '%';
-    document.getElementById('s-absent-pct').textContent  = absent_pct  + '%';
+    document.getElementById('s-absent-pct').textContent = absent_pct + '%';
     document.getElementById('s-excused-pct').textContent = excused_pct + '%';
-    document.getElementById('s-total-sub').textContent   = students + ' спортсменов';
+    document.getElementById('s-total-sub').textContent = students + ' спортсменов';
 }
 
 // ─── UI: лоадер и ошибка ─────────────────────────────────────────────────────
@@ -215,14 +266,18 @@ function renderPickerArea() {
           </div>`;
 
         document.getElementById('prevM').addEventListener('click', () => {
-            if (state.monthMonth === 0) { state.monthYear--; state.monthMonth = 11; }
-            else state.monthMonth--;
+            if (state.monthMonth === 0) {
+                state.monthYear--;
+                state.monthMonth = 11;
+            } else state.monthMonth--;
             renderPickerArea();
             renderTable();
         });
         document.getElementById('nextM').addEventListener('click', () => {
-            if (state.monthMonth === 11) { state.monthYear++; state.monthMonth = 0; }
-            else state.monthMonth++;
+            if (state.monthMonth === 11) {
+                state.monthYear++;
+                state.monthMonth = 0;
+            } else state.monthMonth++;
             renderPickerArea();
             renderTable();
         });
@@ -231,7 +286,10 @@ function renderPickerArea() {
         const val = dateToYMD(state.dayDate);
         area.innerHTML = `<input type="date" class="filter-select" id="dayPicker" value="${val}" style="min-width:160px">`;
         document.getElementById('dayPicker').addEventListener('change', function () {
-            if (this.value) { state.dayDate = ymdToDate(this.value); renderTable(); }
+            if (this.value) {
+                state.dayDate = ymdToDate(this.value);
+                renderTable();
+            }
         });
 
     } else if (mode === 'week') {
@@ -273,7 +331,7 @@ function renderPickerArea() {
 
     } else if (mode === 'period') {
         const fromVal = state.periodFrom ? dateToYMD(state.periodFrom) : '';
-        const toVal   = state.periodTo   ? dateToYMD(state.periodTo)   : '';
+        const toVal = state.periodTo ? dateToYMD(state.periodTo) : '';
         area.innerHTML = `
           <div class="period-range">
             <div class="filter-group">
@@ -299,7 +357,7 @@ function renderPickerArea() {
 }
 
 // ─── Переключение режима (табы) ───────────────────────────────────────────────
-const modeMap = { '1 день': '1day', 'Неделя': 'week', 'Месяц': 'month', 'Период': 'period' };
+const modeMap = {'1 день': '1day', 'Неделя': 'week', 'Месяц': 'month', 'Период': 'period'};
 
 document.querySelectorAll('.period-tab').forEach(btn => {
     btn.addEventListener('click', function () {

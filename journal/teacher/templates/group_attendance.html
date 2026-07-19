@@ -1,4 +1,4 @@
-{% extends 'teacher_base_layout.html' %}
+{% extends 'base_layout.html' %}
 {% load static %}
 {% block content %}
 <!DOCTYPE html>
@@ -146,6 +146,24 @@
             <div class="legend-item"><i class="bi bi-exclamation-circle-fill dot excused"></i> По справке</div>
             <div class="legend-item"><i class="bi bi-circle-fill dot none"></i> Тренировки не было</div>
         </div>
+    </div>
+    <div class="lb-wrap">
+        <div class="lb-header">
+            <h2 class="lb-title"><i class="bi bi-trophy-fill"></i> Топ-5 по посещаемости за период</h2>
+        </div>
+        <table class="lb-table" id="lbTable">
+            <thead>
+            <tr>
+                <th class="lb-rank-col">#</th>
+                <th class="lb-name-col">Спортсмен</th>
+                <th>Был</th>
+                <th>Пропустил</th>
+                <th>По справке</th>
+                <th class="lb-pct-col">% посещения</th>
+            </tr>
+            </thead>
+            <tbody id="lbBody"></tbody>
+        </table>
     </div>
 </div>
 

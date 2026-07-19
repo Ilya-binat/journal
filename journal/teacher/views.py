@@ -148,6 +148,7 @@ def attendance_report(request):
 
 @role_required('Тренер')
 def attendance_report_data(request):
+    # Подготовили переменные для фильтрации
     group_id = request.GET.get('group')
     period = request.GET.get('period', 'month')
     date_from = request.GET.get('date_from')
@@ -173,6 +174,7 @@ def attendance_report_data(request):
         to_date = (date(year, month + 1, 1) - timedelta(days=1)) \
             if month < 12 else date(year, 12, 31)
 
+    # Вытащили слоты за выбранный период
     slots = Slot.objects.filter(date__range=(from_date, to_date))
 
     if group_id:
@@ -183,10 +185,11 @@ def attendance_report_data(request):
     attendances = (
         Attendance.objects
             .filter(slot_id__in=slots_id)
-            .select_related('student', 'slot')
+            .select_related('student', 'slot') # Догружаем дополгительную связанную информацию
             .order_by('student__last_name', 'student__first_name', 'slot__date')
     )
 
+    # Формируем таблицу посещений в базе данных
     student_map = {}
     status_grid = defaultdict(dict)
     for attendance in attendances:
@@ -200,6 +203,8 @@ def attendance_report_data(request):
                 'init': (first_name[:1] + last_name[:1]).upper()
             }
         status_grid[student_id][attendance.slot_id] = attendance.status
+
+    # Формируем статистику посещения
 
     present_count = 0
     excused_count = 0
@@ -219,14 +224,13 @@ def attendance_report_data(request):
         {'id':s.id,'date':s.date.strftime('%Y-%m-%d'),'dow':s.date.weekday()}
         for s in slots
     ]
-
+    # Формируем тело таблицы посещения
     rows = []
     for student_id, info in student_map.items():
         statuses = []
         for s in slots:
             statuses.append(status_grid[student_id].get(s.id, 'None'))
         rows.append({'student':info,'statuses':statuses})
-
 
     return JsonResponse({
         'slots': slots_data,
@@ -241,7 +245,7 @@ def attendance_report_data(request):
     })
 
 
-
+# Берет JS дату и преобразует ее в формат ГГГГ.ММ.ДД
 def _parse_date(s):
     if not s:
         return None

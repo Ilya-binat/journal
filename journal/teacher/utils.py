@@ -140,28 +140,6 @@ def get_week_training(request):
 
     return result
 
-def count_attendance_percent(target_count):
-    slot = (
-        Slot.objects
-            .select_related("group")
-            .annotate(
-            students_count=Count("group__group_students")
-        )
-            .get(id=2858)
-    )
-
-    students_count = slot.students_count
-
-    attendance_percent = 0
-
-    if students_count > 0:
-        attendance_percent = round(
-            target_count / students_count * 100,
-            1
-        )
-    return attendance_percent
-
-
 def get_attendance_count(slot_id):
     counts = (
         Attendance.objects

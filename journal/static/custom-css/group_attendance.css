@@ -562,3 +562,109 @@ input[type="date"].filter-select {
     color: white;
     border-color: #0d6efd;
 }
+
+/* ── LEADERBOARD ─────────────────────────────────────────────────────────── */
+.lb-wrap {
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-top: 20px
+}
+
+.lb-header {
+    padding: 16px 18px;
+    border-bottom: 1px solid #F3F4F6
+}
+
+.lb-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 8px
+}
+
+.lb-title .bi-trophy-fill {
+    color: #F59E0B
+}
+
+.lb-table {
+    width: 100%;
+    border-collapse: collapse
+}
+
+.lb-table th {
+    font-size: 11px;
+    font-weight: 600;
+    color: #9CA3AF;
+    text-align: center;
+    padding: 10px 8px;
+    border-bottom: 1px solid #F3F4F6;
+    background: #FAFAFA;
+    text-transform: uppercase;
+    letter-spacing: .3px
+}
+
+.lb-table th.lb-rank-col { width: 44px }
+.lb-table th.lb-name-col { text-align: left; padding-left: 16px }
+.lb-table th.lb-pct-col  { width: 180px }
+
+.lb-table td {
+    text-align: center;
+    padding: 10px 8px;
+    border-bottom: 1px solid #F9FAFB;
+    vertical-align: middle;
+    font-size: 13px;
+    color: #374151
+}
+
+.lb-table tr:last-child td { border-bottom: none }
+.lb-table tr:hover td { background: #FAFAFA }
+
+.lb-rank {
+    font-weight: 700;
+    font-size: 14px;
+    color: #6B7280
+}
+
+.lb-name {
+    text-align: left;
+    padding-left: 16px !important;
+    font-weight: 500;
+    color: #111827
+}
+
+.lb-num.lb-present { color: #16A34A; font-weight: 600 }
+.lb-num.lb-absent  { color: #DC2626; font-weight: 600 }
+.lb-num.lb-excused { color: #CA8A04; font-weight: 600 }
+
+.lb-pct-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-right: 8px
+}
+
+.lb-bar {
+    flex: 1;
+    height: 6px;
+    background: #F3F4F6;
+    border-radius: 4px;
+    overflow: hidden
+}
+
+.lb-bar-fill {
+    height: 100%;
+    background: #22C55E;
+    border-radius: 4px
+}
+
+.lb-pct-val {
+    font-size: 12px;
+    font-weight: 700;
+    color: #111827;
+    min-width: 34px;
+    text-align: right
+}
