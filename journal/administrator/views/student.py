@@ -5,10 +5,19 @@ import json
 from ..models import *
 from users.decorators import role_required
 
-
-@role_required('Администратор')
+#
+@role_required('Администратор', 'Тренер')
 def students(request):
-    student_list = CustomUser.objects.filter(role="Спортсмен")
+    if request.user.role == 'Администратор':
+        student_list = CustomUser.objects.filter(role='Спортсмен')
+    else:
+        student_list = (
+            CustomUser.objects.filter(
+                role='Спортсмен',
+                current_groups__group__coach=request.user
+            )
+                .distinct()
+        )
 
     return render(request, "students.html", {"students": student_list})
 

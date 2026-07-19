@@ -77,10 +77,11 @@
     <a href="{% url 'teacher:attendance_report' %}">
         <i class="bi bi-calendar me-2"></i> Посещение
     </a>
+
     {% if user.role == 'Тренер' %}
     <a href="#" class="sidebar-link athlete-link">
-        <i class="bi bi-person-check-fill me-2 text-warning"></i>
-        <span>Тренировки</span>
+        <i class="bi bi-card-checklist"></i>
+        <span>План тренировки</span>
     </a>
     {% endif %}
 
