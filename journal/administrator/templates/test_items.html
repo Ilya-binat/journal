@@ -20,6 +20,8 @@
                 <th scope="col">Этап подготовки</th>
                 <th scope="col">Котрольный результат мальчики</th>
                 <th scope="col">Котрольный результат девочки</th>
+                <th scope="col">Вид испытания</th>
+                <th scope="col">Вид спорта</th>
                 <th scope="col"></th>
             </tr>
         </thead>
@@ -31,6 +33,15 @@
                 <td>{{ test_item.stage }}</td>
                 <td>{{ test_item.max_cor_male }}</td>
                 <td>{{ test_item.max_cor_female }}</td>
+                <td>
+                    {% if test_item.assessment_type == 'general' %}
+                    ОФП
+                    {% else %}
+                    СФП
+                    {% endif %}
+                </td>
+
+                <td>{{ test_item.sport_type }}</td>
                 <td class="text-end">
                     <div class="dropdown">
                         <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
@@ -159,6 +170,8 @@
                 document.getElementById('id_stage').value = data.stage
                 document.getElementById('id_max_cor_male').value = data.max_cor_male
                 document.getElementById('id_max_cor_female').value = data.max_cor_female
+                document.getElementById('id_assessment_type').value = data.assessment_type
+                document.getElementById('id_sport_type').value = data.sport_type
 
                 document.getElementById('testItemForm').dataset.mode = "edit"
                 document.getElementById('testItemForm').dataset.id = id
@@ -258,6 +271,8 @@
                         <td>${p.stage}</td>
                         <td>${p.max_cor_male}</td>
                         <td>${p.max_cor_female}</td>
+                        <td>${p.assessment_type=='general'?'ОФП':'СФП'}</td>
+                        <td>${p.sport_type}</td>
                             ${buttons}
                     </tr>
                     `
@@ -274,6 +289,8 @@
                         row.children[2].textContent = p.stage
                         row.children[3].textContent = p.max_cor_male
                         row.children[4].textContent = p.max_cor_female
+                        row.children[5].textContent = p.assessment_type=='general'?'ОФП':'СФП'
+                        row.children[6].textContent = p.sport_type
                     }
 
                     bootstrap.Modal.getInstance(

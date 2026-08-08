@@ -8,6 +8,7 @@ from users.decorators import role_required
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from collections import defaultdict
+from users.models import *
 
 
 @role_required('Тренер')
@@ -185,7 +186,7 @@ def attendance_report_data(request):
     attendances = (
         Attendance.objects
             .filter(slot_id__in=slots_id)
-            .select_related('student', 'slot') # Догружаем дополгительную связанную информацию
+            .select_related('student', 'slot')  # Догружаем дополгительную связанную информацию
             .order_by('student__last_name', 'student__first_name', 'slot__date')
     )
 
@@ -221,7 +222,7 @@ def attendance_report_data(request):
     total = present_count + excused_count + absent_count
 
     slots_data = [
-        {'id':s.id,'date':s.date.strftime('%Y-%m-%d'),'dow':s.date.weekday()}
+        {'id': s.id, 'date': s.date.strftime('%Y-%m-%d'), 'dow': s.date.weekday()}
         for s in slots
     ]
     # Формируем тело таблицы посещения
@@ -230,18 +231,104 @@ def attendance_report_data(request):
         statuses = []
         for s in slots:
             statuses.append(status_grid[student_id].get(s.id, 'None'))
-        rows.append({'student':info,'statuses':statuses})
+        rows.append({'student': info, 'statuses': statuses})
 
     return JsonResponse({
         'slots': slots_data,
         'rows': rows,
         'stats': {
-            'present': present_count, 'present_pct': percent(present_count,total),
-            'absent': absent_count, 'absent_pct': percent(absent_count,total),
-            'excused': excused_count, 'excused_pct': percent(excused_count,total),
+            'present': present_count, 'present_pct': percent(present_count, total),
+            'absent': absent_count, 'absent_pct': percent(absent_count, total),
+            'excused': excused_count, 'excused_pct': percent(excused_count, total),
             'training_days': len(slots_id),
             'students': len(student_map),
         }
+    })
+
+
+# Функция для КПИ
+@role_required('Тренер')
+def exams(request):
+    groups = Group.objects.filter(coach=request.user)
+
+    current_year = date.today().year
+    years = [
+        current_year,
+        current_year - 1,
+        current_year - 2,
+        current_year - 3,
+        current_year - 4
+    ]
+
+    return render(request, 'exams.html', {'groups': groups,
+                                          'years': years,
+                                          'selected_year': current_year
+                                          })
+
+
+# Функция для вывода кол-ва спортсменов и самих спортсменов
+@role_required('Тренер')
+def fetch_exams_data(request):
+    group = request.GET.get('group')
+    data = StudentGroup.objects.filter(group=group)
+    students = CustomUser.objects.filter(
+        pk__in=data.values('student')
+    )
+# Сбор статистики по группе
+    assessment = Assessment.objects.get(group=group)
+    assessment_result =  AssessmentResult.objects.filter(assessment=assessment)
+    stats = (
+            assessment_result
+            .values('result')
+            .annotate(count=Count('id'))
+    )
+
+    stats_dict = {
+        'passed': 0,
+        'failed': 0,
+        'absent': 0
+    }
+
+    for item in stats:
+        stats_dict[item['result']] = item['count']
+
+    total = students.count()
+
+    stats_dict = {
+        'passed': 0,
+        'failed': 0,
+        'absent': 0,
+    }
+
+    for item in stats:
+        stats_dict[item['result']] = item['count']
+
+    percents = {
+        f'{key}_percent': round(value / total * 100) if total else 0
+        for key, value in stats_dict.items()
+    }
+# Таблица результатов КПИ
+    results = assessment_result.select_related ('athlete', 'test_item')
+
+    table = {}
+    for item in results:
+        athlete_id = item.athlete.id
+        if athlete_id not in table:
+            table [athlete_id]={
+                'athlete':item.athlete.get_full_name(),
+                'tests':[]
+            }
+        table[athlete_id]['tests'].append({
+            'name':item.test_item.name,
+            'score':item.score or '-',
+            'result':item.result
+        })
+
+    return JsonResponse({
+        'students_count': total,
+        **stats_dict,
+        **percents,
+        'table':table,
     })
 
 

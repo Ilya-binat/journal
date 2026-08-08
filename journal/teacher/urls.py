@@ -8,4 +8,6 @@ urlpatterns = [
     path('save_attendance/<int:slot_id>', save_all_attendance, name='save_all_attendance'),
     path('attendance_report/', attendance_report, name = 'attendance_report'),
     path('attendance/data/', attendance_report_data, name='attendance_report_data'),
+    path('exams/', exams, name='exams'),
+    path('fetch_exams_data/', fetch_exams_data, name='fetch_exams_data')
 ]

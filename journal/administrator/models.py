@@ -244,7 +244,10 @@ class Competition(models.Model):
 
 
 # Модель КПИ
-
+ASSESSMENT_TYPE_CHOICES = [
+    ('general', 'ОФП'),
+    ('speсial', 'СФП')
+]
 
 class Assessment(models.Model):
     name = models.CharField(max_length=255)
@@ -259,9 +262,9 @@ class Assessment(models.Model):
     )
     sport_type = models.ForeignKey(TrainingType, on_delete=models.CASCADE)
     next_stage = models.CharField(choices=stage_choices, max_length=255)
-    is_passed = models.BooleanField(default=False)
     date_start = models.DateField()
     date_end = models.DateField()
+
 
     class Meta:
         unique_together = ("name", "coach", "group", "date_start", "date_end")
@@ -273,21 +276,29 @@ class Assessment(models.Model):
     def __str__(self):
         return f"{self.name} - {self.group}-{self.date_start} -{self.date_end}"
 
-    #  Модель тестовых испытаний
 
+#  Модель тестовых испытаний
 
 class TestItem(models.Model):
     name = models.CharField(max_length=255)
     stage = models.CharField(max_length=255, choices=stage_choices)
     max_cor_male = models.FloatField()
     max_cor_female = models.FloatField()
+    assessment_type = models.CharField(choices=ASSESSMENT_TYPE_CHOICES, max_length=50)
+    sport_type = models.ForeignKey(TrainingType, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
 
-    # Модель результатов сдачи КПИ
+# Модель результатов сдачи КПИ
+ASSESSMENT_RESULT_CHOICES = [
+    ('passed','Сдал'),
+    ('failed','Не сдал'),
+    ('absent', 'Отсутствовал'),
+    ('exempted', 'Освобожден')
+]
 
-
+# Модель результата КПИ для отдельного студента
 class AssessmentResult(models.Model):
     assessment = models.ForeignKey(
         "Assessment", on_delete=models.CASCADE, related_name="results"
@@ -298,16 +309,9 @@ class AssessmentResult(models.Model):
         on_delete=models.CASCADE,
         limit_choices_to={"role": "Спортсмен"},
     )
-    score = models.PositiveIntegerField(null=True, blank=True)  # Результат выполнения
-    passed = models.BooleanField(default=False)  # Сдал/не сдал
+    score = models.FloatField(null=True, blank=True)  # Результат выполнения
+    result = models.CharField(max_length=50, choices=ASSESSMENT_RESULT_CHOICES)#Поле выбора
 
-    def save(self, *args, **kwargs):
-        # Автоматическая проверка на прохождение
-        if self.score is not None and self.score >= self.test_item.max_score:
-            self.passed = True
-        else:
-            self.passed = False
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.athlete} - {self.test_item} ({self.score})"

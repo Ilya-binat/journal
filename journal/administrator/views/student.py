@@ -5,7 +5,7 @@ import json
 from ..models import *
 from users.decorators import role_required
 
-#
+#  Выводим список спортсменов в зависимости от роли 'Если АДМИН, то все иначе только ПРЕПОДАВАТЕЛЬ'
 @role_required('Администратор', 'Тренер')
 def students(request):
     if request.user.role == 'Администратор':

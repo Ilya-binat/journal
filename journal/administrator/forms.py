@@ -286,7 +286,10 @@ class TestItemForm(forms.ModelForm):
 
     stage = forms.ChoiceField(
         label="Этап подготовки",
-        choices=stage_choices,
+        choices=[
+            ("", "Выберите этап подготовки"),
+            *stage_choices,
+        ],
         widget=forms.Select(
             attrs={
                 "class": "form-select",
@@ -316,6 +319,30 @@ class TestItemForm(forms.ModelForm):
         ),
     )
 
+    assessment_type = forms.ChoiceField(
+        label="Вид испытания",
+        choices=[
+            ("", "Выберите этап подготовки"),
+            *ASSESSMENT_TYPE_CHOICES,
+        ],
+        widget=forms.Select(
+            attrs={
+                "class": "form-select",
+            }
+        ),
+    )
+
+    sport_type = forms.ModelChoiceField(
+        label="Вид спорта",
+        queryset=TrainingType.objects.all(),
+        empty_label="Выберите вид спорта",
+        widget=forms.Select(
+            attrs={
+                "class": "form-select",
+            }
+        ),
+    )
+
     class Meta:
         model = TestItem
         fields = [
@@ -323,6 +350,8 @@ class TestItemForm(forms.ModelForm):
             "stage",
             "max_cor_male",
             "max_cor_female",
+            "assessment_type",
+            "sport_type"
         ]
 
     # Дополнительная валидация

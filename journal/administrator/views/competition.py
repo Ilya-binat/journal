@@ -6,7 +6,7 @@ from users.decorators import role_required
 
 # Функция вывода соревнований
 
-@role_required('Администратор')
+@role_required('Администратор', 'Тренер')
 def competitions(request):
     form = CompetitionForm()
     data = Competition.objects.all()

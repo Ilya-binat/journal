@@ -35,6 +35,7 @@
                 <td>{{ group.coach.get_short_name }}</td>
                 <td class="text-center">12</td>
                 <td class="text-end">
+                    {% if user.role == 'Администратор' %}
                     <div class="dropdown">
                         <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
                             <i class="bi bi-three-dots-vertical"></i>
@@ -56,6 +57,7 @@
                                 </button>
                             </li>
                         </ul>
+                        {% endif %}
                     </div>
                 </td>
 

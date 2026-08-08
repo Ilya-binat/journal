@@ -6,10 +6,13 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">График соревнований</h2>
+
+        {% if user.role == 'Администратор' %}
         <a href="#" class="btn btn-primary add-competition" data-bs-toggle="modal" data-bs-target="#competitionModal">
             <i class="bi bi-building me-2"></i>
             Добавить соревнование
         </a>
+        {% endif %}
     </div>
 
     <table class="table table-striped table-hover align-middle">
@@ -33,6 +36,7 @@
                     {{ competition.date_end|date:"d.m.Y H:i" }}
                 </td>
                 <td>{{ competition.address}}</td>
+                {% if user.role == 'Администратор' %}
                 <td class="text-end">
                     <div class="dropdown">
                         <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
@@ -55,6 +59,7 @@
                                 </button>
                             </li>
                         </ul>
+                        {% endif %}
                     </div>
                 </td>
 

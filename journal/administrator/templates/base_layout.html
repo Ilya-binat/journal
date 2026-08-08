@@ -99,9 +99,15 @@
         <i class="bi-trophy me-2"></i> График соренований
     </a>
 
+    {% if user.role == 'Администратор' %}
     <a href="{% url 'administrator:assessments' %}">
         <i class='bi-journal-check me-2'></i> КПИ
     </a>
+    {% elif user.role == 'Тренер' %}
+     <a href="{% url 'teacher:exams' %}">
+        <i class='bi-journal-check me-2'></i> КПИ
+    </a>
+    {% endif %}
 
     <a href="#">
         <i class="bi-book-half me-2"></i> Домашнее задание

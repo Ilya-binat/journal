@@ -1,0 +1,417 @@
+{% extends 'base_layout.html' %}
+{% load static %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Контрольно-переводные испытания</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'custom-css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'custom-css/exams.css' %}">
+    <script defer src="{% static 'custom-js/exams.js' %}"></script>
+
+
+</head>
+<body>
+<div class="container-fluid py-3 px-4">
+
+    <!-- Page header -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+        <div class="kpi-page-title">Контрольно-переводные испытания</div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-success d-flex align-items-center gap-2">
+                <i class="bi bi-file-earmark-excel"></i> Экспорт в Excel
+            </button>
+            <button type="button" class="btn btn-primary d-flex align-items-center gap-2">
+                <i class="bi bi-plus-lg"></i> Добавить результат
+            </button>
+            <button type="button" class="btn btn-outline-secondary rounded-circle" style="width:38px;height:38px;">
+                <i class="bi bi-question-lg"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <!-- Main column -->
+        <div class="col-12 col-xl-9">
+
+            <!-- Filters -->
+            <div class="kpi-filter row g-2 mb-3">
+                <div class="col-6 col-md-3">
+                    <div class="kpi-filter-label">Группа</div>
+                    <select class="form-select group_select" >
+                        {% for group in groups %}
+                        <option value="{{ group.id }}">{{group.group_name}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="kpi-filter-label">Год</div>
+                    <select class="form-select">
+                        {% for year in years %}
+                        <option>{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="kpi-filter-label">Вид подготовки</div>
+                    <select class="form-select">
+                        <option>ОФП + СФП</option>
+                        <option>ОФП</option>
+                        <option>СФП</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-5">
+                    <div class="kpi-filter-label">&nbsp;</div>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Поиск спортсмена...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat cards -->
+            <div class="row g-3 mb-3">
+                <div class="col-6 col-md">
+                    <div class="kpi-stat-card">
+                        <div class="kpi-stat-icon icon-bg-blue"><i class="bi bi-people-fill"></i></div>
+                        <div>
+                            <div class="kpi-stat-value total_number">25</div>
+                            <div class="kpi-stat-label">Спортсменов в группе</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md">
+                    <div class="kpi-stat-card">
+                        <div class="kpi-stat-icon icon-bg-green"><i class="bi bi-check-circle-fill"></i></div>
+                        <div>
+                            <div class="kpi-stat-value passed_number">18</div>
+                            <div class="kpi-stat-label">Сдали КПИ</div>
+                            <div class="kpi-stat-sub text-success passed_percent">72%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md">
+                    <div class="kpi-stat-card">
+                        <div class="kpi-stat-icon icon-bg-red"><i class="bi bi-x-circle-fill"></i></div>
+                        <div>
+                            <div class="kpi-stat-value failed_number">4</div>
+                            <div class="kpi-stat-label">Не сдали</div>
+                            <div class="kpi-stat-sub text-danger failed_percent">16%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md">
+                    <div class="kpi-stat-card">
+                        <div class="kpi-stat-icon icon-bg-orange"><i class="bi bi-dash-circle-fill"></i></div>
+                        <div>
+                            <div class="kpi-stat-value absent_number">3</div>
+                            <div class="kpi-stat-label">Не проходили</div>
+                            <div class="kpi-stat-sub text-warning absent_percent">12%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md">
+                    <div class="kpi-stat-card">
+                        <div class="kpi-stat-icon icon-bg-purple"><i class="bi bi-bar-chart-fill"></i></div>
+                        <div class="w-100">
+                            <div class="kpi-stat-value avg_number">76%</div>
+                            <div class="kpi-stat-label">Общий результат по группе</div>
+                            <div class="kpi-progress-thin avg_percent"><div style="width:76%"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs + table card -->
+            <div class="kpi-card p-3">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                    <ul class="nav kpi-tabs">
+                        <li class="nav-item"><a class="nav-link active" href="#">Таблица результатов</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#">Аналитика по испытаниям</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#">Сравнение периодов</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#">История группы</a></li>
+                    </ul>
+                </div>
+
+                <div class="kpi-table-wrap">
+                    <table class="table kpi-table align-middle">
+                        <thead>
+                            <tr class="group-row">
+                                <th colspan="2"></th>
+                                <th colspan="7" class="ofp-group">ОФП</th>
+                                <th colspan="5" class="sfp-group">СФП</th>
+                                <th></th>
+                            </tr>
+                            <tr class="sub-row">
+                                <th>№</th>
+                                <th class="text-start">Спортсмен</th>
+                                <th>Подтягивания<br><span class="text-muted">раз</span></th>
+                                <th>Бег 30 м<br><span class="text-muted">сек</span></th>
+                                <th>Бег 500 м<br><span class="text-muted">мин:сек</span></th>
+                                <th>Прыжок в длину<br><span class="text-muted">см</span></th>
+                                <th>Двойной прыжок<br><span class="text-muted">см</span></th>
+                                <th>Подъем ног<br><span class="text-muted">раз</span></th>
+                                <th>Прыжок в верх<br><span class="text-muted">см</span></th>
+                                <th>Челночный бег 3×10 м<br><span class="text-muted">сек</span></th>
+                                <th>Правый шпагат<br><span class="text-muted">°</span></th>
+                                <th>Левый шпагат<br><span class="text-muted">°</span></th>
+                                <th>Поперечный шпагат<br><span class="text-muted">°</span></th>
+                                <th>Чемоданчик<br><span class="text-muted">см</span></th>
+                                <th>Мостик<br><span class="text-muted">балл</span></th>
+                                <th>Связка<br><span class="text-muted">балл</span></th>
+                                <th>Итог<br><span class="text-muted">%</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Row 1 -->
+                            <tr class="active-row">
+                                <td>1</td>
+                                <td class="athlete-cell"><span class="athlete-avatar-placeholder"><i class="bi bi-person-fill"></i></span>Иванов Иван</td>
+                                <td>13 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>5.08 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>1:42 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>198 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>420 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>24 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>56 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>8.9 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>180° <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>180° <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>175° <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>+12 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>8 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>9.0 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td class="kpi-score score-high">92</td>
+                            </tr>
+                            <!-- Row 2 -->
+                            <tr>
+                                <td>2</td>
+                                <td class="athlete-cell"><span class="athlete-avatar-placeholder"><i class="bi bi-person-fill"></i></span>Петров Петр</td>
+                                <td>10 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>5.21 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>1:48 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>190 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>403 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>20 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>52 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>9.4 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>170° <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>175° <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>170° <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>+8 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>7 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>8.2 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td class="kpi-score score-mid">83</td>
+                            </tr>
+                            <!-- Row 3 -->
+                            <tr>
+                                <td>3</td>
+                                <td class="athlete-cell"><span class="athlete-avatar-placeholder"><i class="bi bi-person-fill"></i></span>Сидоров Сергей</td>
+                                <td>12 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>5.16 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>1:44 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>195 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>415 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>22 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>54 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>9.1 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>175° <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>175° <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>175° <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>+10 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>8 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>8.7 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td class="kpi-score score-high">90</td>
+                            </tr>
+                            <!-- Row 4 -->
+                            <tr>
+                                <td>4</td>
+                                <td class="athlete-cell"><span class="athlete-avatar-placeholder"><i class="bi bi-person-fill"></i></span>Кузнецов Кирилл</td>
+                                <td>9 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>5.34 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>1:53 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>176 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>381 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>18 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>46 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>10.2 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>165° <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>170° <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>165° <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>+6 <i class="bi bi-dash-circle-fill status-icon-warn"></i></td>
+                                <td>6 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>7.5 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td class="kpi-score score-mid">72</td>
+                            </tr>
+                            <!-- Row 5 -->
+                            <tr>
+                                <td>5</td>
+                                <td class="athlete-cell"><span class="athlete-avatar-placeholder"><i class="bi bi-person-fill"></i></span>Смирнов Никита</td>
+                                <td class="text-muted">Освоб.</td>
+                                <td>5.41 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td class="text-muted">Отсутс.</td>
+                                <td class="text-muted">Отсутс.</td>
+                                <td class="text-muted">Отсутс.</td>
+                                <td class="text-muted">Отсутс.</td>
+                                <td class="text-muted">Отсутс.</td>
+                                <td class="text-muted">Отсутс.</td>
+                                <td>170° <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td class="text-muted">Отсутс.</td>
+                                <td class="text-muted">Отсутс.</td>
+                                <td>+7 <i class="bi bi-dash-circle-fill status-icon-warn"></i></td>
+                                <td class="text-muted">Отсутс.</td>
+                                <td class="text-muted">Отсутс.</td>
+                                <td>—</td>
+                            </tr>
+                            <!-- Row 6 -->
+                            <tr>
+                                <td>6</td>
+                                <td class="athlete-cell"><span class="athlete-avatar-placeholder"><i class="bi bi-person-fill"></i></span>Орлов Алексей</td>
+                                <td>11 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>5.19 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>1:45 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>189 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>402 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>21 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>53 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>9.0 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>175° <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>180° <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>170° <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>+11 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>8 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td>8.0 <i class="bi bi-x-circle-fill status-icon-fail"></i></td>
+                                <td class="kpi-score score-high">87</td>
+                            </tr>
+                            <!-- Row 7 -->
+                            <tr>
+                                <td>7</td>
+                                <td class="athlete-cell"><span class="athlete-avatar-placeholder"><i class="bi bi-person-fill"></i></span>Федоров Данил</td>
+                                <td>13 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>5.02 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>1:41 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>201 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>435 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>25 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>57 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>8.7 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>180° <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>180° <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>180° <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>+13 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>9 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td>9.2 <i class="bi bi-check-circle-fill status-icon-ok"></i></td>
+                                <td class="kpi-score score-high">94</td>
+                            </tr>
+                            <!-- Row 8 -->
+                            <tr>
+                                <td>8</td>
+                                <td class="athlete-cell"><span class="athlete-avatar-placeholder"><i class="bi bi-person-fill"></i></span>Лебедев Артем</td>
+                                <td class="text-muted">Не запол.</td>
+                                <td class="text-muted">Не запол.</td>
+                                <td class="text-muted">Не запол.</td>
+                                <td class="text-muted">Не запол.</td>
+                                <td class="text-muted">Не запол.</td>
+                                <td class="text-muted">Не запол.</td>
+                                <td class="text-muted">Не запол.</td>
+                                <td class="text-muted">Не запол.</td>
+                                <td class="text-muted">Не запол.</td>
+                                <td class="text-muted">Не запол.</td>
+                                <td class="text-muted">Не запол.</td>
+                                <td class="text-muted">Не запол.</td>
+                                <td class="text-muted">Не запол.</td>
+                                <td class="text-muted">Не запол.</td>
+                                <td>—</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- footer: legend + pagination -->
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3 pt-2 border-top">
+                    <div class="d-flex align-items-center flex-wrap">
+                        <span class="d-flex align-items-center me-3"><i class="bi bi-check-circle-fill status-icon-ok me-1"></i> Сдал</span>
+                        <span class="d-flex align-items-center me-3"><i class="bi bi-x-circle-fill status-icon-fail me-1"></i> Не сдал</span>
+                        <span class="d-flex align-items-center me-3"><i class="bi bi-dash-circle-fill status-icon-warn me-1"></i> Не проходил</span>
+                        <span class="d-flex align-items-center"><i class="bi bi-circle status-icon-empty me-1"></i> Не заполнено</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted small">Показать по</span>
+                        <select class="form-select form-select-sm" style="width:auto;">
+                            <option>20</option>
+                        </select>
+                        <span class="text-muted small">1-20 из 25</span>
+                        <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-chevron-left"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right side panel: athlete details -->
+        <div class="col-12 col-xl-3">
+            <div class="kpi-side-panel">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="athlete-avatar-placeholder" style="width:48px;height:48px;font-size:1.2rem;">
+                            <i class="bi bi-person-fill"></i>
+                        </span>
+                        <div>
+                            <div class="fw-bold">Иванов Иван</div>
+                            <div class="text-muted small">Бокс НП-2 · 12 лет</div>
+                            <span class="badge-soft mt-1 d-inline-block">Сдан КПИ</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-link text-muted p-0"><i class="bi bi-x-lg"></i></button>
+                </div>
+
+                <ul class="nav nav-tabs mt-3" style="font-size:.82rem;">
+                    <li class="nav-item"><a class="nav-link active" href="#">Результаты</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">История</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Динамика</a></li>
+                </ul>
+
+                <div class="d-flex justify-content-between align-items-center kpi-side-section-title">
+                    <span>ОФП</span><span class="text-success fw-bold">84%</span>
+                </div>
+                <div class="kpi-side-row"><span>Подтягивания</span><span><span class="value">13 раз</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
+                <div class="kpi-side-row"><span>Бег 30 м</span><span><span class="value">5.08 сек</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
+                <div class="kpi-side-row"><span>Бег 500 м</span><span><span class="value">1:42</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
+                <div class="kpi-side-row"><span>Прыжок в длину</span><span><span class="value">198 см</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
+                <div class="kpi-side-row"><span>Двойной прыжок</span><span><span class="value">420 см</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
+                <div class="kpi-side-row"><span>Подъем ног</span><span><span class="value">24 раз</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
+                <div class="kpi-side-row"><span>Прыжок в верх</span><span><span class="value">56 см</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
+                <div class="kpi-side-row"><span>Челночный бег 3×10 м</span><span><span class="value">8.9 сек</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
+
+                <div class="d-flex justify-content-between align-items-center kpi-side-section-title">
+                    <span>СФП</span><span class="text-success fw-bold">91%</span>
+                </div>
+                <div class="kpi-side-row"><span>Правый шпагат</span><span><span class="value">180°</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
+                <div class="kpi-side-row"><span>Левый шпагат</span><span><span class="value">180°</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
+                <div class="kpi-side-row"><span>Поперечный шпагат</span><span><span class="value">175°</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
+                <div class="kpi-side-row"><span>Чемоданчик</span><span><span class="value">+12 см</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
+                <div class="kpi-side-row"><span>Мостик</span><span><span class="value">8 балл</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
+                <div class="kpi-side-row"><span>Связка</span><span><span class="value">9.0 балл</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
+
+                <div class="kpi-overall-box d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small">Общий результат</div>
+                        <div class="fw-bold fs-5 text-success">92%</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="text-muted small">Место в группе</div>
+                        <div class="fw-bold">1 из 25</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+{% endblock %}
