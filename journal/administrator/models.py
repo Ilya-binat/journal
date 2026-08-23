@@ -278,24 +278,33 @@ class Assessment(models.Model):
 
 
 #  Модель тестовых испытаний
+unit_choices=[
+    ('секунды','сек.'),
+    ('минуты','мин.'),
+    ('сантиметры', 'см.'),
+    ('метры','м.'),
+    ('количество повторений','кол-во.повт.')
+]
 
 class TestItem(models.Model):
     name = models.CharField(max_length=255)
     stage = models.CharField(max_length=255, choices=stage_choices)
+    unit = models.CharField(max_length=255, choices=unit_choices)
     max_cor_male = models.FloatField()
     max_cor_female = models.FloatField()
     assessment_type = models.CharField(choices=ASSESSMENT_TYPE_CHOICES, max_length=50)
     sport_type = models.ForeignKey(TrainingType, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name
+        return f'{self.name}-{self.stage}-{self.assessment_type}'
 
 # Модель результатов сдачи КПИ
 ASSESSMENT_RESULT_CHOICES = [
     ('passed','Сдал'),
     ('failed','Не сдал'),
     ('absent', 'Отсутствовал'),
-    ('exempted', 'Освобожден')
+    ('exempted', 'Освобожден'),
+    ('empty', 'Нет результата')
 ]
 
 # Модель результата КПИ для отдельного студента

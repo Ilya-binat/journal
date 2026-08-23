@@ -33,8 +33,9 @@ def add_test_items(request):
                     "stage": test.stage,
                     "max_cor_male":test.max_cor_male,
                     "max_cor_female":test.max_cor_female,
+                    "unit":test.unit,
                     "assessment_type":test.assessment_type,
-                    "sport_type":test.sport_type.id
+                    "sport_type":test.sport_type.name
                     }
 
             }
@@ -52,6 +53,7 @@ def get_test_items(request, pk):
             "stage": test.stage,
             "max_cor_male":test.max_cor_male,
             "max_cor_female":test.max_cor_female,
+            "unit": test.unit,
             "assessment_type": test.assessment_type,
             "sport_type": test.sport_type.id
         }
@@ -73,6 +75,7 @@ def edit_test_items(request, pk):
                     "stage": test.stage,
                     "max_cor_male":test.max_cor_male,
                     "max_cor_female":test.max_cor_female,
+                    "unit": test.unit,
                     "assessment_type": test.assessment_type,
                     "sport_type": test.sport_type.name
                 },

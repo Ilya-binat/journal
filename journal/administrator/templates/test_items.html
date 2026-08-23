@@ -14,60 +14,62 @@
 
     <table class="table table-striped table-hover align-middle">
         <thead class="table-light">
-            <tr>
-                <th scope="col">№</th>
-                <th scope="col">Название</th>
-                <th scope="col">Этап подготовки</th>
-                <th scope="col">Котрольный результат мальчики</th>
-                <th scope="col">Котрольный результат девочки</th>
-                <th scope="col">Вид испытания</th>
-                <th scope="col">Вид спорта</th>
-                <th scope="col"></th>
-            </tr>
+        <tr>
+            <th scope="col">№</th>
+            <th scope="col">Название</th>
+            <th scope="col">Этап подготовки</th>
+            <th scope="col">Котрольный результат мальчики</th>
+            <th scope="col">Котрольный результат девочки</th>
+            <th scope="col">Еденица измерения</th>
+            <th scope="col">Вид испытания</th>
+            <th scope="col">Вид спорта</th>
+            <th scope="col"></th>
+        </tr>
         </thead>
         <tbody id="testItemTableBody">
-            {% for test_item in data %}
-            <tr id="test_item-{{ test_item.id }}">
-                <td>{{ test_item.id }}</td>
-                <td>{{ test_item.name }}</td>
-                <td>{{ test_item.stage }}</td>
-                <td>{{ test_item.max_cor_male }}</td>
-                <td>{{ test_item.max_cor_female }}</td>
-                <td>
-                    {% if test_item.assessment_type == 'general' %}
-                    ОФП
-                    {% else %}
-                    СФП
-                    {% endif %}
-                </td>
+        {% for test_item in data %}
+        <tr id="test_item-{{ test_item.id }}">
+            <td>{{ test_item.id }}</td>
+            <td>{{ test_item.name }}</td>
+            <td>{{ test_item.stage }}</td>
+            <td>{{ test_item.max_cor_male }}</td>
+            <td>{{ test_item.max_cor_female }}</td>
+            <td>{{ test_item.unit }}</td>
+            <td>
+                {% if test_item.assessment_type == 'general' %}
+                ОФП
+                {% else %}
+                СФП
+                {% endif %}
+            </td>
 
-                <td>{{ test_item.sport_type }}</td>
-                <td class="text-end">
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-three-dots-vertical"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <a href="#" class="dropdown-item edit-test-item" data-id="{{ test_item.pk }}"
-                                    data-bs-toggle="modal" data-bs-target="#testItemModal">
-                                    <i class="bi bi-pencil"></i>
-                                    Редактировать
-                                </a>
-                            </li>
-                            <li>
-                                <button type="button" class="dropdown-item delete-test-item-btn" data-bs-toggle="modal"
+            <td>{{ test_item.sport_type }}</td>
+            <td class="text-end">
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a href="#" class="dropdown-item edit-test-item" data-id="{{ test_item.pk }}"
+                               data-bs-toggle="modal" data-bs-target="#testItemModal">
+                                <i class="bi bi-pencil"></i>
+                                Редактировать
+                            </a>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item delete-test-item-btn" data-bs-toggle="modal"
                                     data-bs-target="#deleteTestItemModal" id="{{ test_item.pk }}">
-                                    <i class="bi bi-trash"></i>
-                                    Удалить
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                </td>
+                                <i class="bi bi-trash"></i>
+                                Удалить
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </td>
 
-            </tr>
-            {% endfor %}
+        </tr>
+        {% endfor %}
         </tbody>
 
     </table>
@@ -104,7 +106,7 @@
 
     <!-- Модальное окно удаления тестов -->
     <div class="modal fade" id="deleteTestItemModal" tabindex="-1" aria-labelledby="deleteTestItemModalLabel"
-        aria-hidden="true">
+         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -141,17 +143,16 @@
         form.dataset.id = ""
     })
     // открытие модалки удаления
-    document.querySelectorAll('.delete-test-item-btn').forEach(function (btn) {
 
-        btn.addEventListener('click', function () {
 
-            const testItemId = this.id
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.delete-test-item-btn')
+        if(! btn) return
 
-            document.getElementById('deleteTestItemForm').dataset.id = testItemId
-
-        })
+        document.getElementById('deleteTestItemForm').dataset.id = btn.id
 
     })
+
     // Выполнение функции редактироваия
     document.addEventListener('click', function (e) {
 
@@ -170,6 +171,7 @@
                 document.getElementById('id_stage').value = data.stage
                 document.getElementById('id_max_cor_male').value = data.max_cor_male
                 document.getElementById('id_max_cor_female').value = data.max_cor_female
+                document.getElementById('id_unit').value = data.unit
                 document.getElementById('id_assessment_type').value = data.assessment_type
                 document.getElementById('id_sport_type').value = data.sport_type
 
@@ -271,7 +273,8 @@
                         <td>${p.stage}</td>
                         <td>${p.max_cor_male}</td>
                         <td>${p.max_cor_female}</td>
-                        <td>${p.assessment_type=='general'?'ОФП':'СФП'}</td>
+                        <td>${p.unit}</td>
+                        <td>${p.assessment_type == 'general' ? 'ОФП' : 'СФП'}</td>
                         <td>${p.sport_type}</td>
                             ${buttons}
                     </tr>
@@ -289,8 +292,9 @@
                         row.children[2].textContent = p.stage
                         row.children[3].textContent = p.max_cor_male
                         row.children[4].textContent = p.max_cor_female
-                        row.children[5].textContent = p.assessment_type=='general'?'ОФП':'СФП'
-                        row.children[6].textContent = p.sport_type
+                        row.children[5].textContent = p.unit
+                        row.children[6].textContent = p.assessment_type == 'general' ? 'ОФП' : 'СФП'
+                        row.children[7].textContent = p.sport_type
                     }
 
                     bootstrap.Modal.getInstance(
@@ -331,6 +335,7 @@
                 }
             })
     }
+
     function getCookie(name) {
         let cookieValue = null;
 

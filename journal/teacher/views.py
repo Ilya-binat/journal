@@ -274,11 +274,15 @@ def fetch_exams_data(request):
     students = CustomUser.objects.filter(
         pk__in=data.values('student')
     )
-# Сбор статистики по группе
+
+    # Сбор статистики по группе
     assessment = Assessment.objects.get(group=group)
-    assessment_result =  AssessmentResult.objects.filter(assessment=assessment)
+    test_items = TestItem.objects.filter(sport_type=assessment.sport_type, stage=assessment.next_stage)
+    thead = [{'id': test_item.id, 'name': test_item.name, 'unit': test_item.unit,
+              'assessment_type': test_item.assessment_type} for test_item in test_items]
+    assessment_result = AssessmentResult.objects.filter(assessment=assessment)
     stats = (
-            assessment_result
+        assessment_result
             .values('result')
             .annotate(count=Count('id'))
     )
@@ -307,28 +311,30 @@ def fetch_exams_data(request):
         f'{key}_percent': round(value / total * 100) if total else 0
         for key, value in stats_dict.items()
     }
-# Таблица результатов КПИ
-    results = assessment_result.select_related ('athlete', 'test_item')
+
+    # Таблица результатов КПИ
+    results = assessment_result.select_related('athlete', 'test_item')
 
     table = {}
     for item in results:
         athlete_id = item.athlete.id
         if athlete_id not in table:
-            table [athlete_id]={
-                'athlete':item.athlete.get_full_name(),
-                'tests':[]
+            table[athlete_id] = {
+                'athlete': item.athlete.get_full_name(),
+                'tests': []
             }
         table[athlete_id]['tests'].append({
-            'name':item.test_item.name,
-            'score':item.score or '-',
-            'result':item.result
+            'name': item.test_item.name,
+            'score': item.score or '-',
+            'result': item.result
         })
 
     return JsonResponse({
         'students_count': total,
         **stats_dict,
         **percents,
-        'table':table,
+        'table': table,
+        'thead':thead,
     })
 
 

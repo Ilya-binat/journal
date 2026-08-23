@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from ..forms import *
 from django.http import HttpResponse, JsonResponse
 from users.decorators import role_required
+from itertools import product
 
 
 @role_required('Администратор')
@@ -18,6 +19,19 @@ def add_assessment(request):
 
     if request.method == "POST" and form.is_valid():
         assessment = form.save()
+        group = assessment.group
+        tests = TestItem.objects.filter(stage=assessment.next_stage)
+        students = CustomUser.objects.filter(current_groups__group=group)
+        results = [
+            AssessmentResult(
+                assessment=assessment,
+                athlete=student,
+                result='empty',
+                test_item=test_item
+            )
+            for student,test_item in product(students,tests)
+        ]
+        AssessmentResult.objects.bulk_create(results)
         return JsonResponse(
             {
                 "success": True,

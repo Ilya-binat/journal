@@ -60,7 +60,6 @@ class PeriodForm(forms.ModelForm):
 
 
 class HallForm(forms.ModelForm):
-
     hall_name = forms.CharField(
         label="Номер зала",
         widget=forms.TextInput(
@@ -93,7 +92,6 @@ class HallForm(forms.ModelForm):
 
 
 class ScheduleForm(forms.Form):
-
     coach = forms.IntegerField()
     group = forms.IntegerField()
     hall = forms.IntegerField()
@@ -126,8 +124,8 @@ class ScheduleForm(forms.Form):
             for weekday in weekdays:
                 conflict = (
                     Schedule.objects.filter(coach_id=coach_id, weekdays__id=weekday)
-                    .filter(start_time__lt=end_time, end_time__gt=start_time)
-                    .exclude(pk=self.exclude_pk)
+                        .filter(start_time__lt=end_time, end_time__gt=start_time)
+                        .exclude(pk=self.exclude_pk)
                 )
                 if conflict:
                     raise forms.ValidationError(
@@ -269,10 +267,10 @@ class AssessmentForm(forms.ModelForm):
             "date_end",
         ]
 
+
 # Форма тестового испытания (TestItem)
 
 class TestItemForm(forms.ModelForm):
-
     name = forms.CharField(
         label="Название испытания",
         widget=forms.TextInput(
@@ -319,10 +317,23 @@ class TestItemForm(forms.ModelForm):
         ),
     )
 
+    unit = forms.ChoiceField(
+        label="Единицы измерения",
+        choices=[
+            ("", "Выберите единицу измерения"),
+            *unit_choices,
+        ],
+        widget=forms.Select(
+            attrs={
+                "class": "form-select",
+            }
+        ),
+
+    )
     assessment_type = forms.ChoiceField(
         label="Вид испытания",
         choices=[
-            ("", "Выберите этап подготовки"),
+            ("", "Выберите вид испытания"),
             *ASSESSMENT_TYPE_CHOICES,
         ],
         widget=forms.Select(
@@ -350,6 +361,7 @@ class TestItemForm(forms.ModelForm):
             "stage",
             "max_cor_male",
             "max_cor_female",
+            "unit",
             "assessment_type",
             "sport_type"
         ]
