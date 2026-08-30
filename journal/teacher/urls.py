@@ -9,5 +9,7 @@ urlpatterns = [
     path('attendance_report/', attendance_report, name = 'attendance_report'),
     path('attendance/data/', attendance_report_data, name='attendance_report_data'),
     path('exams/', exams, name='exams'),
-    path('fetch_exams_data/', fetch_exams_data, name='fetch_exams_data')
+    path('fetch_exams_data/', fetch_exams_data, name='fetch_exams_data'),
+    path('add_exam_result/', add_exam_result, name='add_exam_result'),
+    path('fetch_station_data/', fetch_station_data, name='fetch_station_data'),
 ]

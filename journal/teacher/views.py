@@ -334,7 +334,7 @@ def fetch_exams_data(request):
         **stats_dict,
         **percents,
         'table': table,
-        'thead':thead,
+        'thead': thead,
     })
 
 
@@ -350,3 +350,130 @@ def _parse_date(s):
 
 def percent(n, total):
     return round(n / total * 100) if total else 0
+
+
+# Добавление результатов экзамена
+@role_required('Тренер')
+def add_exam_result(request):
+    data = json.loads(request.body)  # json строку переводим в python объект
+    # берем id экзамена
+    assessment_id = data.get('assessment_id')
+    # берем id упражнение
+    test_item_id = data.get('test_item_id')
+    # id спортсмена
+    athlete_id = data.get('athlete_id')
+    # проставление результата
+    action = data.get('action')
+
+    # Находим упражнение
+    test_item = get_object_or_404(TestItem, pk=test_item_id)
+    # Находим спортсмена
+    athlete = get_object_or_404(CustomUser, pk=athlete_id)
+
+    # Создаем условие при котором заполняем результат экзамена
+    if action == 'absent':
+        result, score = 'absent', None
+    elif action == 'exempted':
+        result, score = 'exempted', None
+    else:
+        try:
+            score = float(data.get('score'))
+        except(TypeError, ValueError):
+            return JsonResponse({
+                'success': False,
+                'error': 'Не корректоное значение результата',
+            }, status=400)
+        passed = is_score_passed(test_item, athlete, score)
+        result = 'passed' if passed else 'failed'
+
+    # Находим результат спортсмена по экзамену и упражнению и вносим результат
+    updated = AssessmentResult.objects.filter(
+        assessment_id=assessment_id,
+        test_item_id=test_item_id,
+        athlete_id=athlete_id
+    ).update(score=score, result=result)
+
+    if not updated:
+        return JsonResponse({
+            'success': False,
+            'error': 'Результат не найден',
+        }, status=404)
+    return JsonResponse({
+        'success': True,
+        'score': score,
+        'result': result
+    }, status=200)
+
+# Функция для полученя данных станции
+# станция это модальное окно для заполнения результатов экзамена
+@role_required('Тренер')
+def fetch_station_data(request):
+    # Достаем группу
+    group_id = request.GET.get('group')
+    # Берем испытания для группы сортирую подню начала в порядке убывания(от сегодня назад)
+    assessment = Assessment.objects.filter(group=group_id).order_by('-date_start').first()
+
+    # Если испытание не найдено возвращаем пустые данные
+    if not assessment:
+        return JsonResponse({
+            'assessment_id': None,
+            'test_items': [],
+            'selected_test_item': None,
+            'queue': []
+        })
+    # Список испытвний в экзамене(ищем через вид спрорта и этап подготовки)
+    test_items = list(TestItem.objects.filter(
+        sport_type=assessment.sport_type,
+        stage=assessment.next_stage
+    ).order_by('assessment_type', 'id'))
+
+    test_item = request.GET.get('test_item')
+
+    # Если выбрано конкретное испытание то возвращвем его
+    if test_item:
+        selected = get_object_or_404(TestItem, pk=test_item)
+    # Если не выбрано выбираем первое испытние в котор не заполнены рез-ты
+    else:
+        selected = next(
+            (i for i in test_items if AssessmentResult.objects.filter(
+                assessment=assessment, test_item=i, result='empty'
+            ).exists()),
+            test_items[0]
+            if test_items else None
+        )
+    items_data = []
+
+    for item in test_items:
+        qs = AssessmentResult.objects.filter(assessment=assessment, test_item=item)
+        items_data.append({
+            'id': item.id,
+            'name': item.name,
+            'unit': item.get_unit_display(),
+            'assessment_type': item.assessment_type,
+            'done': qs.exclude(result='empty').count(),
+            'total': qs.count()
+        })
+
+    queue = []
+
+    if selected:
+        results = (
+            AssessmentResult.objects.filter(assessment=assessment, test_item=selected)
+                .select_related('athlete')  # select это загрузка связанных данных - информации о спортсмене
+                .order_by('athlete__last_name', 'athlete__first_name')
+        )
+        queue = [{
+            'athlete_id': i.athlete_id,
+            'name': i.athlete.get_full_name(),
+            'result': i.result,
+            'score': i.score
+        } for i in results]
+
+    return JsonResponse({
+        'assessment_id': assessment.id,
+        'test_items': items_data,
+        'selected_test_item': selected.id if selected else None,
+        'selected_unit': selected.get_unit_display() if selected else '',
+        'queue': queue
+    })
+

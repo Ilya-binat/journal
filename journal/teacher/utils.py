@@ -155,3 +155,14 @@ def get_attendance_count(slot_id):
         result.setdefault(status, 0)
 
     return result
+
+# Функция определяет результат сдачи студента по нормативу и полу
+
+def is_score_passed(test_item, athlete, score):
+    norm = test_item.max_cor_male if athlete.gender == 'Мужчина' else test_item.max_cor_female
+    if norm is None:
+        return None
+
+    if test_item.unit in ('минуты', 'секунды'):
+        return score <= norm
+    return score >= norm
