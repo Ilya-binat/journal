@@ -23,6 +23,7 @@
             <th scope="col">Еденица измерения</th>
             <th scope="col">Вид испытания</th>
             <th scope="col">Вид спорта</th>
+            <th scope="col">Допустимый диапазон</th>
             <th scope="col"></th>
         </tr>
         </thead>
@@ -44,6 +45,13 @@
             </td>
 
             <td>{{ test_item.sport_type }}</td>
+            <td>
+                {% if test_item.min_value != None or test_item.max_value != None %}
+                {{ test_item.min_value|default_if_none:"-" }} - {{ test_item.max_value|default_if_none:"-" }}
+                {% else %}
+                <span class="text-muted">Не задан</span>
+                {% endif %}
+            </td>
             <td class="text-end">
                 <div class="dropdown">
                     <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
@@ -174,6 +182,8 @@
                 document.getElementById('id_unit').value = data.unit
                 document.getElementById('id_assessment_type').value = data.assessment_type
                 document.getElementById('id_sport_type').value = data.sport_type
+                document.getElementById('id_min_value').value = data.min_value
+                document.getElementById('id_max_value').value = data.max_value
 
                 document.getElementById('testItemForm').dataset.mode = "edit"
                 document.getElementById('testItemForm').dataset.id = id
@@ -276,6 +286,7 @@
                         <td>${p.unit}</td>
                         <td>${p.assessment_type == 'general' ? 'ОФП' : 'СФП'}</td>
                         <td>${p.sport_type}</td>
+                        <td>${(p.min_value ?? '-') + ' - ' + (p.max_value ?? '-')}</td>
                             ${buttons}
                     </tr>
                     `
@@ -295,6 +306,7 @@
                         row.children[5].textContent = p.unit
                         row.children[6].textContent = p.assessment_type == 'general' ? 'ОФП' : 'СФП'
                         row.children[7].textContent = p.sport_type
+                        row.children[8].textContent = (p.min_value ?? '-') + ' - ' + (p.max_value ?? '-')
                     }
 
                     bootstrap.Modal.getInstance(

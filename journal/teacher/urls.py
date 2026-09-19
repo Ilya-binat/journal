@@ -12,4 +12,5 @@ urlpatterns = [
     path('fetch_exams_data/', fetch_exams_data, name='fetch_exams_data'),
     path('add_exam_result/', add_exam_result, name='add_exam_result'),
     path('fetch_station_data/', fetch_station_data, name='fetch_station_data'),
+
 ]

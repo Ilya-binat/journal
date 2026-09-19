@@ -354,6 +354,28 @@ class TestItemForm(forms.ModelForm):
         ),
     )
 
+    min_value = forms.FloatField(
+        label="Минимальный допустимый результат",
+        widget=forms.NumberInput(
+            attrs={
+                "placeholder": "Введите минимальное значение",
+                "class": "form-control",
+                "step": "0.01",
+            }
+        ),
+    )
+
+    max_value = forms.FloatField(
+        label="Максимальный допустимый результат",
+        widget=forms.NumberInput(
+            attrs={
+                "placeholder": "Введите максимальное значение",
+                "class": "form-control",
+                "step": "0.01",
+            }
+        ),
+    )
+
     class Meta:
         model = TestItem
         fields = [
@@ -363,7 +385,9 @@ class TestItemForm(forms.ModelForm):
             "max_cor_female",
             "unit",
             "assessment_type",
-            "sport_type"
+            "sport_type",
+            'min_value',
+            'max_value'
         ]
 
     # Дополнительная валидация
@@ -385,4 +409,25 @@ class TestItemForm(forms.ModelForm):
                 "Норматив не может быть отрицательным",
             )
 
+        min_value = cleaned_data.get("min_value")
+        max_value = cleaned_data.get("max_value")
+
+        if min_value is not None and min_value < 0:
+            self.add_error(
+                "min_value",
+                "Минимальное значение не может быть отрицательным",
+            )
+
+
+        if max_value is not None and max_value < 0:
+            self.add_error(
+                "max_value",
+                "Максимальный результат не может быть отрицательным",
+            )
+
+        if max_value is not None and min_value is not None and min_value >= max_value:
+            self.add_error(
+                "max_value",
+                "Максимальный результат должен быть больше минимального",
+                )
         return cleaned_data

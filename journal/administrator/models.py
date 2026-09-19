@@ -294,6 +294,8 @@ class TestItem(models.Model):
     max_cor_female = models.FloatField()
     assessment_type = models.CharField(choices=ASSESSMENT_TYPE_CHOICES, max_length=50)
     sport_type = models.ForeignKey(TrainingType, on_delete=models.CASCADE)
+    min_value = models.FloatField(null=True, blank=True)
+    max_value = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.name}-{self.stage}-{self.assessment_type}'

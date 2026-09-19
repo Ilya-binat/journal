@@ -25,7 +25,8 @@
             <button type="button" class="btn btn-outline-success d-flex align-items-center gap-2">
                 <i class="bi bi-file-earmark-excel"></i> Экспорт в Excel
             </button>
-            <button type="button" class="btn btn-primary d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
+                    data-bs-toggle="modal" data-bs-target="#stationModal">
                 <i class="bi bi-plus-lg"></i> Добавить результат
             </button>
             <button type="button" class="btn btn-outline-secondary rounded-circle" style="width:38px;height:38px;">
@@ -224,7 +225,65 @@
         </div>
     </div>
 </div>
+<!--Модальное окно станции-->
+<div class="modal fade" id="stationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content station-modal-content">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title fw-bold" id="stationAssessmentTitle">Добавление результатов</div>
+                    <div class="text-muted small" id="stationGroupTitle"></div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="stationEmptyState" class="text-center text-muted py-5" style="display:none;">
+                    Для этой группы пока нет активного КПИ.
+                </div>
+                <div id="stationContent" class="station-wrap">
+                    <div class="station-picker" id="stationPicker"></div>
+                    <div class="station-main">
+                        <div class="station-header">
+                            <div>
+                                <div class="name" id="stationTestName">—</div>
+                                <div class="meta" id="stationTestMeta">—</div>
+                            </div>
+                            <div class="station-progress-badge" id="stationProgressBadge">0 из 0</div>
+                        </div>
 
+                        <div class="station-active-row" id="stationActiveRow" style="display:none;">
+                            <span class="athlete-avatar-placeholder"><i class="bi bi-person-fill"></i></span>
+                            <div>
+                                <div class="name" id="stationActiveName">—</div>
+                                <div class="group" id="stationActiveHint">Следующий по списку</div>
+                            </div>
+                            <span class="unit-label" id="stationActiveUnit"></span>
+                            <input type="text" inputmode="decimal" class="input-big" id="stationScoreInput" placeholder="0">
+                            <button class="btn-next" id="stationNextBtn">Далее <i class="bi bi-arrow-right"></i></button>
+                        </div>
+                        <div class="d-flex gap-2 mb-3" id="stationQuickActions" style="display:none;">
+                            <button class="btn btn-sm btn-outline-warning" id="stationAbsentBtn">
+                                <i class="bi bi-dash-circle"></i> Отсутствовал
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" id="stationExemptedBtn">
+                                <i class="bi bi-shield-check"></i> Освобождён
+                            </button>
+                        </div>
+                        <div id="stationAllDone" class="text-center text-muted py-4" style="display:none;">
+                            <i class="bi bi-check-circle-fill status-icon-ok" style="font-size:1.6rem;"></i>
+                            <div class="mt-2">По этому испытанию все результаты внесены</div>
+                        </div>
+
+                        <div class="kpi-card" style="border-radius:12px;">
+                            <div id="stationQueueList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
 {% endblock %}
+<!---->

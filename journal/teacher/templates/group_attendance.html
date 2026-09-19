@@ -171,3 +171,11 @@
 </body>
 </html>
 {% endblock %}
+
+{% block script %}
+
+<div class="att-toast-container" id="att-toast-container" aria-live="polite" aria-atomic="false"></div>
+
+<script src="{% static 'custom-js/group_attendance.js' %}"></script>
+
+{% endblock %}

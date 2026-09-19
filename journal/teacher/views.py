@@ -139,11 +139,11 @@ def save_all_attendance(request, slot_id):
         )
     return JsonResponse({'status': 'success'})
 
-
+# закончил тут
 @role_required('Тренер')
 def attendance_report(request):
     """Главная страница — только рендер шаблона"""
-    groups = Group.objects.all()
+    groups = Group.objects.filter(coach = request.user)
     return render(request, 'group_attendance.html', {'groups': groups})
 
 
@@ -383,6 +383,20 @@ def add_exam_result(request):
                 'success': False,
                 'error': 'Не корректоное значение результата',
             }, status=400)
+
+        if test_item.min_value is not None and score < test_item.min_value:
+            return JsonResponse({
+                'success': False,
+                'error': f'Результат не может быть меньше {test_item.min_value}'
+            }, status=400)
+
+        if test_item.max_value is not None and score > test_item.max_value:
+            return JsonResponse({
+                'success': False,
+                'error': f'Результат не может быть боьше {test_item.min_value}'
+            }, status=400)
+
+
         passed = is_score_passed(test_item, athlete, score)
         result = 'passed' if passed else 'failed'
 
@@ -403,6 +417,7 @@ def add_exam_result(request):
         'score': score,
         'result': result
     }, status=200)
+
 
 # Функция для полученя данных станции
 # станция это модальное окно для заполнения результатов экзамена
@@ -450,6 +465,8 @@ def fetch_station_data(request):
             'name': item.name,
             'unit': item.get_unit_display(),
             'assessment_type': item.assessment_type,
+            'min_value': item.min_value,
+            'max_value': item.max_value,
             'done': qs.exclude(result='empty').count(),
             'total': qs.count()
         })
@@ -476,4 +493,6 @@ def fetch_station_data(request):
         'selected_unit': selected.get_unit_display() if selected else '',
         'queue': queue
     })
+
+
 

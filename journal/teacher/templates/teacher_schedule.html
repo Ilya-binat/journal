@@ -1,5 +1,7 @@
 {% extends 'base_layout.html' %}
 {% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'custom-css/teacher_schedule.css' %}">
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-bold mb-0">Расписание</h2>
 </div>
@@ -331,5 +333,13 @@
 
 </div>
 
+
+{% endblock %}
+
+{% block script %}
+
+<div class="att-toast-container" id="att-toast-container" aria-live="polite" aria-atomic="false"></div>
+
+<script src="{% static 'custom-js/teacher_schedule.js' %}"></script>
 
 {% endblock %}

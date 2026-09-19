@@ -289,3 +289,237 @@ table.kpi-table tbody tr.active-row {
     padding: 14px;
     margin-top: 16px;
 }
+
+/* ===== Режим станции: добавление результатов ===== */
+.station-modal-content {
+    border-radius: 16px;
+    border: none;
+}
+
+.station-wrap {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+}
+
+.station-picker {
+    width: 260px;
+    flex-shrink: 0;
+    max-height: 520px;
+    overflow-y: auto;
+}
+
+.station-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.station-item .idx {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #eef1f5;
+    color: #6b7280;
+    font-size: .72rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.station-item .info {
+    flex: 1;
+    min-width: 0;
+}
+
+.station-item .name {
+    font-size: .86rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.station-item .meta {
+    font-size: .72rem;
+    color: #9ca3af;
+}
+
+.station-item .done-count {
+    font-size: .72rem;
+    font-weight: 700;
+    color: #9ca3af;
+}
+
+.station-item .done-count.complete {
+    color: var(--kpi-green);
+}
+
+.station-item.active {
+    background: #eef4ff;
+    border-color: #c7dbff;
+}
+
+.station-item.active .idx {
+    background: var(--kpi-blue);
+    color: #fff;
+}
+
+.station-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.station-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.station-header .name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.station-header .meta {
+    font-size: .8rem;
+    color: #6b7280;
+}
+
+.station-progress-badge {
+    background: #eef4ff;
+    color: var(--kpi-blue);
+    font-weight: 700;
+    font-size: .8rem;
+    border-radius: 20px;
+    padding: 5px 12px;
+    white-space: nowrap;
+}
+
+.station-active-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #eef4ff;
+    border: 1px solid #c7dbff;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+}
+
+.station-active-row .athlete-avatar-placeholder {
+    width: 42px;
+    height: 42px;
+    font-size: 1rem;
+    background: #dbe6ff;
+    color: var(--kpi-blue);
+}
+
+.station-active-row .name {
+    font-weight: 700;
+    color: #111827;
+    font-size: .95rem;
+}
+
+.station-active-row .group {
+    font-size: .76rem;
+    color: #6b7280;
+}
+
+.station-active-row .input-big {
+    width: 120px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    border: 1.5px solid var(--kpi-blue);
+    border-radius: 10px;
+    padding: 8px 10px;
+    margin-left: auto;
+}
+
+.station-active-row .input-big:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px #2563eb22;
+}
+
+.station-active-row .unit-label {
+    font-size: .78rem;
+    color: #6b7280;
+    width: 56px;
+}
+
+.station-active-row .btn-next {
+    background: var(--kpi-blue);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 9px 16px;
+    font-weight: 600;
+    font-size: .86rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.station-list-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 16px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.station-list-row:last-child {
+    border-bottom: none;
+}
+
+.station-list-row .athlete-avatar-placeholder {
+    width: 28px;
+    height: 28px;
+    font-size: .7rem;
+}
+
+.station-list-row .name {
+    font-size: .86rem;
+    color: #374151;
+}
+
+.station-list-row .result-pill {
+    margin-left: auto;
+    font-size: .82rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #9ca3af;
+}
+
+.station-list-row .result-pill.filled {
+    color: #111827;
+}
+
+.station-list-row.upcoming {
+    opacity: .55;
+}
+
+.station-list-row.current {
+    background: #eef4ff;
+    border-radius: 8px;
+}
+
+@media (max-width: 767.98px) {
+    .station-wrap {
+        flex-direction: column;
+    }
+    .station-picker {
+        width: 100%;
+        max-height: 180px;
+    }
+}
