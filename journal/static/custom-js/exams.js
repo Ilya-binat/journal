@@ -314,6 +314,11 @@ function submitStationResult(student, payload) {
         .then(data => {
             if (!data.success) {
                 console.error(data.error)
+                showToast({
+                    type:'warning',
+                    title:'Не допустимое значение',
+                    message:data.error || 'Проверьте введенный результат'
+                })
                 return
             }
             student.result = data.result
@@ -322,12 +327,25 @@ function submitStationResult(student, payload) {
 
             const item = stationState.testItems.find(t => t.id === stationState.selectedTestItemId)
             if (item) item.done += 1
+
+            showToast({
+                type:'success',
+                title:'Результат сохранен'
+            })
+
             renderStationPicker()
             renderStationProgress()
             renderStationActive()
             renderStationQueueList()
         })
-        .catch(error => console.error(error))
+        .catch(error => {
+            console.error(error)
+            showToast({
+                type:'error',
+                title: 'Ошибка',
+                message:'Нет соединения с сервером, проверьте подключение'
+            })
+        })
 }
 
 // Функция отправки результата о освобождение или отсутствии
@@ -352,4 +370,45 @@ function submitScore(){
     }
     submitStationResult(next, {action:'score', score:Number(value)})
 
+}
+
+function showToast({ type = 'success', title, message, duration = 4000 }) {
+    const container = document.getElementById('att-toast-container')
+    if (!container) return
+
+    const icons = {
+        success: 'bi bi-check-circle-fill',
+        error: 'bi bi-x-circle-fill',
+        warning: 'bi bi-exclamation-circle-fill'
+    }
+    const toast = document.createElement('div')
+    toast.className = `att-toast ${type}`
+    toast.style.position = 'relative'
+    toast.innerHTML = `
+            <div class="att-toast-icon ${type}"><i class="${icons[type]}"></i></div>
+            <div class="att-toast-body">
+                <p class="att-toast-title">${title}</p>
+                ${message ? `<p class="att-toast-msg">${message}</p>` : ''}
+            </div>
+            <button class="att-toast-close" aria-label="Закрыть"><i class="bi bi-x"></i></button>
+            <div class="att-toast-progress" style="width:100%"></div>
+        `
+    container.appendChild(toast)
+    requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')))
+
+    const progress = toast.querySelector('.att-toast-progress')
+    progress.style.transition = `width ${duration}ms linear`
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        progress.style.width = '0%'
+    }))
+
+    const dismiss = () => {
+        toast.classList.remove('show')
+        toast.classList.add('hide')
+        setTimeout(() => toast.remove(), 400)
+    }
+    toast.querySelector('.att-toast-close').addEventListener('click', dismiss)
+    const timer = setTimeout(dismiss, duration)
+    toast.addEventListener('mouseenter', () => clearTimeout(timer))
+    toast.addEventListener('mouseleave', () => setTimeout(dismiss, 1500))
 }

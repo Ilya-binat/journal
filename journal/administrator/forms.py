@@ -355,7 +355,7 @@ class TestItemForm(forms.ModelForm):
     )
 
     min_value = forms.FloatField(
-        label="Минимальный допустимый результат",
+        label="Минимальный физически возможный результат",
         widget=forms.NumberInput(
             attrs={
                 "placeholder": "Введите минимальное значение",
@@ -366,7 +366,7 @@ class TestItemForm(forms.ModelForm):
     )
 
     max_value = forms.FloatField(
-        label="Максимальный допустимый результат",
+        label="Максимальный физически возможный результат",
         widget=forms.NumberInput(
             attrs={
                 "placeholder": "Введите максимальное значение",
@@ -374,6 +374,17 @@ class TestItemForm(forms.ModelForm):
                 "step": "0.01",
             }
         ),
+    )
+
+    better_direction = forms.ChoiceField(
+        label = 'Направлние сравнения с нормативом',
+        choices= BETTER_DIRECTION_CHOICES,
+        widget=forms.Select(
+            attrs={
+                'class': 'form-select'
+            }
+        )
+
     )
 
     class Meta:
@@ -387,7 +398,8 @@ class TestItemForm(forms.ModelForm):
             "assessment_type",
             "sport_type",
             'min_value',
-            'max_value'
+            'max_value',
+            'better_direction'
         ]
 
     # Дополнительная валидация

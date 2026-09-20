@@ -159,10 +159,15 @@ def get_attendance_count(slot_id):
 # Функция определяет результат сдачи студента по нормативу и полу
 
 def is_score_passed(test_item, athlete, score):
+    if test_item.min_value is not None and score < test_item.min_value:
+        return False
+    if test_item.max_value is not None and score > test_item.max_value:
+        return False
+
     norm = test_item.max_cor_male if athlete.gender == 'Мужчина' else test_item.max_cor_female
     if norm is None:
         return None
-
-    if test_item.unit in ('минуты', 'секунды'):
-        return score <= norm
+# Если результат меньше норматива и направление = lower, то сдал. Если напрвление higher и результат больше норматива то сдал
+    if test_item.better_direction == 'lower':
+       return score <= norm
     return score >= norm

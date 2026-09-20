@@ -286,6 +286,11 @@ unit_choices=[
     ('количество повторений','кол-во.повт.')
 ]
 
+BETTER_DIRECTION_CHOICES=[
+    ('lower','Меньше-лучше'),
+    ('higher','Больше-лучше')
+]
+
 class TestItem(models.Model):
     name = models.CharField(max_length=255)
     stage = models.CharField(max_length=255, choices=stage_choices)
@@ -296,6 +301,7 @@ class TestItem(models.Model):
     sport_type = models.ForeignKey(TrainingType, on_delete=models.CASCADE)
     min_value = models.FloatField(null=True, blank=True)
     max_value = models.FloatField(null=True, blank=True)
+    better_direction = models.CharField(max_length=10, default='lower' , choices=BETTER_DIRECTION_CHOICES)
 
     def __str__(self):
         return f'{self.name}-{self.stage}-{self.assessment_type}'

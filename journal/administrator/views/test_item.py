@@ -37,7 +37,8 @@ def add_test_items(request):
                     "assessment_type":test.assessment_type,
                     "sport_type":test.sport_type.name,
                     "min_value":test.min_value,
-                    "max_value":test.max_value
+                    "max_value":test.max_value,
+                    "better_direction":test.better_direction
                     }
 
             }
@@ -60,6 +61,7 @@ def get_test_items(request, pk):
             "sport_type": test.sport_type.id,
             "min_value":test.min_value,
             "max_value":test.max_value,
+            "better_direction": test.better_direction
         }
     )
 
@@ -84,6 +86,7 @@ def edit_test_items(request, pk):
                     "sport_type": test.sport_type.name,
                     "min_value": test.min_value,
                     "max_value": test.max_value,
+                    "better_direction": test.better_direction
                 },
             }
         )
