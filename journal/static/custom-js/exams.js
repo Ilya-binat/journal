@@ -38,6 +38,8 @@ function replaceData(data) {
     });
     renderTableHead(data.thead)
     renderTableBody(data.thead, data.table)
+    document.querySelector('.avg_number').textContent = `${data.avg_percent}%`
+    document.querySelector('.avg_percent').querySelector('div').style.width=`${data.avg_percent}%`
 }
 
 function buildQueryParams(data) {

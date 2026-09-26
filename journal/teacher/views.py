@@ -139,11 +139,12 @@ def save_all_attendance(request, slot_id):
         )
     return JsonResponse({'status': 'success'})
 
+
 # закончил тут
 @role_required('Тренер')
 def attendance_report(request):
     """Главная страница — только рендер шаблона"""
-    groups = Group.objects.filter(coach = request.user)
+    groups = Group.objects.filter(coach=request.user)
     return render(request, 'group_attendance.html', {'groups': groups})
 
 
@@ -277,15 +278,20 @@ def fetch_exams_data(request):
 
     # Сбор статистики по группе
     assessment = Assessment.objects.get(group=group)
-    test_items = TestItem.objects.filter(sport_type=assessment.sport_type, stage=assessment.next_stage)
+    test_items = list(TestItem.objects.filter(sport_type=assessment.sport_type, stage=assessment.next_stage).order_by(
+        "assessment_type", "id"))
     thead = [{'id': test_item.id, 'name': test_item.name, 'unit': test_item.unit,
               'assessment_type': test_item.assessment_type} for test_item in test_items]
+
     assessment_result = AssessmentResult.objects.filter(assessment=assessment)
-    stats = (
-        assessment_result
-            .values('result')
-            .annotate(count=Count('id'))
-    )
+    total = students.count()
+    total_test_items = len('test_items')
+    results_by_athlete = defaultdict(dict)  # default_dict - дает возможность создать вложенный словарь
+    athlete_names = {}
+
+    for item in assessment_result.select_related('athlete', 'test_item'):
+        results_by_athlete[item.athlete_id][item.test_item_id] = item
+        athlete_names[item.athlete_id] = item.athlete.get_full_name()
 
     stats_dict = {
         'passed': 0,
@@ -293,46 +299,64 @@ def fetch_exams_data(request):
         'absent': 0
     }
 
-    for item in stats:
-        stats_dict[item['result']] = item['count']
+    table = {}
+    total_percent_sum = 0
+    total_percent_count = 0
 
-    total = students.count()
+    for athlete_id, results_by_item in results_by_athlete.items():
+        statuses = [r.result for r in results_by_item.values()]
+        if 'failed' in statuses:
+            stats_dict['failed'] += 1
+        elif 'absent' in statuses:
+            stats_dict['absent'] += 1
+        elif 'passed' in statuses:
+            stats_dict['passed'] += 1
 
-    stats_dict = {
-        'passed': 0,
-        'failed': 0,
-        'absent': 0,
-    }
+        countable = [i for i in statuses if i in ('failed', 'passed')]
+        total_percent = (
+            round(statuses.count('passed') / total_test_items * 100)
+            if total_test_items and countable
+            else None
+        )
+        if total_percent is not None:
+            total_percent_sum += total_percent
+            total_percent_count += 1
 
-    for item in stats:
-        stats_dict[item['result']] = item['count']
+        tests = []
+        for item in test_items:
+            result_row = results_by_item.get(item.id)
+            if result_row is None:
+                tests.append({
+                    'name': item.name,
+                    'score': '-',
+                    'result': 'empty'
+                })
+            else:
+                tests.append({
+                    'name': item.name,
+                    'score': result_row.score if result_row.score is not None else '-',
+                    'result': result_row.result
+                })
+        table[athlete_id] = {
+            'athlete': athlete_names[athlete_id],
+            'total_percent': total_percent,
+            'tests': tests
+        }
 
     percents = {
         f'{key}_percent': round(value / total * 100) if total else 0
         for key, value in stats_dict.items()
     }
-
-    # Таблица результатов КПИ
-    results = assessment_result.select_related('athlete', 'test_item')
-
-    table = {}
-    for item in results:
-        athlete_id = item.athlete.id
-        if athlete_id not in table:
-            table[athlete_id] = {
-                'athlete': item.athlete.get_full_name(),
-                'tests': []
-            }
-        table[athlete_id]['tests'].append({
-            'name': item.test_item.name,
-            'score': item.score or '-',
-            'result': item.result
-        })
+    avg_percent = (
+        round(total_percent_sum / total_percent_count)
+        if total_percent_count else 0
+    )
 
     return JsonResponse({
         'students_count': total,
         **stats_dict,
         **percents,
+        'avg_percent': avg_percent,
         'table': table,
         'thead': thead,
     })
@@ -395,7 +419,6 @@ def add_exam_result(request):
                 'success': False,
                 'error': f'Результат не может быть боьше {test_item.min_value}'
             }, status=400)
-
 
         passed = is_score_passed(test_item, athlete, score)
         result = 'passed' if passed else 'failed'
@@ -493,6 +516,3 @@ def fetch_station_data(request):
         'selected_unit': selected.get_unit_display() if selected else '',
         'queue': queue
     })
-
-
-
