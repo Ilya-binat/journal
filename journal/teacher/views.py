@@ -285,7 +285,7 @@ def fetch_exams_data(request):
 
     assessment_result = AssessmentResult.objects.filter(assessment=assessment)
     total = students.count()
-    total_test_items = len('test_items')
+    total_test_items = len('test_items') # Подсчет общего кол-ва испытаний
     results_by_athlete = defaultdict(dict)  # default_dict - дает возможность создать вложенный словарь
     athlete_names = {}
 
@@ -298,8 +298,10 @@ def fetch_exams_data(request):
         'failed': 0,
         'absent': 0
     }
+# Подсчет процента сдавших и не сдавших
 
     table = {}
+# Переменные для подсчета среднего процента по группе
     total_percent_sum = 0
     total_percent_count = 0
 
@@ -516,3 +518,4 @@ def fetch_station_data(request):
         'selected_unit': selected.get_unit_display() if selected else '',
         'queue': queue
     })
+

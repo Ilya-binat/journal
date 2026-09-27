@@ -39,7 +39,7 @@ function replaceData(data) {
     renderTableHead(data.thead)
     renderTableBody(data.thead, data.table)
     document.querySelector('.avg_number').textContent = `${data.avg_percent}%`
-    document.querySelector('.avg_percent').querySelector('div').style.width=`${data.avg_percent}%`
+    document.querySelector('.avg_percent').querySelector('div').style.width = `${data.avg_percent}%`
 }
 
 function buildQueryParams(data) {
@@ -111,7 +111,7 @@ function renderTableBody(testItems, table) {
         const scoreValue = row.total_percent === null ? '—' : row.total_percent
 
         tbody.insertAdjacentHTML('beforeend', `
-            <tr>
+            <tr data-name="${row.athlete.toLowerCase()}">
                 <td>${index}</td>
                 <td class="athlete-cell"><span class="athlete-avatar-placeholder"><i class="bi bi-person-fill"></i></span>${row.athlete}</td>
                 ${cells}
@@ -119,6 +119,23 @@ function renderTableBody(testItems, table) {
             </tr>
         `)
     }
+    applyExamsSearch()
+}
+
+let examsSearchInput = document.getElementById('examsSearchInput')
+if (examsSearchInput) {
+    examsSearchInput.addEventListener('input', applyExamsSearch)
+}
+
+function applyExamsSearch() {
+    if (!examsSearchInput) return
+    let query = examsSearchInput.value.trim().toLowerCase()
+    let tbody = document.getElementById('examsTableBody')
+    if (!tbody) return
+    tbody.querySelectorAll('tr').forEach(row => {
+        let name = row.dataset.name || ''
+        row.style.display = name.includes(query) ? '' : 'none'
+    })
 }
 
 // Рендерит одну ячейку результата испытания в зависимости от статуса сдачи
@@ -317,9 +334,9 @@ function submitStationResult(student, payload) {
             if (!data.success) {
                 console.error(data.error)
                 showToast({
-                    type:'warning',
-                    title:'Не допустимое значение',
-                    message:data.error || 'Проверьте введенный результат'
+                    type: 'warning',
+                    title: 'Не допустимое значение',
+                    message: data.error || 'Проверьте введенный результат'
                 })
                 return
             }
@@ -331,8 +348,8 @@ function submitStationResult(student, payload) {
             if (item) item.done += 1
 
             showToast({
-                type:'success',
-                title:'Результат сохранен'
+                type: 'success',
+                title: 'Результат сохранен'
             })
 
             renderStationPicker()
@@ -343,38 +360,38 @@ function submitStationResult(student, payload) {
         .catch(error => {
             console.error(error)
             showToast({
-                type:'error',
+                type: 'error',
                 title: 'Ошибка',
-                message:'Нет соединения с сервером, проверьте подключение'
+                message: 'Нет соединения с сервером, проверьте подключение'
             })
         })
 }
 
 // Функция отправки результата о освобождение или отсутствии
-function submitQuickActions(action){
+function submitQuickActions(action) {
     const next = stationState.pending[0]
 
-    if(!next) return
+    if (!next) return
     submitStationResult(next, {action})
 }
 
 // Функция отправки резкльтата о сдачи или не сдачи
-function submitScore(){
+function submitScore() {
     const next = stationState.pending[0]
 
-    if(!next) return
+    if (!next) return
     const input = document.getElementById('stationScoreInput')
     const value = input.value.trim().replace(',', '.')
 
-    if(value === '' || isNaN(Number(value))){
+    if (value === '' || isNaN(Number(value))) {
         input.focus()
         return
     }
-    submitStationResult(next, {action:'score', score:Number(value)})
+    submitStationResult(next, {action: 'score', score: Number(value)})
 
 }
 
-function showToast({ type = 'success', title, message, duration = 4000 }) {
+function showToast({type = 'success', title, message, duration = 4000}) {
     const container = document.getElementById('att-toast-container')
     if (!container) return
 
