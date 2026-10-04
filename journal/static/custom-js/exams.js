@@ -1,4 +1,6 @@
 let groupSelect = document.querySelector('.group_select')
+let lastExamsData = null
+let selectedAthleteId = null
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchData()
@@ -30,6 +32,7 @@ function fetchData() {
 }
 
 function replaceData(data) {
+    lastExamsData = data
     document.querySelector('.total_number').textContent = data.students_count;
 
     ['passed', 'failed', 'absent'].forEach(status => {
@@ -40,6 +43,14 @@ function replaceData(data) {
     renderTableBody(data.thead, data.table)
     document.querySelector('.avg_number').textContent = `${data.avg_percent}%`
     document.querySelector('.avg_percent').querySelector('div').style.width = `${data.avg_percent}%`
+
+    if (selectedAthleteId && data.table[selectedAthleteId]) {
+        renderAthleteSidebar(selectedAthleteId)
+
+    } else {
+        hideAthleteSidebar()
+
+    }
 }
 
 function buildQueryParams(data) {
@@ -111,7 +122,7 @@ function renderTableBody(testItems, table) {
         const scoreValue = row.total_percent === null ? '—' : row.total_percent
 
         tbody.insertAdjacentHTML('beforeend', `
-            <tr data-name="${row.athlete.toLowerCase()}">
+            <tr data-name="${row.athlete.toLowerCase()}" data-athlete-id = "${athleteId}">
                 <td>${index}</td>
                 <td class="athlete-cell"><span class="athlete-avatar-placeholder"><i class="bi bi-person-fill"></i></span>${row.athlete}</td>
                 ${cells}
@@ -136,6 +147,117 @@ function applyExamsSearch() {
         let name = row.dataset.name || ''
         row.style.display = name.includes(query) ? '' : 'none'
     })
+}
+
+document.getElementById('examsTableBody').addEventListener('click', (event) => {
+    let row = event.target.closest('tr[data-athlete-id]')
+
+    if (!row) return
+
+    selectedAthleteId = row.dataset.athleteId
+    renderAthleteSidebar(selectedAthleteId)
+})
+
+function renderAthleteSidebar(athleteId) {
+    if (!lastExamsData) return
+
+    let row = lastExamsData.table[athleteId]
+
+    if (!row) return
+
+    document.getElementById('athleteSideCol')?.classList.add('is-open')
+    document.getElementById('sideAthleteName').textContent = row.athlete
+    document.getElementById('sideAthleteMeta').textContent = groupSelect.selectedOptions[0] ? groupSelect.selectedOptions[0].textContent : ''
+
+    let statuses = row.tests.map(t => t.result)
+    let badgeText = 'Не заполнено'
+    let badgeClass = 'badge-soft-muted'
+
+    if (statuses.includes('failed')) {
+        badgeText = 'Не сдал'
+        badgeClass = 'badge-soft-danger'
+    } else if (statuses.includes('absent')) {
+        badgeText = 'Не проходил'
+        badgeClass = 'badge-soft-warning'
+    } else if (statuses.includes('past')) {
+        badgeText = 'Сдал КПИ'
+        badgeClass = ''
+    }
+    let badge = document.getElementById('sideAthleteBadge')
+    badge.textContent = badgeText
+
+    badge.className = 'badge-soft mt-1 d-inline-block ' + badgeClass
+
+    let sections = {special: [], general: []}
+    lastExamsData.thead.forEach((item, i) => {
+        let test = row.tests[i]
+
+        if (!test) return
+
+        const type = item.assessment_type === 'general' ? 'general' : 'special'
+        sections[type].push({
+            ...test,
+            unit: item.unit
+        })
+    })
+
+    let container = document.getElementById('sideSectionsContainer')
+    container.innerHTML = ['general', 'special'].map(type => {
+        let items = sections[type]
+
+        if (!items.length) return
+        let count = items.filter(t => t.result === 'passed' || t.result === 'failed')
+        let passedCount = items.filter(t => t.result === 'passed').length
+        let percent = count.length ? Math.round(passedCount / items.length * 100) : null
+        let title = type === 'general' ? 'ОФП' : 'СФП'
+        let rows = items.map(renderSideRow).join('')
+
+        return `
+            <div class="d-flex justify-content-between align-items-center kpi-side-section-title">
+                <span>${title}</span><span class="text-success fw-bold">${percent === null ? '—' : percent + '%'}</span>
+            </div>
+            ${rows}
+        `
+    }).join('')
+
+    document.getElementById('sideOverallPercent').textContent =
+        row.total_percent === null ? '-' : row.total_percent + '%'
+
+    let rank = Object.entries(lastExamsData.table).map(([id, r]) => {
+        return {id, percent: r.total_percent}
+    })
+        .sort((a, b) => {
+            return (b.percent ?? -1) - (a.percent ?? -1)
+        })
+
+    let rankIndex = rank.findIndex(r => r.id === athleteId)
+    document.getElementById('sideRank').textContent = rankIndex === -1 ? '-' : (rankIndex +1) + ' из ' + rank.length
+
+}
+
+function renderSideRow(test) {
+    let valueHtml
+    let iconHtml = ''
+
+    if (test.result === 'empty') {
+        valueHtml = '<span class="value text-muted">Не запол.</span>'
+    } else if (test.result === 'exempted') {
+        valueHtml = '<span class="value text-muted">Освоб.</span>'
+    } else if (test.result === 'absent') {
+        valueHtml = '<span class="value text-muted">Отсутс.</span>'
+    } else {
+        valueHtml = `<span class="value">${test.score}${test.unit ? ' ' + test.unit : ''}</span>`
+        iconHtml = test.result === 'passed'
+            ? '<i class="bi bi-check-circle-fill status-icon-ok"></i>'
+            : '<i class="bi bi-x-circle-fill status-icon-fail"></i>'
+    }
+
+    return `<div class="kpi-side-row"><span>${test.name}</span><span>${valueHtml}${iconHtml}</span></div>`
+}
+
+function hideAthleteSidebar() {
+    selectedAthleteId = null
+    document.getElementById('athleteSideCol')?.classList.remove('is-open')
 }
 
 // Рендерит одну ячейку результата испытания в зависимости от статуса сдачи

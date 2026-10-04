@@ -36,9 +36,9 @@
         </div>
     </div>
 
-    <div class="row g-3">
+    <div class="kpi-layout">
         <!-- Main column -->
-        <div class="col-12 col-xl-9">
+        <div class="kpi-main-col">
 
             <!-- Filters -->
             <div class="kpi-filter row g-2 mb-3">
@@ -70,7 +70,7 @@
                     <div class="kpi-filter-label">&nbsp;</div>
                     <div class="input-group">
                         <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control" id="examsSearchInput" placeholder="Поиск спортсмена...">
+                        <input type="text" id="examsSearchInput" class="form-control" placeholder="Поиск спортсмена...">
                     </div>
                 </div>
             </div>
@@ -168,20 +168,20 @@
         </div>
 
         <!-- Right side panel: athlete details -->
-        <div class="col-12 col-xl-3">
-            <div class="kpi-side-panel">
+        <div class="kpi-side-col" id="athleteSideCol">
+            <div class="kpi-side-panel" id="athleteSidePanel">
                 <div class="d-flex align-items-start justify-content-between">
                     <div class="d-flex align-items-center gap-2">
                         <span class="athlete-avatar-placeholder" style="width:48px;height:48px;font-size:1.2rem;">
                             <i class="bi bi-person-fill"></i>
                         </span>
                         <div>
-                            <div class="fw-bold">Иванов Иван</div>
-                            <div class="text-muted small">Бокс НП-2 · 12 лет</div>
-                            <span class="badge-soft mt-1 d-inline-block">Сдан КПИ</span>
+                            <div class="fw-bold" id="sideAthleteName">—</div>
+                            <div class="text-muted small" id="sideAthleteMeta">—</div>
+                            <span class="badge-soft mt-1 d-inline-block" id="sideAthleteBadge"></span>
                         </div>
                     </div>
-                    <button class="btn btn-sm btn-link text-muted p-0"><i class="bi bi-x-lg"></i></button>
+                    <button type="button" class="btn btn-sm btn-link text-muted p-0" id="sideCloseBtn"><i class="bi bi-x-lg"></i></button>
                 </div>
 
                 <ul class="nav nav-tabs mt-3" style="font-size:.82rem;">
@@ -190,36 +190,16 @@
                     <li class="nav-item"><a class="nav-link" href="#">Динамика</a></li>
                 </ul>
 
-                <div class="d-flex justify-content-between align-items-center kpi-side-section-title">
-                    <span>ОФП</span><span class="text-success fw-bold">84%</span>
-                </div>
-                <div class="kpi-side-row"><span>Подтягивания</span><span><span class="value">13 раз</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
-                <div class="kpi-side-row"><span>Бег 30 м</span><span><span class="value">5.08 сек</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
-                <div class="kpi-side-row"><span>Бег 500 м</span><span><span class="value">1:42</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
-                <div class="kpi-side-row"><span>Прыжок в длину</span><span><span class="value">198 см</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
-                <div class="kpi-side-row"><span>Двойной прыжок</span><span><span class="value">420 см</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
-                <div class="kpi-side-row"><span>Подъем ног</span><span><span class="value">24 раз</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
-                <div class="kpi-side-row"><span>Прыжок в верх</span><span><span class="value">56 см</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
-                <div class="kpi-side-row"><span>Челночный бег 3×10 м</span><span><span class="value">8.9 сек</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
-
-                <div class="d-flex justify-content-between align-items-center kpi-side-section-title">
-                    <span>СФП</span><span class="text-success fw-bold">91%</span>
-                </div>
-                <div class="kpi-side-row"><span>Правый шпагат</span><span><span class="value">180°</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
-                <div class="kpi-side-row"><span>Левый шпагат</span><span><span class="value">180°</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
-                <div class="kpi-side-row"><span>Поперечный шпагат</span><span><span class="value">175°</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
-                <div class="kpi-side-row"><span>Чемоданчик</span><span><span class="value">+12 см</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
-                <div class="kpi-side-row"><span>Мостик</span><span><span class="value">8 балл</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
-                <div class="kpi-side-row"><span>Связка</span><span><span class="value">9.0 балл</span><i class="bi bi-check-circle-fill status-icon-ok"></i></span></div>
+                <div id="sideSectionsContainer"></div>
 
                 <div class="kpi-overall-box d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-muted small">Общий результат</div>
-                        <div class="fw-bold fs-5 text-success">92%</div>
+                        <div class="fw-bold fs-5 text-success" id="sideOverallPercent">—</div>
                     </div>
                     <div class="text-end">
                         <div class="text-muted small">Место в группе</div>
-                        <div class="fw-bold">1 из 25</div>
+                        <div class="fw-bold" id="sideRank">—</div>
                     </div>
                 </div>
             </div>
@@ -287,4 +267,3 @@
 </body>
 </html>
 {% endblock %}
-<!---->
