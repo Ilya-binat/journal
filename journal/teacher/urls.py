@@ -12,5 +12,6 @@ urlpatterns = [
     path('fetch_exams_data/', fetch_exams_data, name='fetch_exams_data'),
     path('add_exam_result/', add_exam_result, name='add_exam_result'),
     path('fetch_station_data/', fetch_station_data, name='fetch_station_data'),
+    path('fetch_athlete_dynamics/', fetch_athlete_dynamics, name='fetch_athlete_dynamics'),
 
 ]

@@ -599,3 +599,60 @@ table.kpi-table td.athlete-cell {
         width: 100%;
     }
 }
+
+/* ===== Вкладка "Динамика" в сайдбаре спортсмена ===== */
+.dyn-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 12px 0;
+}
+
+.dyn-chip {
+    font-size: .72rem;
+    border: 1px solid var(--kpi-border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    color: #6b7280;
+    background: #fff;
+    cursor: pointer;
+    user-select: none;
+}
+
+.dyn-chip.on {
+    background: #eef4ff;
+    border-color: #c7dbff;
+    color: var(--kpi-blue);
+    font-weight: 600;
+}
+
+.dyn-box {
+    display: flex;
+    justify-content: space-between;
+    background: var(--kpi-bg);
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 12px;
+}
+
+.dyn-box-title {
+    font-size: .72rem;
+    color: #6b7280;
+}
+
+.dyn-big {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.dyn-delta {
+    font-size: .72rem;
+    font-weight: 700;
+    border-radius: 20px;
+    padding: 2px 8px;
+    white-space: nowrap;
+}
+
+.dyn-delta.good { background: #e7f8ee; color: var(--kpi-green); }
+.dyn-delta.bad { background: #fde8e8; color: var(--kpi-red); }
+.dyn-delta.flat { background: #f3f4f6; color: #6b7280; }

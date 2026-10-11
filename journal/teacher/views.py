@@ -277,7 +277,20 @@ def fetch_exams_data(request):
     )
 
     # Сбор статистики по группе
-    assessment = Assessment.objects.get(group=group)
+    assessment = Assessment.objects.filter(group=group).order_by('-date_start', '-id').first()
+    if assessment is None:
+        return JsonResponse({
+            'students_count': students.count(),
+            'passed': 0,
+            'absent': 0,
+            'failed': 0,
+            'passed_percent': 0,
+            'absent_percent': 0,
+            'failed_percent': 0,
+            'avg_percent': 0,
+            'thead': [],
+            'table': {},
+        })
     test_items = list(TestItem.objects.filter(sport_type=assessment.sport_type, stage=assessment.next_stage).order_by(
         "assessment_type", "id"))
     thead = [{'id': test_item.id, 'name': test_item.name, 'unit': test_item.unit,
@@ -285,27 +298,28 @@ def fetch_exams_data(request):
 
     assessment_result = AssessmentResult.objects.filter(assessment=assessment)
     total = students.count()
-    total_test_items = len('test_items') # Подсчет общего кол-ва испытаний
+    total_test_items = len(test_items)  # Подсчет общего кол-ва испытаний
     results_by_athlete = defaultdict(dict)  # default_dict - дает возможность создать вложенный словарь
     athlete_names = {}
 
-    for item in assessment_result.select_related('athlete', 'test_item'):
+    for item in assessment_result:
         results_by_athlete[item.athlete_id][item.test_item_id] = item
-        athlete_names[item.athlete_id] = item.athlete.get_full_name()
 
     stats_dict = {
         'passed': 0,
         'failed': 0,
         'absent': 0
     }
-# Подсчет процента сдавших и не сдавших
+    # Подсчет процента сдавших и не сдавших
 
     table = {}
-# Переменные для подсчета среднего процента по группе
+    # Переменные для подсчета среднего процента по группе
     total_percent_sum = 0
     total_percent_count = 0
 
-    for athlete_id, results_by_item in results_by_athlete.items():
+    for student in students.order_by('last_name', 'first_name'):
+        athlete_id = student.id
+        results_by_item = results_by_athlete.get(athlete_id, {})
         statuses = [r.result for r in results_by_item.values()]
         if 'failed' in statuses:
             stats_dict['failed'] += 1
@@ -340,7 +354,7 @@ def fetch_exams_data(request):
                     'result': result_row.result
                 })
         table[athlete_id] = {
-            'athlete': athlete_names[athlete_id],
+            'athlete': student.get_full_name(),
             'total_percent': total_percent,
             'tests': tests
         }
@@ -444,14 +458,14 @@ def add_exam_result(request):
     }, status=200)
 
 
-# Функция для полученя данных станции
+# Функция для получения данных станции
 # станция это модальное окно для заполнения результатов экзамена
 @role_required('Тренер')
 def fetch_station_data(request):
     # Достаем группу
     group_id = request.GET.get('group')
     # Берем испытания для группы сортирую подню начала в порядке убывания(от сегодня назад)
-    assessment = Assessment.objects.filter(group=group_id).order_by('-date_start').first()
+    assessment = Assessment.objects.filter(group=group_id).order_by('-date_start', '-id').first()
 
     # Если испытание не найдено возвращаем пустые данные
     if not assessment:
@@ -519,3 +533,73 @@ def fetch_station_data(request):
         'queue': queue
     })
 
+
+@role_required('Тренер')
+def fetch_athlete_dynamics(request):
+    # Вытаскиваем спортсмена и его группу
+    group_id = request.GET.get('group')
+    athlete_id = request.GET.get('athlete')
+
+    # делаем проверку если какое то из полей не получилось вытащить или информация не предана
+    if not group_id or not athlete_id:
+        return JsonResponse({
+            'success': False,
+            'error': 'Не переданы group или athlete'
+        }, status=400)
+
+    # Делается проверка состоит ли студент в выбранной группе
+    if not StudentGroup.objects.filter(group=group_id, student=athlete_id).exists():
+        return JsonResponse({
+            'success': False,
+            'error': 'Спортсмен не состоит в этой группе'
+        }, status=404)
+
+    # Находими спортсмена, все испытания этой группы, создаем список всех дат по этим экзаменам
+    athlete = get_object_or_404(CustomUser, pk=athlete_id)
+    assessments = list(Assessment.objects.filter(group=group_id).order_by('date_start', 'id'))
+    period_index = {a.id: i for i, a in enumerate(assessments)}  # Нумеруем даты экзаменов
+    periods = [{
+        'id': a.id,
+        'label': a.date_start.strftime('%d.%m.%y'),
+        'name': a.name
+    }
+        for a in assessments]
+
+    #  Достаем результаты экзаменов
+    results = AssessmentResult.objects.filter(assessment__in=assessments, athlete=athlete).select_related('test_item')
+    tests = {}
+
+    for r in results:
+        item = r.test_item
+        key = (item.assessment_type, item.name.strip().lower())
+        norm = item.max_cor_male if athlete.gender == 'Мужчина' else item.max_cor_female
+
+        if key not in tests:
+            tests[key] = {
+                'id': item.id,
+                'name': item.name,
+                'unit': item.get_unit_display(),
+                'assessment_type': item.assessment_type,
+                'norm': norm,
+                'better_direction': item.better_direction,
+                'values': [None] * len(assessments)
+            }
+        entry = tests[key]
+        entry['id'] = min(entry['id'], item.id)
+        # результаты идут от старых КПИ к новым - норма и направление берутся из самого свежего
+        if norm is not None:
+            entry['norm'] = norm
+        entry['better_direction'] = item.better_direction
+
+        # Вставляем результат экзамена в том порядке в каком идут даты
+        entry['values'][period_index[r.assessment_id]] = {
+            'score': r.score,
+            'result': r.result,
+            'norm': norm,
+        }
+    ordered = sorted(tests.values(), key=lambda t: (t['assessment_type'], t['id']))
+    return JsonResponse({
+        'success': True,
+        'periods': periods,
+        'tests': ordered,
+    })

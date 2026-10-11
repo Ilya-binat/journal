@@ -7,11 +7,11 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Контрольно-переводные испытания</h2>
         <div>
-            <a href="{% url 'administrator:test_items' %} " class="btn btn-success add-assessment">
+            <a href="{% url 'administrator:test_items' %}" class="btn btn-success">
                 <i class="bi bi-building me-2"></i>
                 Показать испытания
             </a>
-            <a href="#" class="btn btn-primary add-assessment" data-bs-toggle="modal" data-bs-target="#assessmentModal">
+            <a href="#" class="btn btn-primary add-assessment" id="addAssessmentBtn" data-bs-toggle="modal" data-bs-target="#assessmentModal">
                 <i class="bi bi-building me-2"></i>
                 Добавить КПИ
             </a>
@@ -133,7 +133,7 @@
 {% block script %}
 <script>
     // При нажатие кнопки добавить работы модалки переключится на добавление
-    document.querySelector('.add-assessment').addEventListener('click', function () {
+    document.getElementById('addAssessmentBtn').addEventListener('click', function () {
 
         const form = document.getElementById('assessmentForm')
 
@@ -152,11 +152,12 @@
     })
 
     // Выполнение функции редактироваия
-    document.querySelectorAll('.edit-assessment').forEach(function (btn) {
+    // Делегирование: работает и для строк, добавленных без перезагрузки страницы
+    document.addEventListener('click', function (e) {
 
-        btn.addEventListener('click', function () {
-
-            const id = this.dataset.id
+            const btn = e.target.closest('.edit-assessment')
+            if (!btn) return
+            const id = btn.dataset.id
 
             fetch('/administrator/get_assessment/' + id + '/')
                 .then(res => res.json())
@@ -185,6 +186,7 @@
                         })
                     document.querySelector('[name="group"]').value = data.group
                     document.querySelector('[name="sport_type"]').value = data.sport_type
+                    document.querySelector('[name="next_stage"]').value = data.next_stage
                     document.querySelector('[name="date_start"]').value = formatDate(data.date_start)
                     document.querySelector('[name="date_end"]').value = formatDate(data.date_end)
 
@@ -194,8 +196,6 @@
                     document.getElementById('assessmentForm').dataset.id = id
 
                 })
-
-        })
 
     })
     // Сохранение добавленных соревнований и редактирование соревнований с последующим охранением
@@ -234,7 +234,7 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
-                                <a href="#" class="dropdown-item edit-assessment" data-id="${p.id}""
+                                <a href="#" class="dropdown-item edit-assessment" data-id="${p.id}"
                                     data-bs-toggle="modal" data-bs-target="#assessmentModal">
                                     <i class="bi bi-pencil"></i>
                                     Редактировать

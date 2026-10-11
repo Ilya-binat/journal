@@ -1,6 +1,9 @@
 let groupSelect = document.querySelector('.group_select')
 let lastExamsData = null
 let selectedAthleteId = null
+let activeSideTab = 'results'
+let dynamicsCache = {}        // `${groupId}:${athleteId}` -> ответ сервера
+let dynamicsTestId = null     // выбранное испытание на графике
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchData()
@@ -33,6 +36,7 @@ function fetchData() {
 
 function replaceData(data) {
     lastExamsData = data
+    dynamicsCache = {}  // результаты могли измениться - история устарела
     document.querySelector('.total_number').textContent = data.students_count;
 
     ['passed', 'failed', 'absent'].forEach(status => {
@@ -233,6 +237,8 @@ function renderAthleteSidebar(athleteId) {
     let rankIndex = rank.findIndex(r => r.id === athleteId)
     document.getElementById('sideRank').textContent = rankIndex === -1 ? '-' : (rankIndex +1) + ' из ' + rank.length
 
+    applySideTab()
+
 }
 
 function renderSideRow(test) {
@@ -253,6 +259,165 @@ function renderSideRow(test) {
     }
 
     return `<div class="kpi-side-row"><span>${test.name}</span><span>${valueHtml}${iconHtml}</span></div>`
+}
+
+
+// ===== Вкладки сайдбара: Результаты / Динамика =====
+document.querySelectorAll('[data-side-tab]').forEach(link => {
+    link.addEventListener('click', (e) => {
+        e.preventDefault()
+        activeSideTab = link.dataset.sideTab
+        applySideTab()
+    })
+})
+
+// Показывает активную вкладку; для "Динамики" подгружает историю спортсмена
+function applySideTab() {
+    document.querySelectorAll('[data-side-tab]').forEach(link => {
+        link.classList.toggle('active', link.dataset.sideTab === activeSideTab)
+    })
+    console.log(1)
+    const isDynamics = activeSideTab === 'dynamics'
+    document.getElementById('sideSectionsContainer').style.display = isDynamics ? 'none' : ''
+    document.getElementById('sideDynamicsContainer').style.display = isDynamics ? '' : 'none'
+    if (isDynamics && selectedAthleteId) loadAthleteDynamics(selectedAthleteId)
+}
+
+function loadAthleteDynamics(athleteId) {
+    const container = document.getElementById('sideDynamicsContainer')
+    const key = `${groupSelect.value}:${athleteId}`
+
+    if (dynamicsCache[key]) {
+        renderDynamics(dynamicsCache[key])
+        return
+    }
+    container.innerHTML = '<div class="text-center text-muted small py-4">Загрузка...</div>'
+
+    const query = buildQueryParams({group: groupSelect.value, athlete: athleteId})
+    fetch(`/teacher/fetch_athlete_dynamics/?${query}`)
+        .then(res => res.json())
+        .then(data => {
+            // пока шёл запрос, мог открыться другой спортсмен - не затираем его
+            if (String(selectedAthleteId) !== String(athleteId)) return
+            if (!data.success) {
+                container.innerHTML = `<div class="text-center text-muted small py-4">${data.error || 'Не удалось загрузить динамику'}</div>`
+                return
+            }
+            dynamicsCache[key] = data
+            renderDynamics(data)
+        })
+        .catch(error => {
+            console.error(error)
+            container.innerHTML = '<div class="text-center text-muted small py-4">Нет соединения с сервером</div>'
+        })
+}
+
+// Рисует вкладку: чипы испытаний + график + карточка с рекордом и изменением
+function renderDynamics(data) {
+    const container = document.getElementById('sideDynamicsContainer')
+    const tests = data.tests
+
+    if (!tests.length) {
+        container.innerHTML = '<div class="text-center text-muted small py-4">Пока нет результатов для построения динамики</div>'
+        return
+    }
+    if (!tests.some(t => t.id === dynamicsTestId)) dynamicsTestId = tests[0].id
+    const test = tests.find(t => t.id === dynamicsTestId)
+
+    const chips = tests.map(t =>
+        `<span class="dyn-chip ${t.id === dynamicsTestId ? 'on' : ''}" data-test-id="${t.id}">${t.name}</span>`
+    ).join('')
+
+    const points = test.values.map(v => (v && v.score !== null && v.result !== 'absent' && v.result !== 'exempted') ? v.score : null)
+    const filled = points.filter(x => x !== null)
+
+    let summary = ''
+    if (filled.length) {
+        const best = test.better_direction === 'lower' ? Math.min(...filled) : Math.max(...filled)
+        summary = `
+            <div class="dyn-box">
+                <div><div class="dyn-box-title">Личный рекорд</div><div class="dyn-big">${best} ${test.unit}</div></div>
+                <div class="text-end"><div class="dyn-box-title">К прошлому КПИ</div>${dynamicsDelta(test, filled)}</div>
+            </div>`
+    }
+
+    container.innerHTML = `
+        <div class="dyn-chips">${chips}</div>
+        ${filled.length ? dynamicsChart(test, points, data.periods) : '<div class="text-center text-muted small py-4">По этому испытанию нет числовых результатов</div>'}
+        ${summary}`
+
+    container.querySelectorAll('.dyn-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            dynamicsTestId = Number(chip.dataset.testId)
+            renderDynamics(data)
+        })
+    })
+}
+
+// Бейдж изменения между двумя последними заполненными КПИ.
+// Цвет зависит от better_direction, а не от знака разницы.
+function dynamicsDelta(test, filled) {
+    if (filled.length < 2) return '<span class="dyn-delta flat">—</span>'
+    const prev = filled[filled.length - 2]
+    const cur = filled[filled.length - 1]
+    const diff = Math.round((cur - prev) * 100) / 100
+    if (diff === 0) return '<span class="dyn-delta flat">без изм.</span>'
+    const improved = test.better_direction === 'lower' ? cur < prev : cur > prev
+    return `<span class="dyn-delta ${improved ? 'good' : 'bad'}">${diff > 0 ? '+' : ''}${diff} ${test.unit}</span>`
+}
+
+// SVG-график: линия результатов, пунктир нормы, цвет точки = сдал/не сдал
+function dynamicsChart(test, points, periods) {
+    const w = 300, h = 170, padL = 30, padR = 20, padT = 16, padB = 26
+    const filled = points.filter(x => x !== null)
+    const norm = test.norm
+    const all = norm !== null && norm !== undefined ? [...filled, norm] : filled
+    const min = Math.min(...all), max = Math.max(...all)
+    const pad = (max - min) * 0.2 || 1
+    const lo = min - pad, hi = max + pad
+
+    const n = points.length
+    const px = i => n === 1 ? (padL + w - padR) / 2 : padL + i * (w - padL - padR) / (n - 1)
+    const py = v => padT + (1 - (v - lo) / (hi - lo)) * (h - padT - padB)
+
+    const isPassed = v => {
+        if (norm === null || norm === undefined) return null
+        return test.better_direction === 'lower' ? v <= norm : v >= norm
+    }
+
+    let svg = `<svg viewBox="0 0 ${w} ${h}" width="100%" class="dyn-chart">`
+    ;[0, 0.5, 1].forEach(k => {
+        const y = padT + k * (h - padT - padB)
+        const val = Math.round((hi - k * (hi - lo)) * 10) / 10
+        svg += `<line x1="${padL}" x2="${w - padR}" y1="${y}" y2="${y}" stroke="#eef1f5"/>
+                <text x="${padL - 5}" y="${y + 3}" font-size="9" fill="#94a3b8" text-anchor="end">${val}</text>`
+    })
+    if (norm !== null && norm !== undefined) {
+        svg += `<line x1="${padL}" x2="${w - padR}" y1="${py(norm)}" y2="${py(norm)}" stroke="#16a34a" stroke-dasharray="4 3"/>
+                <text x="${w - padR}" y="${py(norm) - 4}" font-size="9" fill="#16a34a" text-anchor="end">норма ${norm}</text>`
+    }
+
+    // Линия рвётся там, где результата нет (не пришёл / не заполнено)
+    let path = ''
+    let pen = false
+    points.forEach((v, i) => {
+        if (v === null) { pen = false; return }
+        path += `${pen ? 'L' : 'M'}${px(i).toFixed(1)} ${py(v).toFixed(1)} `
+        pen = true
+    })
+    svg += `<path d="${path}" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`
+
+    points.forEach((v, i) => {
+        svg += `<text x="${px(i)}" y="${h - 8}" font-size="9" text-anchor="middle" fill="#94a3b8">${periods[i].label}</text>`
+        if (v === null) return
+        // цвет точки - по сохранённому результату КПИ (у каждого этапа свой норматив)
+        const saved = test.values[i] ? test.values[i].result : null
+        const ok = saved === 'passed' ? true : saved === 'failed' ? false : isPassed(v)
+        const color = ok === null ? '#2563eb' : ok ? '#16a34a' : '#dc2626'
+        svg += `<circle cx="${px(i)}" cy="${py(v)}" r="4.5" fill="#fff" stroke="${color}" stroke-width="2.2"/>
+                <text x="${px(i)}" y="${py(v) - 9}" font-size="9.5" font-weight="700" text-anchor="middle" fill="#111827">${v}</text>`
+    })
+    return svg + '</svg>'
 }
 
 function hideAthleteSidebar() {
@@ -318,6 +483,14 @@ function loadStationData(groupId, testItemId) {
         .then((data) => {
             if (!data.assessment_id) {
                 document.getElementById('stationEmptyState').style.display = 'block'
+                document.getElementById('stationContent').style.display = 'none'
+                return
+            }
+            // КПИ есть, но для его этапа/вида спорта в справочнике нет испытаний
+            if (!data.test_items.length) {
+                const empty = document.getElementById('stationEmptyState')
+                empty.textContent = 'Для этапа этого КПИ нет испытаний в справочнике. Добавьте испытания или создайте КПИ с другим этапом.'
+                empty.style.display = 'block'
                 document.getElementById('stationContent').style.display = 'none'
                 return
             }
