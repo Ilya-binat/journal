@@ -44,7 +44,7 @@
             <div class="kpi-filter row g-2 mb-3">
                 <div class="col-6 col-md-3">
                     <div class="kpi-filter-label">Группа</div>
-                    <select class="form-select group_select" >
+                    <select class="form-select group_select">
                         {% for group in groups %}
                         <option value="{{ group.id }}">{{group.group_name}}</option>
                         {% endfor %}
@@ -122,7 +122,9 @@
                         <div class="w-100">
                             <div class="kpi-stat-value avg_number">76%</div>
                             <div class="kpi-stat-label">Общий результат по группе</div>
-                            <div class="kpi-progress-thin avg_percent"><div style="width:76%"></div></div>
+                            <div class="kpi-progress-thin avg_percent">
+                                <div style="width:76%"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -141,17 +143,20 @@
 
                 <div class="kpi-table-wrap">
                     <table class="table kpi-table align-middle">
-                        <thead id = 'examsTableHead'></thead>
-                        <tbody id = 'examsTableBody'></tbody>
+                        <thead id='examsTableHead'></thead>
+                        <tbody id='examsTableBody'></tbody>
                     </table>
                 </div>
 
                 <!-- footer: legend + pagination -->
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3 pt-2 border-top">
                     <div class="d-flex align-items-center flex-wrap">
-                        <span class="d-flex align-items-center me-3"><i class="bi bi-check-circle-fill status-icon-ok me-1"></i> Сдал</span>
-                        <span class="d-flex align-items-center me-3"><i class="bi bi-x-circle-fill status-icon-fail me-1"></i> Не сдал</span>
-                        <span class="d-flex align-items-center me-3"><i class="bi bi-dash-circle-fill status-icon-warn me-1"></i> Не проходил</span>
+                        <span class="d-flex align-items-center me-3"><i
+                                class="bi bi-check-circle-fill status-icon-ok me-1"></i> Сдал</span>
+                        <span class="d-flex align-items-center me-3"><i
+                                class="bi bi-x-circle-fill status-icon-fail me-1"></i> Не сдал</span>
+                        <span class="d-flex align-items-center me-3"><i
+                                class="bi bi-dash-circle-fill status-icon-warn me-1"></i> Не проходил</span>
                         <span class="d-flex align-items-center"><i class="bi bi-circle status-icon-empty me-1"></i> Не заполнено</span>
                     </div>
                     <div class="d-flex align-items-center gap-2">
@@ -168,43 +173,49 @@
         </div>
 
         <!-- Right side panel: athlete details -->
-        <div class="kpi-side-col" id="athleteSideCol">
+        <aside class="kpi-side-col" id="athleteSideCol" aria-labelledby="sideAthleteName" inert>
             <div class="kpi-side-panel" id="athleteSidePanel">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="athlete-avatar-placeholder" style="width:48px;height:48px;font-size:1.2rem;">
-                            <i class="bi bi-person-fill"></i>
-                        </span>
+                <div class="side-top">
+                    <button type="button" id="sideBackBtn">← Свернуть карточку</button>
+                    <div class="side-navigation">
+                        <span id="sidePosition" class="visually-hidden"></span>
+                        <button type="button" id="sidePrevBtn" aria-label="Предыдущий спортсмен"><i
+                                class="bi bi-chevron-left" aria-hidden="true"></i></button>
+                        <button type="button" id="sideNextBtn" aria-label="Следующий спортсмен"><i
+                                class="bi bi-chevron-right" aria-hidden="true"></i></button>
+                        <button type="button" id="sideCloseBtn" aria-label="Закрыть карточку спортсмена"><i
+                                class="bi bi-x-lg" aria-hidden="true"></i></button>
+                    </div>
+                </div>
+                <div class="side-head">
+                    <div class="side-heading"><span id="sideInitial" class="side-initial"></span>
                         <div>
-                            <div class="fw-bold" id="sideAthleteName">—</div>
-                            <div class="text-muted small" id="sideAthleteMeta">—</div>
-                            <span class="badge-soft mt-1 d-inline-block" id="sideAthleteBadge"></span>
+                            <h2 id="sideAthleteName" tabindex="-1">—</h2>
+                            <p id="sideAthleteMeta">—</p>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-sm btn-link text-muted p-0" id="sideCloseBtn"><i class="bi bi-x-lg"></i></button>
+                    <select id="sidePeriod" aria-label="КПИ для карточки" disabled>
+                        <option>Загрузка…</option>
+                    </select>
                 </div>
-
-                <ul class="nav nav-tabs mt-3" style="font-size:.82rem;">
-                    <li class="nav-item"><a class="nav-link active" href="#" data-side-tab='results'>Результаты</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">История</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#" data-side-tab="dynamics">Динамика</a></li>
-                </ul>
-
-                <div id="sideSectionsContainer"></div>
-                <div id="sideDynamicsContainer" style="display: none"></div>
-
-                <div class="kpi-overall-box d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-muted small">Общий результат</div>
-                        <div class="fw-bold fs-5 text-success" id="sideOverallPercent">—</div>
-                    </div>
-                    <div class="text-end">
-                        <div class="text-muted small">Место в группе</div>
-                        <div class="fw-bold" id="sideRank">—</div>
-                    </div>
+                <div class="side-tabs" role="tablist" aria-label="Разделы карточки">
+                    <button type="button" id="sideTabResults" role="tab" data-side-tab="results"
+                            aria-controls="sideSectionsContainer" aria-selected="false" tabindex="-1">Результаты
+                    </button>
+                    <button type="button" id="sideTabDynamics" role="tab" data-side-tab="dynamics"
+                            aria-controls="sideDynamicsContainer" aria-selected="true">Динамика
+                    </button>
                 </div>
+                <div class="side-body">
+                    <div id="sideSummaryContainer" aria-live="polite"></div>
+                    <section id="sideSectionsContainer" role="tabpanel" aria-labelledby="sideTabResults"
+                             hidden></section>
+                    <section id="sideDynamicsContainer" role="tabpanel" aria-labelledby="sideTabDynamics"></section>
+                </div>
+                <footer class="side-footer"><span
+                        id="sideDataCount"></span><span>Просмотр без изменения результатов</span></footer>
             </div>
-        </div>
+        </aside>
     </div>
 </div>
 <!--Модальное окно станции-->
@@ -240,8 +251,10 @@
                                 <div class="group" id="stationActiveHint">Следующий по списку</div>
                             </div>
                             <span class="unit-label" id="stationActiveUnit"></span>
-                            <input type="text" inputmode="decimal" class="input-big" id="stationScoreInput" placeholder="0">
-                            <button class="btn-next" id="stationNextBtn">Далее <i class="bi bi-arrow-right"></i></button>
+                            <input type="text" inputmode="decimal" class="input-big" id="stationScoreInput"
+                                   placeholder="0">
+                            <button class="btn-next" id="stationNextBtn">Далее <i class="bi bi-arrow-right"></i>
+                            </button>
                         </div>
                         <div class="d-flex gap-2 mb-3" id="stationQuickActions" style="display:none;">
                             <button class="btn btn-sm btn-outline-warning" id="stationAbsentBtn">

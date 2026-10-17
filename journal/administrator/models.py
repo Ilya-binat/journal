@@ -246,7 +246,7 @@ class Competition(models.Model):
 # Модель КПИ
 ASSESSMENT_TYPE_CHOICES = [
     ('general', 'ОФП'),
-    ('speсial', 'СФП')
+    ('special', 'СФП')
 ]
 
 class Assessment(models.Model):

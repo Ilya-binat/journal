@@ -1,7 +1,7 @@
 let groupSelect = document.querySelector('.group_select')
 let lastExamsData = null
 let selectedAthleteId = null
-let activeSideTab = 'results'
+let activeSideTab = 'dynamics'
 let dynamicsCache = {}        // `${groupId}:${athleteId}` -> ответ сервера
 let dynamicsTestId = null     // выбранное испытание на графике
 
@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 
 groupSelect.addEventListener('change', () => {
+    hideAthleteSidebar()
+    dynamicsPeriodId = null
     fetchData()
 
 })
@@ -36,6 +38,7 @@ function fetchData() {
 
 function replaceData(data) {
     lastExamsData = data
+    dynamicsRequestId += 1
     dynamicsCache = {}  // результаты могли измениться - история устарела
     document.querySelector('.total_number').textContent = data.students_count;
 
@@ -163,266 +166,315 @@ document.getElementById('examsTableBody').addEventListener('click', (event) => {
 })
 
 function renderAthleteSidebar(athleteId) {
-    if (!lastExamsData) return
-
-    let row = lastExamsData.table[athleteId]
-
+    const row = lastExamsData?.table[athleteId]
     if (!row) return
-
-    document.getElementById('athleteSideCol')?.classList.add('is-open')
+    const panel = document.getElementById('athleteSideCol')
+    const wasClosed = !panel.classList.contains('is-open')
+    selectedAthleteId = String(athleteId)
+    panel.inert = false
+    panel.classList.add('is-open')
     document.getElementById('sideAthleteName').textContent = row.athlete
-    document.getElementById('sideAthleteMeta').textContent = groupSelect.selectedOptions[0] ? groupSelect.selectedOptions[0].textContent : ''
-
-    let statuses = row.tests.map(t => t.result)
-    let badgeText = 'Не заполнено'
-    let badgeClass = 'badge-soft-muted'
-
-    if (statuses.includes('failed')) {
-        badgeText = 'Не сдал'
-        badgeClass = 'badge-soft-danger'
-    } else if (statuses.includes('absent')) {
-        badgeText = 'Не проходил'
-        badgeClass = 'badge-soft-warning'
-    } else if (statuses.includes('past')) {
-        badgeText = 'Сдал КПИ'
-        badgeClass = ''
-    }
-    let badge = document.getElementById('sideAthleteBadge')
-    badge.textContent = badgeText
-
-    badge.className = 'badge-soft mt-1 d-inline-block ' + badgeClass
-
-    let sections = {special: [], general: []}
-    lastExamsData.thead.forEach((item, i) => {
-        let test = row.tests[i]
-
-        if (!test) return
-
-        const type = item.assessment_type === 'general' ? 'general' : 'special'
-        sections[type].push({
-            ...test,
-            unit: item.unit
-        })
-    })
-
-    let container = document.getElementById('sideSectionsContainer')
-    container.innerHTML = ['general', 'special'].map(type => {
-        let items = sections[type]
-
-        if (!items.length) return
-        let count = items.filter(t => t.result === 'passed' || t.result === 'failed')
-        let passedCount = items.filter(t => t.result === 'passed').length
-        let percent = count.length ? Math.round(passedCount / items.length * 100) : null
-        let title = type === 'general' ? 'ОФП' : 'СФП'
-        let rows = items.map(renderSideRow).join('')
-
-        return `
-            <div class="d-flex justify-content-between align-items-center kpi-side-section-title">
-                <span>${title}</span><span class="text-success fw-bold">${percent === null ? '—' : percent + '%'}</span>
-            </div>
-            ${rows}
-        `
-    }).join('')
-
-    document.getElementById('sideOverallPercent').textContent =
-        row.total_percent === null ? '-' : row.total_percent + '%'
-
-    let rank = Object.entries(lastExamsData.table).map(([id, r]) => {
-        return {id, percent: r.total_percent}
-    })
-        .sort((a, b) => {
-            return (b.percent ?? -1) - (a.percent ?? -1)
-        })
-
-    let rankIndex = rank.findIndex(r => r.id === athleteId)
-    document.getElementById('sideRank').textContent = rankIndex === -1 ? '-' : (rankIndex +1) + ' из ' + rank.length
-
+    document.getElementById('sideInitial').textContent = row.athlete.trim().split(/\s+/).slice(0, 2).map(n => n[0]).join('')
+    document.getElementById('sideAthleteMeta').textContent = `${groupSelect.selectedOptions[0]?.textContent || ''} · карточка спортсмена`
+    const ids = Object.keys(lastExamsData.table)
+    const index = ids.indexOf(String(athleteId))
+    document.getElementById('sidePosition').textContent = `${index + 1} из ${ids.length}`
+    document.getElementById('sidePrevBtn').disabled = index <= 0
+    document.getElementById('sideNextBtn').disabled = index >= ids.length - 1
+    dynamicsAllLeaders = false
     applySideTab()
-
+    if (wasClosed) document.getElementById('sideAthleteName').focus({preventScroll: true})
 }
 
-function renderSideRow(test) {
-    let valueHtml
-    let iconHtml = ''
-
-    if (test.result === 'empty') {
-        valueHtml = '<span class="value text-muted">Не запол.</span>'
-    } else if (test.result === 'exempted') {
-        valueHtml = '<span class="value text-muted">Освоб.</span>'
-    } else if (test.result === 'absent') {
-        valueHtml = '<span class="value text-muted">Отсутс.</span>'
-    } else {
-        valueHtml = `<span class="value">${test.score}${test.unit ? ' ' + test.unit : ''}</span>`
-        iconHtml = test.result === 'passed'
-            ? '<i class="bi bi-check-circle-fill status-icon-ok"></i>'
-            : '<i class="bi bi-x-circle-fill status-icon-fail"></i>'
-    }
-
-    return `<div class="kpi-side-row"><span>${test.name}</span><span>${valueHtml}${iconHtml}</span></div>`
+for (const [id, offset] of [['sidePrevBtn', -1], ['sideNextBtn', 1]]) {
+    document.getElementById(id).addEventListener('click', () => {
+        const ids = Object.keys(lastExamsData?.table || {})
+        const next = ids[ids.indexOf(String(selectedAthleteId)) + offset]
+        if (next) renderAthleteSidebar(next)
+    })
 }
 
-
-// ===== Вкладки сайдбара: Результаты / Динамика =====
 document.querySelectorAll('[data-side-tab]').forEach(link => {
-    link.addEventListener('click', (e) => {
-        e.preventDefault()
+    link.addEventListener('click', () => {
         activeSideTab = link.dataset.sideTab
         applySideTab()
     })
+    link.addEventListener('keydown', event => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+        event.preventDefault()
+        const tabs = [...document.querySelectorAll('[data-side-tab]')]
+        const index = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 :
+            (tabs.indexOf(link) + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length
+        tabs[index].focus()
+        tabs[index].click()
+    })
 })
 
-// Показывает активную вкладку; для "Динамики" подгружает историю спортсмена
 function applySideTab() {
     document.querySelectorAll('[data-side-tab]').forEach(link => {
-        link.classList.toggle('active', link.dataset.sideTab === activeSideTab)
+        const selected = link.dataset.sideTab === activeSideTab
+        link.classList.toggle('active', selected)
+        link.setAttribute('aria-selected', String(selected))
+        link.tabIndex = selected ? 0 : -1
     })
-    console.log(1)
-    const isDynamics = activeSideTab === 'dynamics'
-    document.getElementById('sideSectionsContainer').style.display = isDynamics ? 'none' : ''
-    document.getElementById('sideDynamicsContainer').style.display = isDynamics ? '' : 'none'
-    if (isDynamics && selectedAthleteId) loadAthleteDynamics(selectedAthleteId)
+    for (const [tab, id] of [['results', 'sideSectionsContainer'], ['dynamics', 'sideDynamicsContainer']]) {
+        document.getElementById(id).hidden = tab !== activeSideTab
+    }
+    if (selectedAthleteId) loadAthleteDynamics(selectedAthleteId)
 }
 
-function loadAthleteDynamics(athleteId) {
-    const container = document.getElementById('sideDynamicsContainer')
-    const key = `${groupSelect.value}:${athleteId}`
+// Динамика использует существующий URL; остальные разделы КПИ не меняются.
+let dynamicsRequestId = 0
+let dynamicsPeriodId = null
+let dynamicsAllLeaders = false
+const dynEscape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]))
+const dynNumber = value => Number.isFinite(value) ? value.toLocaleString('ru-RU', {maximumFractionDigits: 2}) : '—'
+const dynValid = row => row && Number.isFinite(row.score) && ['passed', 'failed'].includes(row.result)
+const dynStatus = row => ({passed: 'Сдал', failed: 'Не сдал', absent: 'Отсутствовал', exempted: 'Освобождён', empty: 'Не заполнено'}[row?.result] || 'Нет записи')
+const dynValue = (row, test) => dynValid(row) ? `${dynNumber(row.score)} ${dynEscape(test.unit)}` : '—'
 
+async function loadAthleteDynamics(athleteId) {
+    const container = document.getElementById('sideSummaryContainer')
+    const groupId = groupSelect.value
+    const key = `${groupId}:${athleteId}`
+    const requestId = ++dynamicsRequestId
+    const current = () => requestId === dynamicsRequestId && String(selectedAthleteId) === String(athleteId) && groupSelect.value === groupId
     if (dynamicsCache[key]) {
         renderDynamics(dynamicsCache[key])
         return
     }
-    container.innerHTML = '<div class="text-center text-muted small py-4">Загрузка...</div>'
-
-    const query = buildQueryParams({group: groupSelect.value, athlete: athleteId})
-    fetch(`/teacher/fetch_athlete_dynamics/?${query}`)
-        .then(res => res.json())
-        .then(data => {
-            // пока шёл запрос, мог открыться другой спортсмен - не затираем его
-            if (String(selectedAthleteId) !== String(athleteId)) return
-            if (!data.success) {
-                container.innerHTML = `<div class="text-center text-muted small py-4">${data.error || 'Не удалось загрузить динамику'}</div>`
-                return
-            }
-            dynamicsCache[key] = data
-            renderDynamics(data)
-        })
-        .catch(error => {
-            console.error(error)
-            container.innerHTML = '<div class="text-center text-muted small py-4">Нет соединения с сервером</div>'
-        })
+    document.getElementById('sidePeriod').disabled = true
+    document.getElementById('sidePeriod').innerHTML = '<option>Загрузка…</option>'
+    document.getElementById('sideDataCount').textContent = ''
+    for (const id of ['sideSectionsContainer', 'sideDynamicsContainer']) document.getElementById(id).replaceChildren()
+    container.setAttribute('aria-busy', 'true')
+    container.innerHTML = '<div class="dyn-empty" role="status">Загрузка динамики…</div>'
+    try {
+        const response = await fetch(`/teacher/fetch_athlete_dynamics/?${new URLSearchParams({group: groupId, athlete: athleteId})}`)
+        if (!response.ok) throw new Error('Не удалось загрузить динамику. Попробуйте ещё раз.')
+        const data = await response.json()
+        if (!current()) return
+        if (!data.success) throw new Error(data.error || 'Не удалось загрузить динамику')
+        dynamicsCache[key] = data
+        renderDynamics(data)
+    } catch (error) {
+        if (!current()) return
+        container.innerHTML = `<div class="dyn-empty" role="alert">${dynEscape(error.message)}<br><button type="button" class="dyn-link" id="dynRetry">Повторить</button></div>`
+        container.querySelector('#dynRetry').addEventListener('click', () => loadAthleteDynamics(athleteId))
+    } finally {
+        if (current()) container.removeAttribute('aria-busy')
+    }
 }
 
-// Рисует вкладку: чипы испытаний + график + карточка с рекордом и изменением
 function renderDynamics(data) {
     const container = document.getElementById('sideDynamicsContainer')
-    const tests = data.tests
-
-    if (!tests.length) {
-        container.innerHTML = '<div class="text-center text-muted small py-4">Пока нет результатов для построения динамики</div>'
+    const summaryContainer = document.getElementById('sideSummaryContainer')
+    summaryContainer.removeAttribute('aria-busy')
+    if (!data.periods.length) {
+        summaryContainer.innerHTML = '<div class="dyn-empty">Для этой группы пока нет КПИ.</div>'
+        document.getElementById('sidePeriod').innerHTML = '<option>Нет КПИ</option>'
+        document.getElementById('sidePeriod').disabled = true
+        for (const id of ['sideSectionsContainer', 'sideDynamicsContainer']) document.getElementById(id).replaceChildren()
         return
     }
-    if (!tests.some(t => t.id === dynamicsTestId)) dynamicsTestId = tests[0].id
+    let periodIndex = data.periods.findIndex(p => p.id === dynamicsPeriodId)
+    if (periodIndex < 0) periodIndex = data.periods.length - 1
+    const period = data.periods[periodIndex]
+    dynamicsPeriodId = period.id
+    const tests = data.tests.filter(t => period.test_ids.includes(t.id))
+    if (!tests.some(t => t.id === dynamicsTestId)) dynamicsTestId = tests[0]?.id ?? null
     const test = tests.find(t => t.id === dynamicsTestId)
-
-    const chips = tests.map(t =>
-        `<span class="dyn-chip ${t.id === dynamicsTestId ? 'on' : ''}" data-test-id="${t.id}">${t.name}</span>`
-    ).join('')
-
-    const points = test.values.map(v => (v && v.score !== null && v.result !== 'absent' && v.result !== 'exempted') ? v.score : null)
-    const filled = points.filter(x => x !== null)
-
-    let summary = ''
-    if (filled.length) {
-        const best = test.better_direction === 'lower' ? Math.min(...filled) : Math.max(...filled)
-        summary = `
-            <div class="dyn-box">
-                <div><div class="dyn-box-title">Личный рекорд</div><div class="dyn-big">${best} ${test.unit}</div></div>
-                <div class="text-end"><div class="dyn-box-title">К прошлому КПИ</div>${dynamicsDelta(test, filled)}</div>
-            </div>`
+    const summary = period.summary
+    const options = data.periods.map(p => `<option value="${p.id}" ${p.id === period.id ? 'selected' : ''}>${dynEscape(p.name)} · ${dynEscape(p.label)}${p.future ? ' · будущий' : ''}</option>`).join('')
+    const rankFor = t => t.rankings[periodIndex].find(row => row.athlete_id === data.athlete_id)
+    const groups = ['general', 'special'].map(type => ({
+        title: type === 'general' ? 'ОФП' : 'СФП',
+        items: tests.filter(t => (t.assessment_type === 'general' ? 'general' : 'special') === type)
+    })).filter(group => group.items.length)
+    const percentage = summary.total ? Math.round(summary.filled / summary.total * 100) : 0
+    const periodSelect = document.getElementById('sidePeriod')
+    periodSelect.disabled = false
+    periodSelect.innerHTML = options
+    document.getElementById('sideDataCount').textContent = `${tests.length} испытаний · ${data.students_count} спортсменов`
+    summaryContainer.innerHTML = `
+        ${period.future || period.invalid_dates ? `<div class="dyn-notice">${period.future ? 'Будущий КПИ. Показаны сохранённые результаты. ' : ''}${period.invalid_dates ? 'Дата окончания раньше даты начала — проверьте даты КПИ.' : ''}</div>` : ''}
+        <div class="dyn-summary">
+            <div class="dyn-summary-rank"><span>Общее место в группе</span><strong>${summary.rank ?? '—'} <small>${summary.rank ? `из ${summary.participants} участников` : ''}</small></strong><small>${summary.rank ? summary.ties > 1 ? `Делит место ещё с ${summary.ties - 1} участниками` : 'Без равных результатов' : 'Нет числовых результатов'}</small></div>
+            <div><span>Сдано испытаний</span><strong>${summary.passed} <small>из ${summary.total}</small></strong><small>Все испытания · ОФП + СФП</small></div>
+            <div><span>Полнота результатов</span><strong>${summary.filled} <small>из ${summary.total}</small></strong><div class="dyn-progress"><i style="width:${percentage}%"></i></div></div>
+        </div>
+        <div class="dyn-rank-note">Рейтинг предварительный · равные результаты делят место</div>
+        <details class="dyn-rules"><summary>Как считаются места?</summary><p>Общее место — по количеству статусов «Сдал» среди участников с числовыми результатами. Место в испытании — по результату с учётом направления «меньше/больше — лучше». Равные результаты делят места: 1, 1, 3. Отсутствие и освобождение не участвуют в рейтинге. Рейтинг рассчитан для текущего состава группы.</p><p>Нормативы взяты из текущего справочника, статусы сдачи — из сохранённых результатов. Если пол не указан, показаны нормы М / Ж. Изменение считается относительно предыдущего числового замера того же испытания.</p></details>
+        `
+    renderSidebarResults(data, tests, periodIndex, groups)
+    container.innerHTML = `${test ? `<div class="dyn-picker"><header><strong>Испытание</strong><small>${tests.length} в программе</small></header>
+            <select id="dynTest" aria-label="Испытание для анализа">${groups.map(group => `<optgroup label="${group.title}">${group.items.map(t => `<option value="${t.id}" ${t.id === test.id ? 'selected' : ''}>${dynEscape(t.name)}</option>`).join('')}</optgroup>`).join('')}</select>
+            <details id="dynAllTests"><summary>Все испытания и места</summary>${groups.map(group => `<div class="dyn-group-title"><span>${group.title}</span><span>${group.items.length} испытаний</span></div>${group.items.map(t => {
+                const rank = rankFor(t)
+                return `<button type="button" class="dyn-test-button" data-dyn-test="${t.id}" aria-pressed="${t.id === test.id}"><span>${dynEscape(t.name)}</span><span>${rank ? `${rank.rank} / ${t.rankings[periodIndex].length}` : '—'}</span></button>`
+            }).join('')}`).join('')}</details></div><div id="dynDetail"></div>` : '<div class="dyn-empty">В этом КПИ пока нет испытаний.</div>'}`
+    periodSelect.onchange = event => {
+        dynamicsPeriodId = Number(event.target.value)
+        dynamicsAllLeaders = false
+        renderDynamics(data)
     }
+    if (!test) return
+    const selectTest = id => {
+        const expanded = container.querySelector('#dynAllTests').open
+        dynamicsTestId = id
+        dynamicsAllLeaders = false
+        renderDynamics(data)
+        container.querySelector('#dynAllTests').open = expanded
+    }
+    container.querySelector('#dynTest').addEventListener('change', event => {
+        selectTest(Number(event.target.value))
+        container.querySelector('#dynTest').focus()
+    })
+    container.querySelectorAll('[data-dyn-test]').forEach(button => button.addEventListener('click', () => {
+        selectTest(Number(button.dataset.dynTest))
+        container.querySelector(`[data-dyn-test="${dynamicsTestId}"]`).focus()
+    }))
+    renderDynamicsDetail(data, test, periodIndex)
+}
 
-    container.innerHTML = `
-        <div class="dyn-chips">${chips}</div>
-        ${filled.length ? dynamicsChart(test, points, data.periods) : '<div class="text-center text-muted small py-4">По этому испытанию нет числовых результатов</div>'}
-        ${summary}`
+function renderSidebarResults(data, tests, index, groups) {
+    const norm = t => `${t.better_direction === 'lower' ? '≤' : '≥'} ${Number.isFinite(t.norm) ? dynNumber(t.norm) : `${dynNumber(t.norm_male)} / ${dynNumber(t.norm_female)}`} ${dynEscape(t.unit)}`
+    document.getElementById('sideSectionsContainer').innerHTML = tests.length ? `
+        <div class="side-results-wrap"><table class="side-results" aria-label="Результаты выбранного КПИ">
+        <thead><tr><th>Испытание</th><th>Результат</th><th>Норматив</th><th>Место</th><th>Статус</th></tr></thead><tbody>
+        ${groups.map(group => `<tr class="side-category"><td colspan="5">${group.title}</td></tr>${group.items.map(test => {
+            const row = test.values[index]
+            const ranking = test.rankings[index]
+            const mine = ranking.find(r => r.athlete_id === data.athlete_id)
+            return `<tr><td>${dynEscape(test.name)}${dynamicsAchievementBadge(dynamicsAchievement(test, index))}</td><td>${dynValue(row, test)}</td><td>${norm(test)}</td><td>${mine ? `${mine.rank} / ${ranking.length}` : '—'}</td><td class="${row?.result === 'passed' ? 'dyn-good' : row?.result === 'failed' ? 'dyn-bad' : ''}">${dynStatus(row)}</td></tr>`
+        }).join('')}`).join('')}</tbody></table></div>` : '<div class="dyn-empty">В этом КПИ пока нет испытаний.</div>'
+}
 
-    container.querySelectorAll('.dyn-chip').forEach(chip => {
-        chip.addEventListener('click', () => {
-            dynamicsTestId = Number(chip.dataset.testId)
-            renderDynamics(data)
-        })
+// Сравнение только с более ранними КПИ того же испытания.
+function dynamicsAchievement(test, index) {
+    const current = test.values[index]
+    const earlier = test.values.slice(0, index).filter(dynValid)
+    if (!dynValid(current) || !earlier.length) return null
+    const lower = test.better_direction === 'lower'
+    const previous = earlier[earlier.length - 1]
+    const best = earlier.reduce((a, b) => (lower ? b.score < a.score : b.score > a.score) ? b : a)
+    const gain = lower ? previous.score - current.score : current.score - previous.score
+    const recordGain = lower ? best.score - current.score : current.score - best.score
+    return {gain, recordGain, previous: previous.score, best: best.score,
+        improved: gain > 0, declined: gain < 0, record: recordGain > 0, tied: recordGain === 0}
+}
+
+function dynamicsAchievementBadge(achievement) {
+    if (!achievement) return ''
+    if (achievement.record) return '<span class="dyn-achievement-badge record">★ Личный рекорд</span>'
+    if (achievement.tied) return '<span class="dyn-achievement-badge record">★ Повтор рекорда</span>'
+    if (achievement.declined) return '<span class="dyn-achievement-badge declined">↘ Снижение</span>'
+    if (achievement.improved) return '<span class="dyn-achievement-badge improved">↗ Улучшение</span>'
+    return ''
+}
+
+function dynamicsAchievementBanner(test, index) {
+    const a = dynamicsAchievement(test, index)
+    if (!a || (!a.record && !a.tied && !a.improved && !a.declined)) return ''
+    const record = a.record || a.tied
+    const title = a.record ? 'Новый личный рекорд' : a.tied ? 'Личный рекорд повторён' : a.declined ? 'Результат снизился' : 'Результат улучшился'
+    const value = dynValue(test.values[index], test)
+    const delta = a.gain === 0 ? 'Без изменения к предыдущему замеру' :
+        `${a.gain > 0 ? 'Лучше' : 'Хуже'} на ${dynNumber(Math.abs(a.gain))} ${dynEscape(test.unit)} к предыдущему замеру`
+    return `<div class="dyn-achievement ${record ? 'record' : a.declined ? 'declined' : 'improved'}" role="status"><span class="dyn-achievement-icon" aria-hidden="true">${record ? '★' : a.declined ? '↘' : '↗'}</span><div><strong>${title}</strong><div class="dyn-achievement-value">${value}</div><div class="dyn-achievement-delta">${delta}</div></div></div>`
+}
+
+function renderDynamicsDetail(data, test, index) {
+    const period = data.periods[index]
+    const row = test.values[index]
+    const history = data.periods.slice(0, index + 1).map((p, i) => ({period: p, row: test.values[i]})).filter(v => v.period.test_ids.includes(test.id))
+    const filled = history.filter(v => dynValid(v.row))
+    const previous = history.filter(v => v.period.id !== period.id && dynValid(v.row)).at(-1)
+    const difference = dynValid(row) && previous ? Math.round((row.score - previous.row.score) * 100) / 100 : null
+    const improved = difference !== null && (test.better_direction === 'lower' ? difference < 0 : difference > 0)
+    const best = filled.length ? filled.reduce((a, b) => (test.better_direction === 'lower' ? b.row.score < a.row.score : b.row.score > a.row.score) ? b : a).row : null
+    const ranking = test.rankings[index]
+    const mine = ranking.find(r => r.athlete_id === data.athlete_id)
+    const norms = Number.isFinite(test.norm) ? [test.norm] : [test.norm_male, test.norm_female].filter(Number.isFinite)
+    const normText = `${test.better_direction === 'lower' ? '≤' : '≥'} ${Number.isFinite(test.norm) ? dynNumber(test.norm) : `${dynNumber(test.norm_male)} / ${dynNumber(test.norm_female)}`} ${dynEscape(test.unit)}`
+    let leaders = ranking
+    if (!dynamicsAllLeaders && ranking.length > 5) {
+        leaders = ranking.slice(0, 4)
+        leaders.push(mine && !leaders.includes(mine) ? mine : ranking[4])
+    }
+    document.getElementById('dynDetail').innerHTML = `
+        <div class="dyn-title"><div><h3>${dynEscape(test.name)}</h3><p>${test.assessment_type === 'general' ? 'ОФП' : 'СФП'} · ${test.better_direction === 'lower' ? 'Меньше — лучше' : 'Больше — лучше'}</p></div><div class="dyn-rank-badge"><b>${mine ? `${mine.rank} из ${ranking.length}` : '—'}</b><span>место в испытании</span></div></div>
+        ${dynamicsAchievementBanner(test, index)}
+        <div class="dyn-chart-head"><strong>Динамика результата</strong><span>Замеров: ${filled.length}</span></div>
+        <div class="dyn-chart-wrap">${dynamicsChart(test, history, norms)}</div>
+        ${filled.length ? `<div class="dyn-legend"><span><i></i>Результат</span><span><i class="norm"></i>Норматив ${Number.isFinite(test.norm) ? '' : 'М / Ж '}из справочника</span></div>` : ''}
+        <div class="dyn-metrics">
+            <div><span>Результат выбранного КПИ</span><strong>${dynValue(row, test)}</strong><small class="${row?.result === 'passed' ? 'dyn-good' : row?.result === 'failed' ? 'dyn-bad' : ''}">${dynStatus(row)}</small></div>
+            <div><span>К предыдущему замеру</span><strong class="${difference === null || difference === 0 ? '' : improved ? 'dyn-good' : 'dyn-bad'}">${difference === null ? '—' : `${difference > 0 ? '+' : ''}${dynNumber(difference)} ${dynEscape(test.unit)}`}</strong><small>${difference !== null ? `к ${dynEscape(previous.period.label)}` : dynValid(row) ? 'Нет предыдущего замера' : 'В выбранном КПИ нет замера'}</small></div>
+            <div><span>Лучший до выбранного КПИ</span><strong>${dynValue(best, test)}</strong><small>Норма${Number.isFinite(test.norm) ? '' : ' М / Ж'}: ${normText}</small></div>
+        </div>
+        <div class="dyn-detail-note"><span>${dynEscape(period.label)} · ${dynStatus(row)}</span><span>${difference === null ? 'Недостаточно данных для оценки тренда' : difference === 0 ? 'Без изменения' : improved ? 'Результат улучшился' : 'Результат снизился'}</span></div>
+        <div class="dyn-leader-head"><strong>Место среди участников</strong><small>${ranking.length} с замером из ${data.students_count}</small></div>
+        <table class="dyn-leaders" aria-label="Рейтинг по выбранному испытанию"><thead><tr><th>Место</th><th>Спортсмен</th><th>Результат</th></tr></thead><tbody>${leaders.length ? leaders.map(r => `<tr class="${r.athlete_id === data.athlete_id ? 'selected' : ''}"><td>${r.rank}</td><td>${dynEscape(r.name)}${r.athlete_id === data.athlete_id ? '<small> выбран</small>' : ''}</td><td>${dynNumber(r.score)} ${dynEscape(test.unit)}</td></tr>`).join('') : '<tr><td colspan="3">В группе ещё нет числовых результатов.</td></tr>'}</tbody></table>
+        ${ranking.length > 5 ? `<button type="button" class="dyn-link" id="dynLeadersToggle" aria-expanded="${dynamicsAllLeaders}">${dynamicsAllLeaders ? 'Свернуть рейтинг' : `Показать всех участников (${ranking.length})`}</button>` : ''}`
+    document.getElementById('dynLeadersToggle')?.addEventListener('click', () => {
+        dynamicsAllLeaders = !dynamicsAllLeaders
+        renderDynamicsDetail(data, test, index)
+        document.getElementById('dynLeadersToggle').focus()
     })
 }
 
-// Бейдж изменения между двумя последними заполненными КПИ.
-// Цвет зависит от better_direction, а не от знака разницы.
-function dynamicsDelta(test, filled) {
-    if (filled.length < 2) return '<span class="dyn-delta flat">—</span>'
-    const prev = filled[filled.length - 2]
-    const cur = filled[filled.length - 1]
-    const diff = Math.round((cur - prev) * 100) / 100
-    if (diff === 0) return '<span class="dyn-delta flat">без изм.</span>'
-    const improved = test.better_direction === 'lower' ? cur < prev : cur > prev
-    return `<span class="dyn-delta ${improved ? 'good' : 'bad'}">${diff > 0 ? '+' : ''}${diff} ${test.unit}</span>`
-}
-
-// SVG-график: линия результатов, пунктир нормы, цвет точки = сдал/не сдал
-function dynamicsChart(test, points, periods) {
-    const w = 300, h = 170, padL = 30, padR = 20, padT = 16, padB = 26
-    const filled = points.filter(x => x !== null)
-    const norm = test.norm
-    const all = norm !== null && norm !== undefined ? [...filled, norm] : filled
-    const min = Math.min(...all), max = Math.max(...all)
-    const pad = (max - min) * 0.2 || 1
-    const lo = min - pad, hi = max + pad
-
-    const n = points.length
-    const px = i => n === 1 ? (padL + w - padR) / 2 : padL + i * (w - padL - padR) / (n - 1)
-    const py = v => padT + (1 - (v - lo) / (hi - lo)) * (h - padT - padB)
-
-    const isPassed = v => {
-        if (norm === null || norm === undefined) return null
-        return test.better_direction === 'lower' ? v <= norm : v >= norm
-    }
-
-    let svg = `<svg viewBox="0 0 ${w} ${h}" width="100%" class="dyn-chart">`
-    ;[0, 0.5, 1].forEach(k => {
-        const y = padT + k * (h - padT - padB)
-        const val = Math.round((hi - k * (hi - lo)) * 10) / 10
-        svg += `<line x1="${padL}" x2="${w - padR}" y1="${y}" y2="${y}" stroke="#eef1f5"/>
-                <text x="${padL - 5}" y="${y + 3}" font-size="9" fill="#94a3b8" text-anchor="end">${val}</text>`
+function dynamicsChart(test, history, norms) {
+    const filled = history.filter(v => dynValid(v.row))
+    if (!filled.length) return '<div class="dyn-empty">Пока нет результатов спортсмена<br>График появится после первого замера</div>'
+    // Для длинной истории сохраняем читаемые подписи и горизонтальную прокрутку.
+    const width = Math.max(310, history.length * 82), height = 208
+    const left = 44, right = 32, top = 27, bottom = 36
+    const values = [...filled.map(v => v.row.score), ...norms]
+    const min = Math.min(...values), max = Math.max(...values)
+    const pad = (max - min) * .25 || 1, lo = min - pad, hi = max + pad
+    const x = i => history.length === 1 ? (left + width - right) / 2 : left + i * (width - left - right) / (history.length - 1)
+    const y = value => top + (hi - value) / (hi - lo) * (height - top - bottom)
+    let svg = `<svg viewBox="0 0 ${width} ${height}" style="min-width:${width}px" role="img" aria-label="${dynEscape(test.name)}: динамика результата"><title>${dynEscape(filled.map(v => `${v.period.label}: ${dynNumber(v.row.score)} ${test.unit}`).join('; '))}</title><text x="0" y="12">${dynEscape(test.unit)}</text>`
+    ;[0, .5, 1].forEach(k => {
+        const value = lo + (hi - lo) * k
+        svg += `<line class="dyn-grid" x1="${left}" x2="${width - right}" y1="${y(value)}" y2="${y(value)}"/><text x="${left - 6}" y="${y(value) + 4}" text-anchor="end">${dynNumber(value)}</text>`
     })
-    if (norm !== null && norm !== undefined) {
-        svg += `<line x1="${padL}" x2="${w - padR}" y1="${py(norm)}" y2="${py(norm)}" stroke="#16a34a" stroke-dasharray="4 3"/>
-                <text x="${w - padR}" y="${py(norm) - 4}" font-size="9" fill="#16a34a" text-anchor="end">норма ${norm}</text>`
-    }
-
-    // Линия рвётся там, где результата нет (не пришёл / не заполнено)
-    let path = ''
-    let pen = false
-    points.forEach((v, i) => {
-        if (v === null) { pen = false; return }
-        path += `${pen ? 'L' : 'M'}${px(i).toFixed(1)} ${py(v).toFixed(1)} `
+    ;[...new Set(norms)].forEach(norm => {
+        svg += `<line x1="${left}" x2="${width - right}" y1="${y(norm)}" y2="${y(norm)}" stroke="#a8b8cf" stroke-dasharray="4 4"><title>Норматив: ${dynNumber(norm)}</title></line>`
+    })
+    let path = '', pen = false
+    history.forEach((v, i) => {
+        if (!dynValid(v.row)) { pen = false; return }
+        path += `${pen ? 'L' : 'M'}${x(i)} ${y(v.row.score)} `
         pen = true
     })
-    svg += `<path d="${path}" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`
-
-    points.forEach((v, i) => {
-        svg += `<text x="${px(i)}" y="${h - 8}" font-size="9" text-anchor="middle" fill="#94a3b8">${periods[i].label}</text>`
-        if (v === null) return
-        // цвет точки - по сохранённому результату КПИ (у каждого этапа свой норматив)
-        const saved = test.values[i] ? test.values[i].result : null
-        const ok = saved === 'passed' ? true : saved === 'failed' ? false : isPassed(v)
-        const color = ok === null ? '#2563eb' : ok ? '#16a34a' : '#dc2626'
-        svg += `<circle cx="${px(i)}" cy="${py(v)}" r="4.5" fill="#fff" stroke="${color}" stroke-width="2.2"/>
-                <text x="${px(i)}" y="${py(v) - 9}" font-size="9.5" font-weight="700" text-anchor="middle" fill="#111827">${v}</text>`
+    svg += `<path d="${path}" fill="none" stroke="#3478ee" stroke-width="2.2"/>`
+    history.forEach((v, i) => {
+        const anchor = history.length === 1 ? 'middle' : i === 0 ? 'start' : i === history.length - 1 ? 'end' : 'middle'
+        svg += `<text x="${x(i)}" y="${height - 12}" text-anchor="${anchor}">${dynEscape(v.period.label)}</text>`
+        if (dynValid(v.row)) {
+            svg += `<circle cx="${x(i)}" cy="${y(v.row.score)}" r="4.5" fill="#3478ee"><title>${dynEscape(v.period.label)}: ${dynNumber(v.row.score)} ${dynEscape(test.unit)} · ${dynStatus(v.row)}</title></circle><text x="${x(i)}" y="${y(v.row.score) - 12}" text-anchor="${anchor}" class="dyn-point-label">${dynNumber(v.row.score)}</text>`
+        } else {
+            svg += `<text x="${x(i)}" y="${top + 18}" text-anchor="${anchor}">Нет замера</text>`
+        }
     })
     return svg + '</svg>'
 }
 
+document.getElementById('sideCloseBtn').addEventListener('click', hideAthleteSidebar)
+document.getElementById('sideBackBtn').addEventListener('click', hideAthleteSidebar)
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !document.querySelector('.modal.show')) hideAthleteSidebar()
+})
+
 function hideAthleteSidebar() {
     selectedAthleteId = null
-    document.getElementById('athleteSideCol')?.classList.remove('is-open')
+    dynamicsRequestId += 1
+    const panel = document.getElementById('athleteSideCol')
+    if (panel?.contains(document.activeElement)) examsSearchInput?.focus({preventScroll: true})
+    panel?.classList.remove('is-open')
+    if (panel) panel.inert = true
 }
 
 // Рендерит одну ячейку результата испытания в зависимости от статуса сдачи
@@ -483,14 +535,6 @@ function loadStationData(groupId, testItemId) {
         .then((data) => {
             if (!data.assessment_id) {
                 document.getElementById('stationEmptyState').style.display = 'block'
-                document.getElementById('stationContent').style.display = 'none'
-                return
-            }
-            // КПИ есть, но для его этапа/вида спорта в справочнике нет испытаний
-            if (!data.test_items.length) {
-                const empty = document.getElementById('stationEmptyState')
-                empty.textContent = 'Для этапа этого КПИ нет испытаний в справочнике. Добавьте испытания или создайте КПИ с другим этапом.'
-                empty.style.display = 'block'
                 document.getElementById('stationContent').style.display = 'none'
                 return
             }

@@ -537,6 +537,7 @@ table.kpi-table td.athlete-cell {
     .station-wrap {
         flex-direction: column;
     }
+
     .station-picker {
         width: 100%;
         max-height: 180px;
@@ -579,8 +580,9 @@ table.kpi-table td.athlete-cell {
 @media (max-width: 1199.98px) {
     .kpi-layout {
         flex-direction: column;
-        align-items: stretch;   /* добавить */
+        align-items: stretch; /* добавить */
     }
+
     /* В колоночной раскладке ширина не влияет на видимость - схлопываем
        по max-height, иначе панель будет резко появляться/исчезать. */
     .kpi-side-col {
@@ -590,69 +592,827 @@ table.kpi-table td.athlete-cell {
         max-height: 0;
         transition: max-height .35s ease, margin-top .35s ease, opacity .25s ease;
     }
+
     .kpi-side-col.is-open {
         width: 100%;
         max-height: 2000px;
         margin-top: 16px;
     }
+
     .kpi-side-col .kpi-side-panel {
         width: 100%;
     }
 }
 
-/* ===== Вкладка "Динамика" в сайдбаре спортсмена ===== */
-.dyn-chips {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin: 12px 0;
+
+/* Динамика карточки спортсмена — стили ограничены её контейнером. */
+#athleteSidePanel {
+    color: var(--bs-body-color, #212529);
+    font-size: .84rem;
+    padding-top: 14px;
 }
 
-.dyn-chip {
-    font-size: .72rem;
-    border: 1px solid var(--kpi-border);
-    border-radius: 20px;
-    padding: 3px 10px;
+#athleteSidePanel * {
+    box-sizing: border-box;
+}
+
+#athleteSidePanel small {
     color: #6b7280;
+    font-size: .78rem;
+}
+
+#athleteSidePanel button, #athleteSidePanel select {
+    font: inherit;
+}
+
+#athleteSidePanel button:focus-visible, #athleteSidePanel select:focus-visible,
+#athleteSidePanel summary:focus-visible {
+    outline: 3px solid #8db5ff;
+    outline-offset: 2px;
+}
+
+#athleteSidePanel select {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid #dde5ef;
+    border-radius: 6px;
     background: #fff;
+    color: #4f6583;
+    padding: 9px 7px;
+    font-size: .84rem;
+}
+
+#athleteSidePanel .dyn-period {
+    display: block;
+    color: #6b7280;
+    font-size: .78rem;
+    margin-bottom: 16px;
+}
+
+#athleteSidePanel .dyn-period select {
+    display: block;
+    margin-top: 6px;
+}
+
+#athleteSidePanel .dyn-notice {
+    background: #fff8ed;
+    border: 1px solid #f8eacb;
+    border-radius: 8px;
+    padding: 10px;
+    color: #936624;
+    font-size: .84rem;
+    margin-bottom: 12px;
+}
+
+#athleteSidePanel .dyn-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 0;
+    border: 1px solid #e1eafa;
+    border-radius: 10px;
+    background: #f5f8ff;
+    padding: 14px 0;
+}
+
+#athleteSidePanel .dyn-summary > div {
+    padding: 0 12px;
+    min-width: 0;
+}
+
+#athleteSidePanel .dyn-summary > div:last-child {
+    border-left: 1px solid #e2e9f5;
+}
+
+#athleteSidePanel .dyn-summary-rank {
+    grid-column: 1 / -1;
+}
+
+#athleteSidePanel .dyn-summary span {
+    color: #6b7280;
+    font-size: .78rem;
+}
+
+#athleteSidePanel .dyn-summary strong {
+    display: block;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 5px 0;
+    line-height: 1.2;
+}
+
+#athleteSidePanel .dyn-summary strong small {
+    font-weight: 400;
+}
+
+#athleteSidePanel .dyn-progress {
+    height: 3px;
+    background: #e2e9f5;
+    margin-top: 10px;
+    border-radius: 2px;
+}
+
+#athleteSidePanel .dyn-progress i {
+    display: block;
+    height: 100%;
+    background: #4b84ee;
+    border-radius: 2px;
+}
+
+#athleteSidePanel .dyn-rank-note {
+    color: #6b7280;
+    font-size: .78rem;
+    margin: 11px 0 6px;
+}
+
+#athleteSidePanel .dyn-rules {
+    font-size: .84rem;
+    color: #6b7280;
+    line-height: 1.7;
+    margin-bottom: 18px;
+}
+
+#athleteSidePanel summary {
     cursor: pointer;
-    user-select: none;
+    color: #6485ba;
+    font-size: .78rem;
 }
 
-.dyn-chip.on {
-    background: #eef4ff;
-    border-color: #c7dbff;
-    color: var(--kpi-blue);
-    font-weight: 600;
+#athleteSidePanel .dyn-rules p {
+    background: #f7f9fc;
+    padding: 10px;
+    margin: 8px 0 0;
+    border-radius: 6px;
 }
 
-.dyn-box {
+#athleteSidePanel .dyn-picker {
+    border: 1px solid #e8edf4;
+    border-radius: 10px;
+    padding: 11px;
+    margin-bottom: 20px;
+    background: #fafbfd;
+}
+
+#athleteSidePanel .dyn-picker header {
     display: flex;
     justify-content: space-between;
-    background: var(--kpi-bg);
-    border-radius: 12px;
-    padding: 12px;
-    margin-top: 12px;
+    padding-bottom: 8px;
+    font-size: .84rem;
 }
 
-.dyn-box-title {
+#athleteSidePanel .dyn-picker summary {
+    padding-top: 11px;
+}
+
+#athleteSidePanel .dyn-group-title {
+    display: flex;
+    justify-content: space-between;
+    font-size: .78rem;
+    color: #6b7280;
+    padding: 12px 7px 6px;
+}
+
+#athleteSidePanel .dyn-test-button {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    border: 0;
+    border-radius: 6px;
+    padding: 9px 7px;
+    background: none;
+    color: #64758d;
+    font-size: .84rem;
+    line-height: 1.5;
+}
+
+#athleteSidePanel .dyn-test-button span:last-child {
+    text-align: right;
+    white-space: nowrap;
+    color: #7890b1;
+}
+
+#athleteSidePanel .dyn-test-button[aria-pressed="true"] {
+    background: #edf3ff;
+    color: #2d64bf;
+    box-shadow: inset 2px 0 #397bf0;
+}
+
+#athleteSidePanel .dyn-test-button:hover {
+    background: #f0f4fc;
+}
+
+#athleteSidePanel .dyn-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 17px;
+}
+
+#athleteSidePanel .dyn-title h3 {
+    font-size: .9rem;
+    line-height: 1.4;
+    margin: 0 0 6px;
+    overflow-wrap: anywhere;
+}
+
+#athleteSidePanel .dyn-title p {
+    color: #6b7280;
+    font-size: .78rem;
+    margin: 0;
+}
+
+#athleteSidePanel .dyn-rank-badge {
+    flex-shrink: 0;
+    background: #edf3ff;
+    padding: 7px;
+    color: #4c73b0;
+    border-radius: 7px;
+    text-align: center;
     font-size: .72rem;
+}
+
+#athleteSidePanel .dyn-rank-badge b {
+    display: block;
+    font-size: .9rem;
+    margin-bottom: 2px;
+}
+
+#athleteSidePanel .dyn-chart-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: .84rem;
+    gap: 8px;
+}
+
+#athleteSidePanel .dyn-chart-head span {
+    color: #6b7280;
+    font-size: .72rem;
+}
+
+#athleteSidePanel .dyn-chart-wrap {
+    overflow-x: auto;
+    margin: 10px 0;
+}
+
+#athleteSidePanel .dyn-chart-wrap svg {
+    width: 100%;
+    display: block;
+}
+
+#athleteSidePanel .dyn-chart-wrap text {
+    font-family: inherit;
+    font-size: .72rem;
+    fill: #6b7280;
+}
+
+#athleteSidePanel .dyn-chart-wrap .dyn-point-label {
+    fill: #5279b8;
+}
+
+#athleteSidePanel .dyn-grid {
+    stroke: #eef2f7;
+}
+
+#athleteSidePanel .dyn-empty {
+    background: #f8fafc;
+    border: 1px dashed #e4eaf2;
+    border-radius: 9px;
+    text-align: center;
+    color: #6b7280;
+    padding: 42px 12px;
+    font-size: .84rem;
+    line-height: 1.8;
+}
+
+#athleteSidePanel .dyn-legend {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    color: #6b7280;
+    font-size: .72rem;
+    margin: 2px 0 16px;
+}
+
+#athleteSidePanel .dyn-legend i {
+    display: inline-block;
+    width: 15px;
+    border-top: 2px solid #3478ee;
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+#athleteSidePanel .dyn-legend i.norm {
+    border-top: 1.5px dashed #9eb0c8;
+}
+
+#athleteSidePanel .dyn-metrics {
+    display: grid;
+    gap: 12px;
+    padding-bottom: 19px;
+    border-bottom: 1px solid #e8edf4;
+}
+
+#athleteSidePanel .dyn-metrics > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px 10px;
+}
+
+#athleteSidePanel .dyn-metrics span {
+    color: #6b7280;
+    font-size: .78rem;
+}
+
+#athleteSidePanel .dyn-metrics strong {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+#athleteSidePanel .dyn-metrics small {
+    margin-top: 2px;
+}
+
+#athleteSidePanel .dyn-good {
+    color: var(--kpi-green);
+}
+
+#athleteSidePanel .dyn-bad {
+    color: var(--kpi-red);
+}
+
+#athleteSidePanel .dyn-detail-note {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: #f6f8fc;
+    border-radius: 7px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    color: #6b7280;
+    font-size: .78rem;
+    line-height: 1.6;
+}
+
+#athleteSidePanel .dyn-leader-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: center;
+    margin: 21px 0 10px;
+    font-size: .84rem;
+}
+
+#athleteSidePanel .dyn-leaders {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+}
+
+#athleteSidePanel .dyn-leaders td, #athleteSidePanel .dyn-leaders th {
+    padding: 9px 5px;
+    font-size: .78rem;
+    text-align: left;
+    border-bottom: 1px solid #f0f3f7;
     color: #6b7280;
 }
 
-.dyn-big {
+#athleteSidePanel .dyn-leaders th {
+    color: #6b7280;
+    font-weight: 400;
+}
+
+#athleteSidePanel .dyn-leaders td:nth-child(2) {
+    overflow-wrap: anywhere;
+}
+
+#athleteSidePanel .dyn-leaders td:last-child, #athleteSidePanel .dyn-leaders th:last-child {
+    text-align: right;
+}
+
+#athleteSidePanel .dyn-leaders tr.selected td {
+    background: #f0f5ff;
+    color: #3f6aac;
+}
+
+#athleteSidePanel .dyn-link {
+    background: none;
+    border: 0;
+    padding: 5px 0;
+    margin-top: 10px;
+    color: #6081b7;
+    font-size: .78rem;
+}
+
+/* Карточка спортсмена по dynamics.html. */
+#athleteSideCol {
+    position: sticky;
+    top: 18px;
+}
+
+#athleteSideCol:not(.is-open) {
+    visibility: hidden;
+}
+
+#athleteSideCol.is-open {
+    width: 380px;
+}
+
+#athleteSideCol #athleteSidePanel {
+    width: 380px;
+    padding: 0;
+    max-height: calc(100vh - 36px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid #e8edf4;
+    border-radius: 12px;
+    box-shadow: 0 4px 18px #15314d05;
+}
+
+#athleteSidePanel [hidden] {
+    display: none !important;
+}
+
+#athleteSidePanel button {
+    cursor: pointer;
+}
+
+#athleteSidePanel button:disabled {
+    opacity: .35;
+    cursor: default;
+}
+
+#athleteSidePanel .side-top {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    background: #fff;
+    border-bottom: 1px solid #e8edf4;
+}
+
+#athleteSidePanel .side-top button {
+    border: 0;
+    background: none;
+    color: #6b7280;
+    padding: 0;
+    font-size: .84rem;
+}
+
+#athleteSidePanel .side-top button:hover {
+    color: #2563eb;
+}
+
+#athleteSidePanel .side-navigation {
+    display: flex;
+    gap: 5px;
+}
+
+#athleteSidePanel .side-navigation button {
+    width: 26px;
+    height: 26px;
     font-size: 1.2rem;
-    font-weight: 700;
+    border: 1px solid #e8edf4;
+    border-radius: 6px;
 }
 
-.dyn-delta {
+#athleteSidePanel .side-head {
+    padding: 18px 16px 0;
+}
+
+#athleteSidePanel .side-heading {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+#athleteSidePanel .side-initial {
+    width: 39px;
+    height: 39px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #ecf3ff;
+    color: #4779c9;
+    font-size: .84rem;
+}
+
+#athleteSidePanel .side-heading h2 {
+    font-size: 1.1rem;
+    letter-spacing: -.3px;
+    margin: 0 0 5px;
+    overflow-wrap: anywhere;
+}
+
+#athleteSidePanel .side-heading p {
+    color: #6b7280;
+    font-size: .78rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+#athleteSidePanel #sidePeriod {
+    margin-top: 14px;
+}
+
+#athleteSidePanel .side-tabs {
+    display: flex;
+    gap: 23px;
+    margin: 9px 16px 0;
+    border-bottom: 1px solid #e8edf4;
+}
+
+#athleteSidePanel .side-tabs button {
+    padding: 12px 0;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: #6b7280;
+    font-size: .84rem;
+}
+
+#athleteSidePanel .side-tabs button[aria-selected="true"] {
+    color: #2563eb;
+    border-bottom-color: #2563eb;
+    font-weight: 500;
+}
+
+#athleteSidePanel .side-body {
+    padding: 16px;
+}
+
+#athleteSidePanel .side-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+    border-top: 1px solid #e8edf4;
+    background: #fafbfd;
+    padding: 12px 16px;
+    color: #6b7280;
     font-size: .72rem;
-    font-weight: 700;
-    border-radius: 20px;
-    padding: 2px 8px;
-    white-space: nowrap;
 }
 
-.dyn-delta.good { background: #e7f8ee; color: var(--kpi-green); }
-.dyn-delta.bad { background: #fde8e8; color: var(--kpi-red); }
-.dyn-delta.flat { background: #f3f4f6; color: #6b7280; }
+#athleteSidePanel .side-results-wrap {
+    overflow-x: auto;
+}
+
+#athleteSidePanel .side-results {
+    width: 100%;
+    min-width: 480px;
+    font-size: .84rem;
+    border-collapse: collapse;
+}
+
+#athleteSidePanel .side-results td, #athleteSidePanel .side-results th {
+    padding: 12px 9px;
+    border-bottom: 1px solid #e8edf4;
+    text-align: left;
+}
+
+#athleteSidePanel .side-results th {
+    color: #6b7280;
+    font-weight: 400;
+}
+
+#athleteSidePanel .side-category td {
+    background: #f9fbfd;
+    color: #6b7280;
+    font-size: .78rem;
+}
+
+#athleteSidePanel .side-tag {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 5px 8px;
+    border-radius: 5px;
+    background: #edf3ff;
+    color: #3667b7;
+    font-size: .78rem;
+}
+
+#athleteSidePanel .side-tag.warn {
+    background: #fff5e7;
+    color: #9a651f;
+}
+
+@media (max-width: 1199.98px) {
+    #athleteSideCol {
+        position: static;
+    }
+
+    #athleteSideCol.is-open {
+        width: 100%;
+        max-height: none;
+    }
+
+    #athleteSideCol #athleteSidePanel {
+        width: 100%;
+    }
+}
+
+@media (max-width: 760px) {
+    #athleteSideCol.is-open {
+        position: fixed;
+        top: 8px;
+        right: 8px;
+        bottom: 8px;
+        width: min(380px, calc(100% - 24px));
+        margin: 0;
+        z-index: 1040;
+        border-radius: 12px;
+        box-shadow: -8px 0 34px #18365720;
+    }
+
+    #athleteSideCol #athleteSidePanel {
+        height: 100%;
+        max-height: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .kpi-side-col {
+        transition: none;
+    }
+}
+
+/* Единая типографика с основной панелью КПИ. */
+#athleteSidePanel {
+    font-family: inherit;
+    font-size: .84rem;
+    line-height: 1.5;
+}
+
+#athleteSidePanel .side-heading h2,
+#athleteSidePanel .dyn-title h3 {
+    color: #111827;
+    font-weight: 700;
+    letter-spacing: normal;
+}
+
+#athleteSidePanel .side-tabs button {
+    font-size: .88rem;
+    font-weight: 500;
+}
+
+#athleteSidePanel .side-tabs button[aria-selected="true"] {
+    color: #111827;
+}
+
+#athleteSidePanel select {
+    font-size: .9rem;
+    color: var(--bs-body-color, #212529);
+}
+
+#athleteSidePanel #sidePeriod {
+    font-size: .9rem;
+}
+
+#athleteSidePanel .dyn-summary strong {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+#athleteSidePanel .dyn-metrics strong {
+    font-weight: 700;
+}
+
+#athleteSidePanel .dyn-leaders th,
+#athleteSidePanel .side-results th {
+    font-weight: 500;
+}
+
+#athleteSidePanel .dyn-test-button {
+    color: var(--bs-body-color, #212529);
+}
+
+#athleteSidePanel .dyn-test-button[aria-pressed="true"] {
+    color: var(--kpi-blue);
+}
+
+#athleteSidePanel .side-top {
+    flex-wrap: wrap;
+}
+
+#athleteSidePanel .side-navigation {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+}
+
+#athleteSidePanel .side-navigation button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    line-height: 1;
+}
+
+#athleteSidePanel .side-navigation button i {
+    display: flex;
+    font-size: 14px;
+    line-height: 1;
+}
+
+/* Улучшения и личные рекорды: цвет дополнен текстом и символом. */
+#athleteSidePanel .dyn-achievement {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 13px;
+    margin: 0 0 18px;
+    border: 1px solid #bbdfc9;
+    border-radius: 10px;
+    background: #edf8f1;
+    color: #166534;
+}
+
+#athleteSidePanel .dyn-achievement.record {
+    background: #fff8e6;
+    border-color: #efcf7a;
+    color: #805400;
+}
+
+#athleteSidePanel .dyn-achievement-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #fff;
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+#athleteSidePanel .dyn-achievement strong {
+    display: block;
+    font-size: .9rem;
+    font-weight: 700;
+}
+
+#athleteSidePanel .dyn-achievement-badge {
+    display: block;
+    width: fit-content;
+    padding: 3px 6px;
+    margin-top: 5px;
+    border-radius: 5px;
+    font-size: .72rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+#athleteSidePanel .dyn-achievement-badge.record {
+    background: #fff3ce;
+    color: #805400;
+}
+
+#athleteSidePanel .dyn-achievement-badge.improved {
+    background: #e7f8ee;
+    color: #166534;
+}
+
+#athleteSidePanel .dyn-achievement.declined {
+    background: #fff1f2;
+    border-color: #fecdd3;
+    color: #9f1239;
+}
+
+#athleteSidePanel .dyn-achievement-badge.declined {
+    background: #fff1f2;
+    color: #9f1239;
+}
+
+#athleteSidePanel .dyn-achievement {
+    align-items: center;
+}
+
+#athleteSidePanel .dyn-achievement-value {
+    margin-top: 3px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+#athleteSidePanel .dyn-achievement-delta {
+    margin-top: 3px;
+    font-size: .78rem;
+    font-weight: 400;
+}

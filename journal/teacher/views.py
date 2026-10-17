@@ -536,70 +536,106 @@ def fetch_station_data(request):
 
 @role_required('Тренер')
 def fetch_athlete_dynamics(request):
-    # Вытаскиваем спортсмена и его группу
-    group_id = request.GET.get('group')
-    athlete_id = request.GET.get('athlete')
+    """История спортсмена и рейтинг текущего состава его группы по каждому КПИ."""
+    from math import isfinite
 
-    # делаем проверку если какое то из полей не получилось вытащить или информация не предана
-    if not group_id or not athlete_id:
-        return JsonResponse({
-            'success': False,
-            'error': 'Не переданы group или athlete'
-        }, status=400)
+    try:
+        group_id = int(request.GET.get('group', ''))
+        athlete_id = int(request.GET.get('athlete', ''))
+    except (TypeError, ValueError):
+        return JsonResponse({'success': False, 'error': 'Некорректная группа или спортсмен'}, status=400)
 
-    # Делается проверка состоит ли студент в выбранной группе
-    if not StudentGroup.objects.filter(group=group_id, student=athlete_id).exists():
-        return JsonResponse({
-            'success': False,
-            'error': 'Спортсмен не состоит в этой группе'
-        }, status=404)
+    group = get_object_or_404(Group, pk=group_id, coach=request.user)
+    students = list(CustomUser.objects.filter(
+        pk__in=StudentGroup.objects.filter(group=group).values('student')
+    ).order_by('last_name', 'first_name', 'id'))
+    athlete = next((student for student in students if student.id == athlete_id), None)
+    if athlete is None:
+        return JsonResponse({'success': False, 'error': 'Спортсмен не состоит в этой группе'}, status=404)
 
-    # Находими спортсмена, все испытания этой группы, создаем список всех дат по этим экзаменам
-    athlete = get_object_or_404(CustomUser, pk=athlete_id)
-    assessments = list(Assessment.objects.filter(group=group_id).order_by('date_start', 'id'))
-    period_index = {a.id: i for i, a in enumerate(assessments)}  # Нумеруем даты экзаменов
-    periods = [{
-        'id': a.id,
-        'label': a.date_start.strftime('%d.%m.%y'),
-        'name': a.name
+    assessments = list(Assessment.objects.filter(group=group).order_by('date_start', 'id'))
+    period_index = {assessment.id: i for i, assessment in enumerate(assessments)}
+    # Каталог нужен и для испытаний, по которым ещё нет ни одной записи.
+    items = list(TestItem.objects.filter(
+        sport_type_id__in={assessment.sport_type_id for assessment in assessments},
+        stage__in={assessment.next_stage for assessment in assessments},
+    ).order_by('assessment_type', 'id'))
+    programs = {
+        assessment.id: {item.id for item in items
+                        if item.sport_type_id == assessment.sport_type_id
+                        and item.stage == assessment.next_stage}
+        for assessment in assessments
     }
-        for a in assessments]
+    results = list(AssessmentResult.objects.filter(
+        assessment__in=assessments, athlete_id__in=[student.id for student in students]
+    ).select_related('test_item').order_by('id'))
+    items_by_id = {item.id: item for item in items}
+    for result in results:
+        items_by_id[result.test_item_id] = result.test_item
+        programs[result.assessment_id].add(result.test_item_id)
 
-    #  Достаем результаты экзаменов
-    results = AssessmentResult.objects.filter(assessment__in=assessments, athlete=athlete).select_related('test_item')
+    def finite(value):
+        return value if value is not None and isfinite(value) else None
+
     tests = {}
-
-    for r in results:
-        item = r.test_item
-        key = (item.assessment_type, item.name.strip().lower())
-        norm = item.max_cor_male if athlete.gender == 'Мужчина' else item.max_cor_female
-
-        if key not in tests:
-            tests[key] = {
-                'id': item.id,
-                'name': item.name,
-                'unit': item.get_unit_display(),
-                'assessment_type': item.assessment_type,
-                'norm': norm,
-                'better_direction': item.better_direction,
-                'values': [None] * len(assessments)
-            }
-        entry = tests[key]
-        entry['id'] = min(entry['id'], item.id)
-        # результаты идут от старых КПИ к новым - норма и направление берутся из самого свежего
-        if norm is not None:
-            entry['norm'] = norm
-        entry['better_direction'] = item.better_direction
-
-        # Вставляем результат экзамена в том порядке в каком идут даты
-        entry['values'][period_index[r.assessment_id]] = {
-            'score': r.score,
-            'result': r.result,
-            'norm': norm,
+    for item in items_by_id.values():
+        norm = (item.max_cor_male if athlete.gender == 'Мужчина' else
+                item.max_cor_female if athlete.gender == 'Женщина' else None)
+        tests[item.id] = {
+            'id': item.id, 'name': item.name, 'unit': item.get_unit_display(),
+            'assessment_type': item.assessment_type,
+            'norm': finite(norm), 'norm_male': finite(item.max_cor_male),
+            'norm_female': finite(item.max_cor_female),
+            'better_direction': item.better_direction,
+            'values': [None] * len(assessments),
+            'rankings': [[] for _ in assessments],
         }
-    ordered = sorted(tests.values(), key=lambda t: (t['assessment_type'], t['id']))
+    # При дубликатах используем последнюю запись, не считаем одного участника дважды.
+    unique_results = {(r.assessment_id, r.athlete_id, r.test_item_id): r for r in results}
+    names = {student.id: student.get_full_name() for student in students}
+    totals = {a.id: {s.id: {'passed': 0, 'filled': 0} for s in students} for a in assessments}
+    for result in unique_results.values():
+        index = period_index[result.assessment_id]
+        test = tests[result.test_item_id]
+        score = finite(result.score)
+        if result.athlete_id == athlete_id:
+            test['values'][index] = {'score': score, 'result': result.result}
+        total = totals[result.assessment_id][result.athlete_id]
+        if result.result == 'passed':
+            total['passed'] += 1
+        if score is not None and result.result in ('passed', 'failed'):
+            total['filled'] += 1
+            test['rankings'][index].append({
+                'athlete_id': result.athlete_id, 'name': names[result.athlete_id], 'score': score,
+            })
+
+    for test in tests.values():
+        for ranking in test['rankings']:
+            ranking.sort(key=lambda row: row['score'], reverse=test['better_direction'] != 'lower')
+            previous_score, rank = None, 0
+            for position, row in enumerate(ranking, 1):
+                if row['score'] != previous_score:
+                    rank = position
+                row['rank'] = rank
+                previous_score = row['score']
+
+    periods = []
+    for assessment in assessments:
+        total = totals[assessment.id][athlete_id]
+        eligible = [row for row in totals[assessment.id].values() if row['filled']]
+        rank = (1 + sum(row['passed'] > total['passed'] for row in eligible)) if total['filled'] else None
+        periods.append({
+            'id': assessment.id, 'label': assessment.date_start.strftime('%d.%m.%Y'),
+            'name': assessment.name, 'date_start': assessment.date_start.isoformat(),
+            'future': assessment.date_start > timezone.localdate(),
+            'invalid_dates': assessment.date_end < assessment.date_start,
+            'test_ids': sorted(programs[assessment.id]),
+            'summary': {**total, 'total': len(programs[assessment.id]), 'rank': rank,
+                        'participants': len(eligible),
+                        'ties': sum(row['passed'] == total['passed'] for row in eligible) if rank else 0},
+        })
     return JsonResponse({
-        'success': True,
-        'periods': periods,
-        'tests': ordered,
+        'success': True, 'periods': periods,
+        'tests': sorted(tests.values(), key=lambda test: (test['assessment_type'], test['id'])),
+        'athlete_id': athlete_id, 'students_count': len(students),
     })
