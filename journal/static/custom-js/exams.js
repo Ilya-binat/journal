@@ -770,3 +770,7 @@ function showToast({type = 'success', title, message, duration = 4000}) {
     toast.addEventListener('mouseenter', () => clearTimeout(timer))
     toast.addEventListener('mouseleave', () => setTimeout(dismiss, 1500))
 }
+// Экспорт в excel
+document.getElementById('exportExcelBtn').addEventListener('click', ()=>{
+    window.location.href = `/teacher/export_exams_excel/?${buildQueryParams({group:groupSelect.value})}`
+})

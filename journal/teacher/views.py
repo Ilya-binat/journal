@@ -1,4 +1,10 @@
+from io import BytesIO
+from urllib.parse import quote
+
 from django.shortcuts import render, get_object_or_404, redirect
+from openpyxl.styles import Side, Border, Alignment, Font
+from openpyxl.utils import get_column_letter
+
 from .utils import *
 from administrator.models import *
 from datetime import datetime, date, timedelta
@@ -6,9 +12,10 @@ import json
 from django.utils import timezone
 from users.decorators import role_required
 from django.views.decorators.http import require_POST
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from collections import defaultdict
 from users.models import *
+from openpyxl import Workbook
 
 
 @role_required('Тренер')
@@ -267,10 +274,7 @@ def exams(request):
                                           })
 
 
-# Функция для вывода кол-ва спортсменов и самих спортсменов
-@role_required('Тренер')
-def fetch_exams_data(request):
-    group = request.GET.get('group')
+def build_exams_data(group):
     data = StudentGroup.objects.filter(group=group)
     students = CustomUser.objects.filter(
         pk__in=data.values('student')
@@ -279,7 +283,7 @@ def fetch_exams_data(request):
     # Сбор статистики по группе
     assessment = Assessment.objects.filter(group=group).order_by('-date_start', '-id').first()
     if assessment is None:
-        return JsonResponse({
+        return {
             'students_count': students.count(),
             'passed': 0,
             'absent': 0,
@@ -290,7 +294,9 @@ def fetch_exams_data(request):
             'avg_percent': 0,
             'thead': [],
             'table': {},
-        })
+            'assessment': None,
+        }
+
     test_items = list(TestItem.objects.filter(sport_type=assessment.sport_type, stage=assessment.next_stage).order_by(
         "assessment_type", "id"))
     thead = [{'id': test_item.id, 'name': test_item.name, 'unit': test_item.unit,
@@ -368,14 +374,31 @@ def fetch_exams_data(request):
         if total_percent_count else 0
     )
 
-    return JsonResponse({
+    return {
         'students_count': total,
         **stats_dict,
         **percents,
         'avg_percent': avg_percent,
         'table': table,
         'thead': thead,
-    })
+        'assessment': {
+            'name': assessment.name,
+            'group': str(assessment.group),
+            'next_stage': assessment.next_stage,
+            'date_start': assessment.date_start.strftime('%d.%m.%Y'),
+            'date_end': assessment.date_end.strftime('%d.%m.%Y'),
+            'year': assessment.date_start.year,
+            'group_stage': assessment.group.stage,
+            'coach': assessment.coach.get_short_name(),
+        }
+    }
+
+
+# Функция для вывода кол-ва спортсменов и самих спортсменов
+@role_required('Тренер')
+def fetch_exams_data(request):
+    group = request.GET.get('group')
+    return JsonResponse(build_exams_data(group))
 
 
 # Берет JS дату и преобразует ее в формат ГГГГ.ММ.ДД
@@ -639,3 +662,240 @@ def fetch_athlete_dynamics(request):
         'tests': sorted(tests.values(), key=lambda test: (test['assessment_type'], test['id'])),
         'athlete_id': athlete_id, 'students_count': len(students),
     })
+
+# Функция экспорта результатов КПИ в Excel
+@role_required('Тренер')
+def export_exams_excel(request):
+    # Достаем id группы
+    group = request.GET.get('group')
+
+    # Если не передано id возвращаем ошибку
+    if not group:
+        return JsonResponse({
+            'success': False,
+            'error': 'Не передана группа'
+        }, status=400)
+
+    # Достаем всю необходимую информацию через группу
+    # Экзамен, список и кол-во студентов, список упражнений,статистику
+    data = build_exams_data(group)
+    thead = data['thead']
+    info = data['assessment']
+
+    # Если у выбранной группы не назначен никакой экзамен, то выдаем ошибку
+    if not info:
+        return JsonResponse({
+            'success': False,
+            'error': 'Для этой группы нет КПИ'
+        }, status=400)
+
+    # Настраиваем шрифт,границы, выравнивание текста
+    font = 'Times New Roman'
+    thin = Side(style='thin', color='000000')
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    center = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    left = Alignment(horizontal='left', vertical='center', wrap_text=True)
+
+    # Настраиваем раскладку колонок(первым идет нумерация, ФИО, этап подготовки)
+    # Начиная с 4-ой колонки идет первое испытание и вычисляется номер стобца последнего испытания
+    # Так же вычисляется уровень спортивной квалификации и итог
+    first_test_col = 4
+    last_test_col = first_test_col + len(thead) - 1
+    qual_col = last_test_col + 1
+    total_col = last_test_col + 2
+    last_col = total_col
+
+    # Инициализация excel таблицы
+    # Создание листа
+    workbook = Workbook()
+    ws = workbook.active
+    workbook.title = "КПИ"
+
+    # В первой строке пишим зоголовок
+    ws.cell(
+        1, 1,
+        f"Контрольно-переводные нормативы по ОФП и СФП для перевода на следующий этап спортивной подготовки {info['year']}г."
+    )
+    # Соединяем столбцы так что бы поместился зоголовок
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=last_col)
+    # Зодаем шрифт
+    ws.cell(1, 1).font = Font(name=font, bold=True, size=12)
+    # Выравниваем текст по центру() alignment-выравнивание
+    ws.cell(1, 1).alignment = Alignment(horizontal='center', vertical='center')
+
+    # Во 2, 3, 4 строчке указыываем тренера, группу и период
+    ws.cell(2, 1, f"Тренер: {info['coach']}")
+    ws.cell(3, 1, f"Группа: {info['group']}")
+    ws.cell(4, 1, f"Период: {info['date_start']}-{info['date_end']}")
+
+    for row in range(2, 5):
+        ws.cell(row, 1).font = Font(name=font, bold=True, size=11)
+        ws.merge_cells(start_row=row, end_row=row, start_column=1, end_column=2)
+
+    # В 5-ой 6-ой и 7-ой строчках будет распологаться шапка таблицы начиная с 8-ой строки будет идти тело таблицы
+    top = 5
+    mid = 6
+    sub = 7
+    first_row = 8
+
+    #  Вспомогательная функция которая всавляет текст в ячейку и дает нужные стили
+    def head(rrow, col, value):
+        column = ws.cell(rrow, col, value)
+        column.font = Font(name=font, bold=True, size=10)
+        column.alignment = center
+        column.border = border
+
+    # В первые 3 ячейки шапки таблицы вставляем текст и соединяем столбцы
+    for c, title in ((1, '№'), (2, 'ФИО'), (3, 'Этап подготовки'),
+                     (qual_col, 'Уровень спортивной квалификации'), (total_col, ' Итог')):
+        head(top, c, title)
+        ws.merge_cells(start_row=top, start_column=c, end_row=sub, end_column=c)
+
+    # Блок для построения первого этажа нашей шапки таблицы.
+    # Вставляем ОФП и СФП
+    # А так же оъединяем подряд идущие колонки одного типа под общей ячейкой ОФП или СФП
+    colmn = first_test_col
+    while colmn <= last_test_col:
+        kind = thead[colmn - first_test_col]['assessment_type']
+        end = colmn
+        while end + 1 <= last_test_col and thead[end + 1 - first_test_col]['assessment_type'] == kind:
+            end += 1
+        head(top, colmn, 'ОФП' if kind == 'general' else 'СФП')
+        if end > colmn:
+            ws.merge_cells(start_row=top, start_column=colmn, end_row=top, end_column=end)
+        colmn = end + 1
+
+    # Разновидности упражнения шпагат
+    split_labels = [
+        ('продольный', 'прод.'),
+        ('поперечный', 'поп.'),
+        ('правый', 'пр.'),
+        ('левый', 'лев.'),
+    ]
+
+    # Вспомогательная функция для опредедления разновидности шпагата
+
+    def split_info(name):
+        low = name.strip().lower()
+
+        if not low.startswith('шпагат'):
+            return None, None
+
+        for k, label in split_labels:
+            if k in low:
+                return 'шпагат', label
+        return 'шпагат', name.strip()[6:].strip() or '-'
+
+    colmn = first_test_col
+
+    # После подготовки "первого этажа" таблицы делаем цикл по упражнениям. В зависимости от вида упражнения
+    # Вставляем ячейку в СФП или в ОФП
+    # Если упражнения не является шпагатов, то вставляем его в одну ячеку. Если упражнение шпагат, то сначал создаем
+    # соединенную ячейку с текстом шпагат, и под ней вставляем все разновидности шпагатов.
+    while colmn <= last_test_col:
+        item = thead[colmn-first_test_col]
+        group_name, label = split_info(item['name'])
+        if group_name:
+            end = colmn
+            while end + 1 <= last_test_col and split_info(thead[end+1 - first_test_col]['name'])[0] == group_name:
+                end += 1
+            head(mid, colmn, group_name)
+            if end > colmn:
+                ws.merge_cells(start_row=mid, start_column=colmn, end_row=mid, end_column=end)
+            for i in range(colmn, end + 1):
+                head(sub, i, split_info(thead[i - first_test_col]['name'])[1])
+            colmn = end + 1
+        else:
+            unit = item.get('unit_display') or ''
+
+            head(mid, colmn, f'{item["name"]} ({unit.strip(".")})' if unit else item['name'])
+            head(sub, colmn, None)
+            ws.merge_cells(start_row=mid, start_column=colmn, end_row=sub, end_column=colmn)
+            colmn += 1
+
+
+# Вспомогательная функция для форматирования не целых чисел
+    def format_score(score):
+        if isinstance(score, float) and score.is_integer():
+            score = int(score)
+        return str(score).replace('.', ',')
+
+    #  Функция для возвращающая вердикт в зависимости от результата в контексте одного упражнения
+    def cell_text(test):
+        result = test['result']
+        if result == 'passed':
+            return f"{format_score(test['score'])}/сдано"
+        if result == 'failed':
+            return f"{format_score(test['score'])}/не сдано"
+        if result == 'absent':
+            return 'отс.'
+        if result == 'exempted':
+            return 'осв.'
+        return ""
+
+    # Функция определяющая итог всего испытания
+    def overall_text(tests):
+        results = [i['result'] for i in tests]
+        if 'failed' in results:
+            return 'не сдано'
+        if 'absent' in results:
+            return 'не проходил'
+        required = [i for i in results if i != 'exempted']
+        if required and all(i == 'passed' for i in required):
+            return 'сдано'
+        return ''
+
+    # Блок для вставки тела таблицы
+    row_num = first_row
+    for index, row in enumerate(data['table'].values(), start=1):
+        # Сначала вытаскиваем порядкой номе, ФИО, текущий этап подготовки
+        values = [index, row['athlete'], info['group_stage']]
+        # Вставляем результаты упражнений
+        values += [cell_text(i) for i in row['tests']]
+        # Вставляем следующий этап подготовки и итог
+        values += [None, overall_text(row['tests'])]
+
+        # Циклом проходимся по столбцам вставляем текст и стилизуем
+        for c, value in enumerate(values, start=1):
+            cell = ws.cell(row_num, c, value)
+            cell.border = border
+            cell.alignment = left if c == 2 else center
+            cell.font = Font(
+                name=font, size=10,
+                color = 'C00000' if isinstance(value,str) and 'не сдано' in value else '000000'
+
+            )
+        row_num += 1
+
+    # Настраиваем ширину столбцов
+    ws.column_dimensions['A'].width = 5
+    ws.column_dimensions['B'].width = 35
+    ws.column_dimensions['C'].width = 15
+
+    for i in range(first_test_col, last_test_col + 1):
+        ws.column_dimensions[get_column_letter(i)].width = 15
+    ws.column_dimensions[get_column_letter(qual_col)].width = 16
+    ws.column_dimensions[get_column_letter(total_col)].width = 12
+    ws.row_dimensions[mid].height = 75
+    ws.freeze_panes = ws.cell(first_row, 3)
+    ws.page_setup.orientation = 'landscape'
+    ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 0
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+
+    # Подготавливаемся к скачиванию
+    buffer = BytesIO()
+    workbook.save(buffer)
+    filename = f'КПИ_{info["group"]}_{date.today():%Y-%m-%d}.xlsx'
+
+    # Отдаем файл excel
+    response = HttpResponse(
+        buffer.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+    )
+    response['Content-Disposition'] = (
+        f"attachment; filename*=UTF-8''{quote(filename, safe='')}"
+    )
+
+    return response

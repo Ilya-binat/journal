@@ -171,3 +171,4 @@ def is_score_passed(test_item, athlete, score):
     if test_item.better_direction == 'lower':
        return score <= norm
     return score >= norm
+
