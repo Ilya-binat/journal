@@ -125,7 +125,7 @@ function renderTableBody(testItems, table) {
 
         const scoreClass = row.total_percent === null
             ? ''
-            : row.total_percent >= 85 ? 'score-high' : 'score-mid'
+            : row.total_percent >= (lastExamsData.pass_percent ?? 65) ? 'score-high' : 'score-mid'
         const scoreValue = row.total_percent === null ? '—' : row.total_percent
 
         tbody.insertAdjacentHTML('beforeend', `
@@ -227,10 +227,22 @@ function applySideTab() {
 let dynamicsRequestId = 0
 let dynamicsPeriodId = null
 let dynamicsAllLeaders = false
-const dynEscape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]))
+const dynEscape = value => String(value ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+}[c]))
 const dynNumber = value => Number.isFinite(value) ? value.toLocaleString('ru-RU', {maximumFractionDigits: 2}) : '—'
 const dynValid = row => row && Number.isFinite(row.score) && ['passed', 'failed'].includes(row.result)
-const dynStatus = row => ({passed: 'Сдал', failed: 'Не сдал', absent: 'Отсутствовал', exempted: 'Освобождён', empty: 'Не заполнено'}[row?.result] || 'Нет записи')
+const dynStatus = row => ({
+    passed: 'Сдал',
+    failed: 'Не сдал',
+    absent: 'Отсутствовал',
+    exempted: 'Освобождён',
+    empty: 'Не заполнено'
+}[row?.result] || 'Нет записи')
 const dynValue = (row, test) => dynValid(row) ? `${dynNumber(row.score)} ${dynEscape(test.unit)}` : '—'
 
 async function loadAthleteDynamics(athleteId) {
@@ -250,7 +262,10 @@ async function loadAthleteDynamics(athleteId) {
     container.setAttribute('aria-busy', 'true')
     container.innerHTML = '<div class="dyn-empty" role="status">Загрузка динамики…</div>'
     try {
-        const response = await fetch(`/teacher/fetch_athlete_dynamics/?${new URLSearchParams({group: groupId, athlete: athleteId})}`)
+        const response = await fetch(`/teacher/fetch_athlete_dynamics/?${new URLSearchParams({
+            group: groupId,
+            athlete: athleteId
+        })}`)
         if (!response.ok) throw new Error('Не удалось загрузить динамику. Попробуйте ещё раз.')
         const data = await response.json()
         if (!current()) return
@@ -310,9 +325,9 @@ function renderDynamics(data) {
     container.innerHTML = `${test ? `<div class="dyn-picker"><header><strong>Испытание</strong><small>${tests.length} в программе</small></header>
             <select id="dynTest" aria-label="Испытание для анализа">${groups.map(group => `<optgroup label="${group.title}">${group.items.map(t => `<option value="${t.id}" ${t.id === test.id ? 'selected' : ''}>${dynEscape(t.name)}</option>`).join('')}</optgroup>`).join('')}</select>
             <details id="dynAllTests"><summary>Все испытания и места</summary>${groups.map(group => `<div class="dyn-group-title"><span>${group.title}</span><span>${group.items.length} испытаний</span></div>${group.items.map(t => {
-                const rank = rankFor(t)
-                return `<button type="button" class="dyn-test-button" data-dyn-test="${t.id}" aria-pressed="${t.id === test.id}"><span>${dynEscape(t.name)}</span><span>${rank ? `${rank.rank} / ${t.rankings[periodIndex].length}` : '—'}</span></button>`
-            }).join('')}`).join('')}</details></div><div id="dynDetail"></div>` : '<div class="dyn-empty">В этом КПИ пока нет испытаний.</div>'}`
+        const rank = rankFor(t)
+        return `<button type="button" class="dyn-test-button" data-dyn-test="${t.id}" aria-pressed="${t.id === test.id}"><span>${dynEscape(t.name)}</span><span>${rank ? `${rank.rank} / ${t.rankings[periodIndex].length}` : '—'}</span></button>`
+    }).join('')}`).join('')}</details></div><div id="dynDetail"></div>` : '<div class="dyn-empty">В этом КПИ пока нет испытаний.</div>'}`
     periodSelect.onchange = event => {
         dynamicsPeriodId = Number(event.target.value)
         dynamicsAllLeaders = false
@@ -343,11 +358,11 @@ function renderSidebarResults(data, tests, index, groups) {
         <div class="side-results-wrap"><table class="side-results" aria-label="Результаты выбранного КПИ">
         <thead><tr><th>Испытание</th><th>Результат</th><th>Норматив</th><th>Место</th><th>Статус</th></tr></thead><tbody>
         ${groups.map(group => `<tr class="side-category"><td colspan="5">${group.title}</td></tr>${group.items.map(test => {
-            const row = test.values[index]
-            const ranking = test.rankings[index]
-            const mine = ranking.find(r => r.athlete_id === data.athlete_id)
-            return `<tr><td>${dynEscape(test.name)}${dynamicsAchievementBadge(dynamicsAchievement(test, index))}</td><td>${dynValue(row, test)}</td><td>${norm(test)}</td><td>${mine ? `${mine.rank} / ${ranking.length}` : '—'}</td><td class="${row?.result === 'passed' ? 'dyn-good' : row?.result === 'failed' ? 'dyn-bad' : ''}">${dynStatus(row)}</td></tr>`
-        }).join('')}`).join('')}</tbody></table></div>` : '<div class="dyn-empty">В этом КПИ пока нет испытаний.</div>'
+        const row = test.values[index]
+        const ranking = test.rankings[index]
+        const mine = ranking.find(r => r.athlete_id === data.athlete_id)
+        return `<tr><td>${dynEscape(test.name)}${dynamicsAchievementBadge(dynamicsAchievement(test, index))}</td><td>${dynValue(row, test)}</td><td>${norm(test)}</td><td>${mine ? `${mine.rank} / ${ranking.length}` : '—'}</td><td class="${row?.result === 'passed' ? 'dyn-good' : row?.result === 'failed' ? 'dyn-bad' : ''}">${dynStatus(row)}</td></tr>`
+    }).join('')}`).join('')}</tbody></table></div>` : '<div class="dyn-empty">В этом КПИ пока нет испытаний.</div>'
 }
 
 // Сравнение только с более ранними КПИ того же испытания.
@@ -360,8 +375,10 @@ function dynamicsAchievement(test, index) {
     const best = earlier.reduce((a, b) => (lower ? b.score < a.score : b.score > a.score) ? b : a)
     const gain = lower ? previous.score - current.score : current.score - previous.score
     const recordGain = lower ? best.score - current.score : current.score - best.score
-    return {gain, recordGain, previous: previous.score, best: best.score,
-        improved: gain > 0, declined: gain < 0, record: recordGain > 0, tied: recordGain === 0}
+    return {
+        gain, recordGain, previous: previous.score, best: best.score,
+        improved: gain > 0, declined: gain < 0, record: recordGain > 0, tied: recordGain === 0
+    }
 }
 
 function dynamicsAchievementBadge(achievement) {
@@ -387,7 +404,10 @@ function dynamicsAchievementBanner(test, index) {
 function renderDynamicsDetail(data, test, index) {
     const period = data.periods[index]
     const row = test.values[index]
-    const history = data.periods.slice(0, index + 1).map((p, i) => ({period: p, row: test.values[i]})).filter(v => v.period.test_ids.includes(test.id))
+    const history = data.periods.slice(0, index + 1).map((p, i) => ({
+        period: p,
+        row: test.values[i]
+    })).filter(v => v.period.test_ids.includes(test.id))
     const filled = history.filter(v => dynValid(v.row))
     const previous = history.filter(v => v.period.id !== period.id && dynValid(v.row)).at(-1)
     const difference = dynValid(row) && previous ? Math.round((row.score - previous.row.score) * 100) / 100 : null
@@ -445,7 +465,10 @@ function dynamicsChart(test, history, norms) {
     })
     let path = '', pen = false
     history.forEach((v, i) => {
-        if (!dynValid(v.row)) { pen = false; return }
+        if (!dynValid(v.row)) {
+            pen = false;
+            return
+        }
         path += `${pen ? 'L' : 'M'}${x(i)} ${y(v.row.score)} `
         pen = true
     })
@@ -770,7 +793,8 @@ function showToast({type = 'success', title, message, duration = 4000}) {
     toast.addEventListener('mouseenter', () => clearTimeout(timer))
     toast.addEventListener('mouseleave', () => setTimeout(dismiss, 1500))
 }
+
 // Экспорт в excel
-document.getElementById('exportExcelBtn').addEventListener('click', ()=>{
-    window.location.href = `/teacher/export_exams_excel/?${buildQueryParams({group:groupSelect.value})}`
+document.getElementById('exportExcelBtn').addEventListener('click', () => {
+    window.location.href = `/teacher/export_exams_excel/?${buildQueryParams({group: groupSelect.value})}`
 })

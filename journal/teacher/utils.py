@@ -7,6 +7,7 @@ from django.db.models import Count
 # Вывод дней недели
 from datetime import timedelta
 
+KPI_PASS_PERCENT = 65
 
 def get_week_days(current_date):
     start_of_week = current_date - timedelta(days=current_date.weekday())

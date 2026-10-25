@@ -327,19 +327,25 @@ def build_exams_data(group):
         athlete_id = student.id
         results_by_item = results_by_athlete.get(athlete_id, {})
         statuses = [r.result for r in results_by_item.values()]
-        if 'failed' in statuses:
-            stats_dict['failed'] += 1
-        elif 'absent' in statuses:
-            stats_dict['absent'] += 1
-        elif 'passed' in statuses:
-            stats_dict['passed'] += 1
-
         countable = [i for i in statuses if i in ('failed', 'passed')]
+        items = total_test_items - statuses.count('exempted')
         total_percent = (
-            round(statuses.count('passed') / total_test_items * 100)
-            if total_test_items and countable
+            round(statuses.count('passed') / items * 100)
+            if items > 0 and countable
             else None
         )
+        if total_percent is not None and total_percent >= KPI_PASS_PERCENT:
+            status = "passed"
+        elif "failed" in statuses:
+            status = "failed"
+        elif "absent" in statuses:
+            status = "absent"
+        else:
+            status = None
+
+        if status:
+            stats_dict[status] += 1
+
         if total_percent is not None:
             total_percent_sum += total_percent
             total_percent_count += 1
@@ -362,7 +368,8 @@ def build_exams_data(group):
         table[athlete_id] = {
             'athlete': student.get_full_name(),
             'total_percent': total_percent,
-            'tests': tests
+            'tests': tests,
+            'status': status
         }
 
     percents = {
@@ -379,6 +386,7 @@ def build_exams_data(group):
         **stats_dict,
         **percents,
         'avg_percent': avg_percent,
+        'pass_percent': KPI_PASS_PERCENT,
         'table': table,
         'thead': thead,
         'assessment': {
@@ -663,6 +671,7 @@ def fetch_athlete_dynamics(request):
         'athlete_id': athlete_id, 'students_count': len(students),
     })
 
+
 # Функция экспорта результатов КПИ в Excel
 @role_required('Тренер')
 def export_exams_excel(request):
@@ -793,11 +802,11 @@ def export_exams_excel(request):
     # Если упражнения не является шпагатов, то вставляем его в одну ячеку. Если упражнение шпагат, то сначал создаем
     # соединенную ячейку с текстом шпагат, и под ней вставляем все разновидности шпагатов.
     while colmn <= last_test_col:
-        item = thead[colmn-first_test_col]
+        item = thead[colmn - first_test_col]
         group_name, label = split_info(item['name'])
         if group_name:
             end = colmn
-            while end + 1 <= last_test_col and split_info(thead[end+1 - first_test_col]['name'])[0] == group_name:
+            while end + 1 <= last_test_col and split_info(thead[end + 1 - first_test_col]['name'])[0] == group_name:
                 end += 1
             head(mid, colmn, group_name)
             if end > colmn:
@@ -813,8 +822,7 @@ def export_exams_excel(request):
             ws.merge_cells(start_row=mid, start_column=colmn, end_row=sub, end_column=colmn)
             colmn += 1
 
-
-# Вспомогательная функция для форматирования не целых чисел
+    # Вспомогательная функция для форматирования не целых чисел
     def format_score(score):
         if isinstance(score, float) and score.is_integer():
             score = int(score)
@@ -834,16 +842,13 @@ def export_exams_excel(request):
         return ""
 
     # Функция определяющая итог всего испытания
-    def overall_text(tests):
-        results = [i['result'] for i in tests]
-        if 'failed' in results:
-            return 'не сдано'
-        if 'absent' in results:
-            return 'не проходил'
-        required = [i for i in results if i != 'exempted']
-        if required and all(i == 'passed' for i in required):
-            return 'сдано'
-        return ''
+    def overall_text(row1):
+        result_dict = {
+            'passed': 'сдано',
+            'failed': 'не сдано',
+            'absent': 'не проходил'
+        }
+        return result_dict.get(row1['status'], '')
 
     # Блок для вставки тела таблицы
     row_num = first_row
@@ -853,7 +858,7 @@ def export_exams_excel(request):
         # Вставляем результаты упражнений
         values += [cell_text(i) for i in row['tests']]
         # Вставляем следующий этап подготовки и итог
-        values += [None, overall_text(row['tests'])]
+        values += [None, overall_text(row)]
 
         # Циклом проходимся по столбцам вставляем текст и стилизуем
         for c, value in enumerate(values, start=1):
@@ -862,7 +867,7 @@ def export_exams_excel(request):
             cell.alignment = left if c == 2 else center
             cell.font = Font(
                 name=font, size=10,
-                color = 'C00000' if isinstance(value,str) and 'не сдано' in value else '000000'
+                color='C00000' if isinstance(value, str) and 'не сдано' in value else '000000'
 
             )
         row_num += 1
@@ -899,3 +904,91 @@ def export_exams_excel(request):
     )
 
     return response
+
+
+# Функция аналитики КПИ:по каждому испытанию-кто сдал, кто не ссдал, сколько не хватило до норматива
+@role_required('Тренер')
+def fetch_exams_analytics(request):
+    group = request.GET.get('group')
+    assessment = Assessment.objects.filter(group=group).order_by('-date_start')
+
+    if assessment is None:
+        return JsonResponse({
+            "assessment": None,
+            "tests": []
+        })
+
+    test_items = list(TestItem.objects.filter(
+        sport_type=assessment.sport_type, stage=assessment.next_stage
+    ).order_by("assessment_type", "id"))
+    students = list(
+        CustomUser.objects.filter(
+            id__in=StudentGroup.objects.filter(group=group).values("student")).order_by("last_name", "first_name")
+    )
+    results = {
+        (r.athlete_id, r.test_item_id): r for r in AssessmentResult.objects.filter(assessment=assessment)
+    }
+
+    tests = []
+
+    for item in test_items:
+        counts = {
+            "passed": 0,
+            "failed": 0,
+            "absent": 0,
+            "empty": 0,
+            "exempted": 0
+        }
+
+        rows = []
+
+        for student in students:
+            res = results.get((student.id, item.id))
+            result = res.result if res else "empty"
+            score = res.score if res else None
+
+            counts[result] = counts.get(result, 0) + 1
+            genders = {
+                "Мужчина": 'male',
+                "Женщина": 'female'
+            }
+            gender = genders.get(student.gender)
+            norm = (item.max_cor_male if gender == 'male' else item.max_core_female if gender == 'female' else None)
+
+            gap = None
+
+            if result == 'failed' and score is not None and norm is not None:
+                gap = round(score - norm if item.better_direction == 'lower' else norm - score, 2)
+
+                if gap < 0:
+                    gap = None
+
+            rows.append({
+                "athlete_id": student.id,
+                "name": student.get_full_name,
+                "gender": gender,
+                "result": result,
+                "score": score,
+                "norm": norm,
+                "gap": gap,
+            })
+
+        tests.append({
+            "id": item.id,
+            "name": item.name,
+            "type": item.assessment_type,
+            "unit": item.get_unit_display(),
+            "better_direction": item.get_better_direction,
+            "counts": counts,
+            "rows": rows,
+        })
+
+    return JsonResponse({
+        "assessment": {
+            "name": assessment.name,
+            "date_start": assessment.date_start.strftime('%d.%m.%Y'),
+            "date_end": assessment.date_end.strftime('%d.%m.%Y'),
+        },
+        "student_count": len(students),
+        "tests": tests,
+    })
