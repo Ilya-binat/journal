@@ -48,6 +48,7 @@ function replaceData(data) {
     });
     renderTableHead(data.thead)
     renderTableBody(data.thead, data.table)
+    window.refreshAnalytics?.()  // обновить вкладку аналитики, если она открыта
     document.querySelector('.avg_number').textContent = `${data.avg_percent}%`
     document.querySelector('.avg_percent').querySelector('div').style.width = `${data.avg_percent}%`
 

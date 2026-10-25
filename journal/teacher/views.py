@@ -910,7 +910,7 @@ def export_exams_excel(request):
 @role_required('Тренер')
 def fetch_exams_analytics(request):
     group = request.GET.get('group')
-    assessment = Assessment.objects.filter(group=group).order_by('-date_start')
+    assessment = Assessment.objects.filter(group=group).order_by('-date_start').first()
 
     if assessment is None:
         return JsonResponse({
@@ -953,7 +953,7 @@ def fetch_exams_analytics(request):
                 "Женщина": 'female'
             }
             gender = genders.get(student.gender)
-            norm = (item.max_cor_male if gender == 'male' else item.max_core_female if gender == 'female' else None)
+            norm = item.max_cor_male if gender == 'male' else item.max_cor_female
 
             gap = None
 
@@ -965,7 +965,7 @@ def fetch_exams_analytics(request):
 
             rows.append({
                 "athlete_id": student.id,
-                "name": student.get_full_name,
+                "name": student.get_full_name(),
                 "gender": gender,
                 "result": result,
                 "score": score,
@@ -978,7 +978,7 @@ def fetch_exams_analytics(request):
             "name": item.name,
             "type": item.assessment_type,
             "unit": item.get_unit_display(),
-            "better_direction": item.get_better_direction,
+            "better_direction": item.better_direction,
             "counts": counts,
             "rows": rows,
         })

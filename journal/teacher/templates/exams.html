@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="{% static 'custom-css/style.css' %}">
     <link rel="stylesheet" href="{% static 'custom-css/exams.css' %}">
     <script defer src="{% static 'custom-js/exams.js' %}"></script>
+    <script defer src="{% static 'custom-js/exams_analytics.js' %}"></script>
 
 
 </head>
@@ -60,7 +61,7 @@
                 </div>
                 <div class="col-6 col-md-2">
                     <div class="kpi-filter-label">Вид подготовки</div>
-                    <select class="form-select">
+                    <select class="form-select" id="kindSelect">
                         <option>ОФП + СФП</option>
                         <option>ОФП</option>
                         <option>СФП</option>
@@ -134,13 +135,14 @@
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
                     <ul class="nav kpi-tabs">
-                        <li class="nav-item"><a class="nav-link active" href="#">Таблица результатов</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#">Аналитика по испытаниям</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="#" data-main-tab="results">Таблица результатов</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-main-tab="analytics">Аналитика по испытаниям</a></li>
                         <li class="nav-item"><a class="nav-link" href="#">Сравнение периодов</a></li>
                         <li class="nav-item"><a class="nav-link" href="#">История группы</a></li>
                     </ul>
                 </div>
 
+                <div id="tabResults">
                 <div class="kpi-table-wrap">
                     <table class="table kpi-table align-middle">
                         <thead id='examsTableHead'></thead>
@@ -169,6 +171,137 @@
                         <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-chevron-right"></i></button>
                     </div>
                 </div>
+                </div><!-- /tabResults -->
+
+                <!-- ===== ВКЛАДКА «Аналитика по испытаниям» (верстка с заглушками) =====
+                     Показ/скрытие: переключайте класс d-none у #tabResults и #tabAnalytics -->
+                <div id="tabAnalytics" class="d-none">
+
+                    <!-- 3 карточки категорий. Число -> .an-card-value, список -> <ul class="an-athletes"> -->
+                    <div class="an-cards">
+
+                        <div class="an-card" id="anCardComplete">
+                            <div class="an-card-top">
+                                <div>
+                                    <div class="an-card-label">Выполнили все нормативы</div>
+                                    <div class="an-card-value"><span id="anCompleteCount">0</span> <small>из <span id="anTotalCount">15</span></small></div>
+                                    <div class="an-card-hint">Все выбранные испытания сданы</div>
+                                </div>
+                                <span class="an-icon an-icon-ok"><i class="bi bi-check-lg"></i></span>
+                            </div>
+                            <details class="an-disclosure">
+                                <summary><span class="an-show">Показать спортсменов</span><span class="an-hide">Скрыть список</span></summary>
+                                <!-- TODO: цикл по спортсменам категории -->
+                                <ul class="an-athletes" id="anCompleteList">
+                                    <li><b>Фамилия Имя Отчество</b>
+                                        <ul class="an-athlete-tests">
+                                            <li>
+                                                <span class="an-test-name">Название испытания</span>
+                                                <span class="an-test-meta">Результат: 0,0 ед. · норма ≥ 0,0 ед.</span>
+                                                <span class="an-test-meta an-green">Сдано</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                                <!-- пустое состояние: <p class="an-empty">В этой категории спортсменов нет.</p> -->
+                            </details>
+                        </div>
+
+                        <div class="an-card" id="anCardFailed">
+                            <div class="an-card-top">
+                                <div>
+                                    <div class="an-card-label">Есть несданные нормативы</div>
+                                    <div class="an-card-value"><span id="anFailedCount">0</span></div>
+                                    <div class="an-card-hint">Хотя бы одно испытание не сдано</div>
+                                </div>
+                                <span class="an-icon an-icon-fail"><i class="bi bi-x-lg"></i></span>
+                            </div>
+                            <details class="an-disclosure">
+                                <summary><span class="an-show">Показать спортсменов</span><span class="an-hide">Скрыть список</span></summary>
+                                <ul class="an-athletes" id="anFailedList">
+                                    <li><b>Фамилия Имя Отчество</b>
+                                        <ul class="an-athlete-tests">
+                                            <li>
+                                                <span class="an-test-name">Название испытания</span>
+                                                <span class="an-test-meta">Результат: 0,0 ед. · норма ≤ 0,0 ед.</span>
+                                                <span class="an-test-meta an-red">Не сдано · до норматива: 0,0 ед.</span>
+                                            </li>
+                                            <li>
+                                                <span class="an-test-name">Другое испытание</span>
+                                                <span class="an-test-meta">Отсутствовал · норма ≥ 0 ед.</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </details>
+                        </div>
+
+                        <div class="an-card" id="anCardPending">
+                            <div class="an-card-top">
+                                <div>
+                                    <div class="an-card-label">Не завершили испытания</div>
+                                    <div class="an-card-value"><span id="anPendingCount">0</span></div>
+                                    <div class="an-card-hint">Нет несданных, но есть пропуски</div>
+                                </div>
+                                <span class="an-icon an-icon-warn"><i class="bi bi-dash-lg"></i></span>
+                            </div>
+                            <details class="an-disclosure">
+                                <summary><span class="an-show">Показать спортсменов</span><span class="an-hide">Скрыть список</span></summary>
+                                <ul class="an-athletes" id="anPendingList">
+                                    <li><b>Фамилия Имя Отчество</b>
+                                        <ul class="an-athlete-tests">
+                                            <li>
+                                                <span class="an-test-name">Название испытания</span>
+                                                <span class="an-test-meta">Нет результата · норма ≥ 0 ед.</span>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </details>
+                        </div>
+                    </div>
+
+                    <!-- Таблица по испытаниям -->
+                    <div class="an-table-card">
+                        <div class="an-table-head">
+                            <h2>Результаты по испытаниям</h2>
+                            <p class="an-sub" id="anTableSub">Название КПИ · сначала наибольшая доля несдавших среди замеров</p>
+                        </div>
+                        <div class="kpi-table-wrap">
+                            <table class="table align-middle mb-0 an-table">
+                                <thead>
+                                    <tr>
+                                        <th class="text-start">Испытание</th>
+                                        <th>Сдали</th>
+                                        <th>Не сдали</th>
+                                        <th>Без замера</th>
+                                        <th>Подробности</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="anTableBody">
+                                    <!-- TODO: цикл по tests; data-an-detail = id испытания -->
+                                    <tr>
+                                        <td class="text-start"><b>Название испытания</b><div class="an-sub">ОФП</div></td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td><button type="button" class="btn btn-link btn-sm p-0" data-an-detail="0">Подробнее <i class="bi bi-arrow-right"></i></button></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start"><b>Другое испытание</b><div class="an-sub">СФП</div></td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td>0</td>
+                                        <td><button type="button" class="btn btn-link btn-sm p-0" data-an-detail="1">Подробнее <i class="bi bi-arrow-right"></i></button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <p class="an-note">Без замера: отсутствие, освобождение или незаполненный результат. Эти статусы не считаются неудачной попыткой.</p>
+                    <p class="an-note">В списках карточек каждый спортсмен относится только к одной категории. Освобождение не означает провал.</p>
+                </div>
+                <!-- ===== /tabAnalytics ===== -->
             </div>
         </div>
 
@@ -216,6 +349,109 @@
                         id="sideDataCount"></span><span>Просмотр без изменения результатов</span></footer>
             </div>
         </aside>
+    </div>
+</div>
+<!-- Модальное окно «Подробнее» по испытанию (аналитика) -->
+<div class="modal fade" id="anDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title fw-bold" id="anDetailTitle">Название испытания</div>
+                    <div class="text-muted small" id="anDetailSub">Название КПИ · ед. · Меньше — лучше</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="anDetailBody">
+
+                <!-- Топ-3 -->
+                <section class="an-leaders-box">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h3 class="an-h3">Топ-3 спортсмена</h3>
+                        <label class="small text-muted">Категория
+                            <select id="anGender" class="form-select form-select-sm d-inline-block w-auto ms-1">
+                                <option value="all">Все</option>
+                                <option value="male">Юноши</option>
+                                <option value="female">Девушки</option>
+                            </select>
+                        </label>
+                    </div>
+                    <!-- TODO: цикл по лидерам -->
+                    <ol class="an-leaders" id="anLeaders">
+                        <li><span class="an-place">1</span>
+                            <span class="an-leader-name">Фамилия Имя Отчество <span class="an-status an-status-passed">Сдал</span></span>
+                            <b>0,0 ед.</b></li>
+                        <li><span class="an-place">2</span>
+                            <span class="an-leader-name">Фамилия Имя Отчество <span class="an-status an-status-passed">Сдал</span></span>
+                            <b>0,0 ед.</b></li>
+                        <li><span class="an-place">3</span>
+                            <span class="an-leader-name">Фамилия Имя Отчество <span class="an-status an-status-failed">Не сдал</span></span>
+                            <b>0,0 ед.</b></li>
+                    </ol>
+                    <!-- пусто: <p class="an-empty">В этой категории пока нет результатов с замером.</p> -->
+                    <p class="an-note mb-0">Рейтинг по результату, без поправки на норматив. Одинаковые результаты делят место; призёров может быть больше трёх.</p>
+                </section>
+
+                <!-- Все результаты -->
+                <h3 class="an-h3 mt-3">Все результаты</h3>
+                <div class="d-flex gap-2 mb-2">
+                    <input id="anSearch" type="search" class="form-control form-control-sm" placeholder="Найти спортсмена...">
+                    <select id="anStatus" class="form-select form-select-sm w-auto">
+                        <option value="all">Все статусы</option>
+                        <option value="passed">Сдал</option>
+                        <option value="failed">Не сдал</option>
+                        <option value="absent">Отсутствовал</option>
+                        <option value="exempted">Освобождён</option>
+                        <option value="empty">Нет результата</option>
+                    </select>
+                </div>
+                <div class="kpi-table-wrap">
+                    <table class="table table-sm align-middle an-table mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-start">Спортсмен</th>
+                                <th>Результат</th>
+                                <th>Норма</th>
+                                <th>До норматива</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody id="anDetailRows">
+                            <!-- TODO: цикл по rows -->
+                            <tr>
+                                <td class="text-start">Фамилия Имя Отчество</td>
+                                <td>0,0 ед.</td>
+                                <td>≥ 0,0 ед.</td>
+                                <td>Не хватает: 0,0 ед.</td>
+                                <td><span class="an-status an-status-failed">Не сдал</span></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start">Фамилия Имя Отчество</td>
+                                <td>0,0 ед.</td>
+                                <td>≥ 0,0 ед.</td>
+                                <td>Норматив выполнен</td>
+                                <td><span class="an-status an-status-passed">Сдал</span></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start">Фамилия Имя Отчество</td>
+                                <td>—</td>
+                                <td>≥ 0,0 ед.</td>
+                                <td>—</td>
+                                <td><span class="an-status an-status-absent">Отсутствовал</span></td>
+                            </tr>
+                            <tr>
+                                <td class="text-start">Фамилия Имя Отчество</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td><span class="an-status">Освобождён</span></td>
+                            </tr>
+                            <!-- пусто: <tr><td colspan="5" class="text-center text-muted py-3">Ничего не найдено</td></tr> -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <!--Модальное окно станции-->
