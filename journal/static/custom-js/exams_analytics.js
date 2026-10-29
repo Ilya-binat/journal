@@ -1,6 +1,9 @@
 // Вкладка "Аналитика по испытаниям" (exams.html -> #tabAnalytics, модалка #anDetailModal)
 // Зависит от exams.js: groupSelect, buildQueryParams.
 
+// Порог сдачи КПИ. Должен совпадать с KPI_PASS_PERCENT в teacher/utils.py
+const AN_PASS_PERCENT = 65
+
 const AN_LABELS = {
     passed: 'Сдал', failed: 'Не сдал', absent: 'Отсутствовал',
     exempted: 'Освобождён', empty: 'Нет результата'
@@ -10,6 +13,7 @@ let anData = null        // ответ fetch_exams_analytics
 let anLoaded = false     // данные актуальны для текущей группы
 let anActive = false     // вкладка открыта
 let anRequestId = 0      // защита от гонки запросов
+let anAssessmentId = null  // конкретный КПИ (из «Истории группы»); null = последний
 let anTestId = null      // испытание, открытое в модалке
 
 const $an = id => document.getElementById(id)
@@ -33,15 +37,18 @@ function anGapText(t, r) {
 
 const anSign = t => t.better_direction === 'lower' ? '≤' : '≥'
 
-// ---------- переключение вкладок ----------
+// ---------- переключение вкладок (results / analytics / compare) ----------
+const AN_PANELS = {results: 'tabResults', analytics: 'tabAnalytics', compare: 'tabCompare', history: 'tabHistory'}
+
 document.querySelectorAll('[data-main-tab]').forEach(link => {
     link.addEventListener('click', e => {
         e.preventDefault()
-        anActive = link.dataset.mainTab === 'analytics'
+        const tab = link.dataset.mainTab
+        anActive = tab === 'analytics'
         document.querySelectorAll('[data-main-tab]').forEach(l => l.classList.toggle('active', l === link))
-        $an('tabResults').classList.toggle('d-none', anActive)
-        $an('tabAnalytics').classList.toggle('d-none', !anActive)
+        Object.entries(AN_PANELS).forEach(([name, id]) => $an(id)?.classList.toggle('d-none', name !== tab))
         if (anActive) loadAnalytics()
+        window.dispatchEvent(new CustomEvent('main-tab', {detail: tab}))  // exams_compare.js слушает это событие
     })
 })
 
@@ -52,6 +59,7 @@ $an('kindSelect')?.addEventListener('change', () => {
 
 // вызывается из exams.js после перезагрузки данных (смена группы, новый результат)
 window.refreshAnalytics = () => {
+    anAssessmentId = null
     anLoaded = false
     if (anActive) loadAnalytics()
 }
@@ -61,16 +69,27 @@ window.refreshAnalytics = () => {
 // Сейчас возвращает заглушку AN_STUB (внизу файла).
 // Чтобы подключить настоящие данные: удалите строку "return AN_STUB"
 // и раскомментируйте блок ниже. Остальной код трогать не нужно.
-async function getAnalyticsData() {
+// assessmentId - id КПИ из «Истории группы» (null = последний КПИ группы)
+async function getAnalyticsData(assessmentId) {
+    return AN_STUB  // <-- УДАЛИТЬ
 
-    const res = await fetch(`/teacher/fetch_exams_analytics/?${buildQueryParams({group: groupSelect.value})}`)
-    return await res.json()
+    // const params = {group: groupSelect.value, ...periodParam()}   // по умолчанию - КПИ, выбранный вверху страницы
+    // if (assessmentId) params.assessment = assessmentId
+    // const res = await fetch(`/teacher/fetch_exams_analytics/?${buildQueryParams(params)}`)
+    // return await res.json()
+}
+
+// «Открыть →» из истории группы: показать аналитику выбранного КПИ
+window.openAnalyticsFor = assessmentId => {
+    anAssessmentId = assessmentId
+    anLoaded = false
+    document.querySelector('[data-main-tab="analytics"]').click()
 }
 
 function loadAnalytics() {
     if (anLoaded && anData) return renderAnalytics()
     const id = ++anRequestId
-    getAnalyticsData()
+    getAnalyticsData(anAssessmentId)
         .then(data => {
             if (id !== anRequestId) return   // пришёл ответ для уже сменённой группы
             anData = data
@@ -96,8 +115,14 @@ function anAthletes(tests) {
     return [...map.values()].map(a => {
         const failed = a.entries.filter(e => e.r.result === 'failed')
         const pending = a.entries.filter(e => ['absent', 'empty'].includes(e.r.result))
-        const required = a.entries.filter(e => e.r.result !== 'exempted')
-        return {...a, failed, pending, complete: !failed.length && !pending.length && required.length > 0}
+        const passed = a.entries.filter(e => e.r.result === 'passed').length
+        const required = a.entries.filter(e => e.r.result !== 'exempted').length  // освобождённые не считаются
+        const percent = required ? Math.round(passed / required * 100) : 0
+        // правило КПИ (как в шапке): >= 65% сданных испытаний = сдал
+        let status = 'pending'
+        if (percent >= AN_PASS_PERCENT) status = 'passed'
+        else if (failed.length) status = 'failed'
+        return {...a, failed, pending, passed, required, percent, status}
     })
 }
 
@@ -118,7 +143,11 @@ function anEntry({t, r}) {
 
 function anFillList(id, athletes, entriesOf) {
     $an(id).innerHTML = athletes.length
-        ? athletes.map(a => `<li><b>${anEsc(a.name)}</b><ul class="an-athlete-tests">${entriesOf(a).map(anEntry).join('')}</ul></li>`).join('')
+        ? athletes.map(a => {
+            const items = entriesOf(a)
+            return `<li><b>${anEsc(a.name)}</b> <span class="an-pct">${a.percent}% · ${a.passed} из ${a.required}</span>
+                <ul class="an-athlete-tests">${items.length ? items.map(anEntry).join('') : '<li class="an-test-meta an-green">Все испытания сданы</li>'}</ul></li>`
+        }).join('')
         : '<li class="an-empty">В этой категории спортсменов нет.</li>'
 }
 
@@ -133,16 +162,16 @@ function renderAnalytics() {
 
     const tests = anKindTests()
     const athletes = anAthletes(tests)
-    const complete = athletes.filter(a => a.complete)
-    const failed = athletes.filter(a => a.failed.length)
-    const pending = athletes.filter(a => !a.failed.length && a.pending.length)
+    const complete = athletes.filter(a => a.status === 'passed')
+    const failed = athletes.filter(a => a.status === 'failed')
+    const pending = athletes.filter(a => a.status === 'pending')
 
     $an('anTotalCount').textContent = athletes.length
     $an('anCompleteCount').textContent = complete.length
     $an('anFailedCount').textContent = failed.length
     $an('anPendingCount').textContent = pending.length
 
-    anFillList('anCompleteList', complete, a => a.entries)
+    anFillList('anCompleteList', complete, a => [...a.failed, ...a.pending])
     anFillList('anFailedList', failed, a => [...a.failed, ...a.pending])
     anFillList('anPendingList', pending, a => a.pending)
 

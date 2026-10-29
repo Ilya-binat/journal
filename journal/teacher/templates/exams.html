@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="{% static 'custom-css/exams.css' %}">
     <script defer src="{% static 'custom-js/exams.js' %}"></script>
     <script defer src="{% static 'custom-js/exams_analytics.js' %}"></script>
+    <script defer src="{% static 'custom-js/exams_compare.js' %}"></script>
+    <script defer src="{% static 'custom-js/exams_history.js' %}"></script>
 
 
 </head>
@@ -51,12 +53,10 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-6 col-md-2">
-                    <div class="kpi-filter-label">Год</div>
-                    <select class="form-select">
-                        {% for year in years %}
-                        <option>{{ year }}</option>
-                        {% endfor %}
+                <div class="col-6 col-md-3">
+                    <div class="kpi-filter-label">Период (КПИ)</div>
+                    <select class="form-select" id="periodSelect">
+                        <option value="">Загрузка…</option>
                     </select>
                 </div>
                 <div class="col-6 col-md-2">
@@ -67,7 +67,7 @@
                         <option>СФП</option>
                     </select>
                 </div>
-                <div class="col-12 col-md-5">
+                <div class="col-12 col-md-4">
                     <div class="kpi-filter-label">&nbsp;</div>
                     <div class="input-group">
                         <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
@@ -137,8 +137,8 @@
                     <ul class="nav kpi-tabs">
                         <li class="nav-item"><a class="nav-link active" href="#" data-main-tab="results">Таблица результатов</a></li>
                         <li class="nav-item"><a class="nav-link" href="#" data-main-tab="analytics">Аналитика по испытаниям</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#">Сравнение периодов</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#">История группы</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-main-tab="compare">Сравнение периодов</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-main-tab="history">История группы</a></li>
                     </ul>
                 </div>
 
@@ -183,9 +183,9 @@
                         <div class="an-card" id="anCardComplete">
                             <div class="an-card-top">
                                 <div>
-                                    <div class="an-card-label">Выполнили все нормативы</div>
+                                    <div class="an-card-label">Сдали КПИ</div>
                                     <div class="an-card-value"><span id="anCompleteCount">0</span> <small>из <span id="anTotalCount">15</span></small></div>
-                                    <div class="an-card-hint">Все выбранные испытания сданы</div>
+                                    <div class="an-card-hint">Сдано не менее 65% испытаний</div>
                                 </div>
                                 <span class="an-icon an-icon-ok"><i class="bi bi-check-lg"></i></span>
                             </div>
@@ -210,9 +210,9 @@
                         <div class="an-card" id="anCardFailed">
                             <div class="an-card-top">
                                 <div>
-                                    <div class="an-card-label">Есть несданные нормативы</div>
+                                    <div class="an-card-label">Не сдали КПИ</div>
                                     <div class="an-card-value"><span id="anFailedCount">0</span></div>
-                                    <div class="an-card-hint">Хотя бы одно испытание не сдано</div>
+                                    <div class="an-card-hint">Меньше 65% и есть несданные испытания</div>
                                 </div>
                                 <span class="an-icon an-icon-fail"><i class="bi bi-x-lg"></i></span>
                             </div>
@@ -239,9 +239,9 @@
                         <div class="an-card" id="anCardPending">
                             <div class="an-card-top">
                                 <div>
-                                    <div class="an-card-label">Не завершили испытания</div>
+                                    <div class="an-card-label">Не завершили</div>
                                     <div class="an-card-value"><span id="anPendingCount">0</span></div>
-                                    <div class="an-card-hint">Нет несданных, но есть пропуски</div>
+                                    <div class="an-card-hint">Меньше 65%, несданных нет, есть пропуски</div>
                                 </div>
                                 <span class="an-icon an-icon-warn"><i class="bi bi-dash-lg"></i></span>
                             </div>
@@ -299,9 +299,117 @@
                         </div>
                     </div>
                     <p class="an-note">Без замера: отсутствие, освобождение или незаполненный результат. Эти статусы не считаются неудачной попыткой.</p>
-                    <p class="an-note">В списках карточек каждый спортсмен относится только к одной категории. Освобождение не означает провал.</p>
+                    <p class="an-note">Спортсмен сдал КПИ, если сдано не менее 65% испытаний; освобождённые испытания в расчёт не входят. Каждый спортсмен попадает только в одну карточку.</p>
                 </div>
                 <!-- ===== /tabAnalytics ===== -->
+
+                <!-- ===== ВКЛАДКА «Сравнение периодов» (верстка с заглушками, заполняется exams_compare.js) ===== -->
+                <div id="tabCompare" class="d-none">
+
+                    <!-- Выбор периодов -->
+                    <div class="cmp-periods">
+                        <div class="cmp-field">
+                            <label for="cmpPeriodA">С чем сравнить</label>
+                            <select id="cmpPeriodA" class="form-select">
+                                <option>Период A</option>
+                            </select>
+                        </div>
+                        <button type="button" id="cmpSwap" class="btn btn-outline-secondary" aria-label="Поменять периоды местами">⇄</button>
+                        <div class="cmp-field">
+                            <label for="cmpPeriodB">Какой период оценить</label>
+                            <select id="cmpPeriodB" class="form-select">
+                                <option>Период B</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Итоговая строка или подсказка -->
+                    <div id="cmpSummary" class="cmp-summary">
+                        Из <strong>0</strong> пар результатов: <strong>0</strong> лучше, <strong>0</strong> хуже, <strong>0</strong> без изменений.
+                    </div>
+
+                    <!-- Таблица сравнения -->
+                    <div class="an-table-card">
+                        <div class="an-table-head">
+                            <h2>Как изменились результаты</h2>
+                            <p class="an-sub">Средние результаты одних и тех же спортсменов</p>
+                        </div>
+                        <div class="kpi-table-wrap">
+                            <table class="table align-middle mb-0 an-table">
+                                <thead>
+                                    <tr>
+                                        <th class="text-start">Испытание</th>
+                                        <th id="cmpHeadA">Период A</th>
+                                        <th id="cmpHeadB">Период B</th>
+                                        <th>Изменение</th>
+                                        <th>Подробности</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cmpTableBody">
+                                    <!-- строки рисует exams_compare.js -->
+                                    <tr>
+                                        <td class="text-start"><b>Название испытания</b><div class="an-sub">Замеров в обоих периодах: 0</div></td>
+                                        <td>0,0 ед.</td>
+                                        <td>0,0 ед.</td>
+                                        <td class="cmp-good"><b>Лучше на 0,0 ед.</b></td>
+                                        <td><button type="button" class="btn btn-link btn-sm p-0" data-cmp-detail="0">По спортсменам <i class="bi bi-box-arrow-up-right"></i></button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <p class="an-note">Нажмите «По спортсменам», чтобы увидеть индивидуальные результаты за оба периода. Пропуски и пустые результаты исключены.</p>
+                </div>
+                <!-- ===== /tabCompare ===== -->
+
+                <!-- ===== ВКЛАДКА «История группы» (верстка с заглушками, заполняется exams_history.js) ===== -->
+                <div id="tabHistory" class="d-none">
+
+                    <!-- График прогресса (сворачиваемый) -->
+                    <details class="hist-progress">
+                        <summary>
+                            <span>Прогресс группы</span>
+                            <span class="hist-toggle"><span class="hist-when-closed">Показать график ＋</span><span class="hist-when-open">Скрыть график −</span></span>
+                        </summary>
+                        <div class="hist-progress-body">
+                            <p class="an-sub">Доля сданных попыток среди результатов с замером.</p>
+                            <!-- SVG рисует exams_history.js -->
+                            <div id="histChart"></div>
+                            <div class="hist-periods" id="histPeriods">
+                                <div><strong>Название КПИ</strong><span>0 из 0 сданы</span></div>
+                            </div>
+                            <p class="an-sub">Учтён выбранный вид подготовки и текущий состав группы. Число замеров в периодах может различаться.</p>
+                        </div>
+                    </details>
+
+                    <!-- Список прошедших КПИ -->
+                    <div class="an-table-card">
+                        <div class="an-table-head">
+                            <h2>Прошедшие испытания</h2>
+                            <p class="an-sub">Результаты текущего состава группы</p>
+                        </div>
+                        <div class="hist-list" id="histList">
+                            <!-- строки рисует exams_history.js; ниже образец одной строки -->
+                            <article class="hist-item">
+                                <div class="hist-main">
+                                    <div>
+                                        <h3>Название КПИ</h3>
+                                        <p class="an-sub">01.09.2026 — 30.09.2026</p>
+                                    </div>
+                                    <p class="hist-score"><b>0 из 0</b> сдали КПИ</p>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-hist-open="0">Открыть →</button>
+                                </div>
+                                <details class="hist-detail">
+                                    <summary>Подробнее о периоде</summary>
+                                    <p>Заполнено результатов: 0 из 0. Сданы 0 из 0 попыток с замером.</p>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-hist-compare="0">Сравнить с предыдущим периодом</button>
+                                </details>
+                            </article>
+                        </div>
+                    </div>
+                    <p class="an-note">Состав группы на дату испытаний мог отличаться от текущего.</p>
+                </div>
+                <!-- ===== /tabHistory ===== -->
             </div>
         </div>
 
@@ -448,6 +556,35 @@
                             </tr>
                             <!-- пусто: <tr><td colspan="5" class="text-center text-muted py-3">Ничего не найдено</td></tr> -->
                         </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Модальное окно «По спортсменам» (сравнение периодов) -->
+<div class="modal fade" id="cmpDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title fw-bold" id="cmpDetailTitle">Название испытания</div>
+                    <div class="text-muted small" id="cmpDetailSub">Период A → Период B · ед. · Меньше — лучше</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="kpi-table-wrap">
+                    <table class="table table-sm align-middle an-table mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-start">Спортсмен</th>
+                                <th id="cmpDetailHeadA">Период A</th>
+                                <th id="cmpDetailHeadB">Период B</th>
+                                <th>Изменение</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cmpDetailRows"></tbody>
                     </table>
                 </div>
             </div>

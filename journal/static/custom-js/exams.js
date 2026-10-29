@@ -1,4 +1,5 @@
 let groupSelect = document.querySelector('.group_select')
+let periodSelect = document.getElementById('periodSelect')   // КПИ выбранной группы
 let lastExamsData = null
 let selectedAthleteId = null
 let activeSideTab = 'dynamics'
@@ -12,13 +13,33 @@ document.addEventListener('DOMContentLoaded', () => {
 groupSelect.addEventListener('change', () => {
     hideAthleteSidebar()
     dynamicsPeriodId = null
+    periodSelect.innerHTML = ''   // у новой группы свои КПИ: сбрасываем выбор, откроется последний
     fetchData()
 
 })
 
+// смена периода: показываем выбранный КПИ группы
+periodSelect.addEventListener('change', () => {
+    hideAthleteSidebar()
+    fetchData()
+})
+
+// «assessment=<id>» для запросов; пусто, если КПИ ещё не выбран (тогда сервер берёт последний)
+function periodParam() {
+    return periodSelect.value ? {assessment: periodSelect.value} : {}
+}
+
+// Заполняет селект «Период» КПИ группы (новые сверху)
+function renderPeriods(periods, selectedId) {
+    periodSelect.innerHTML = periods.length
+        ? periods.map(p => `<option value="${p.id}">${p.name} · ${p.date_start}</option>`).join('')
+        : '<option value="">Нет КПИ</option>'
+    if (selectedId) periodSelect.value = selectedId
+}
+
 function fetchData() {
     let selectedGroup = groupSelect.value
-    let queryParams = buildQueryParams({'group': selectedGroup})
+    let queryParams = buildQueryParams({'group': selectedGroup, ...periodParam()})
 
     fetch(`/teacher/fetch_exams_data?${queryParams}`, {
         method: 'GET',
@@ -38,6 +59,7 @@ function fetchData() {
 
 function replaceData(data) {
     lastExamsData = data
+    renderPeriods(data.periods || [], data.selected_assessment_id)
     dynamicsRequestId += 1
     dynamicsCache = {}  // результаты могли измениться - история устарела
     document.querySelector('.total_number').textContent = data.students_count;
@@ -49,6 +71,8 @@ function replaceData(data) {
     renderTableHead(data.thead)
     renderTableBody(data.thead, data.table)
     window.refreshAnalytics?.()  // обновить вкладку аналитики, если она открыта
+    window.refreshCompare?.()    // и сравнение периодов
+    window.refreshHistory?.()    // и историю группы
     document.querySelector('.avg_number').textContent = `${data.avg_percent}%`
     document.querySelector('.avg_percent').querySelector('div').style.width = `${data.avg_percent}%`
 
@@ -548,7 +572,7 @@ if (stationModalEl) {
 // Достает информацию по экзамену для заполнения результатов
 // Если рез-ов нет, будет пустая модалка, если результат есть, то он будет показан на экране
 function loadStationData(groupId, testItemId) {
-    let params = {group: groupId}
+    let params = {group: groupId, ...periodParam()}
     if (testItemId) params.test_item = testItemId
     let queryParams = buildQueryParams(params)
 
@@ -797,5 +821,5 @@ function showToast({type = 'success', title, message, duration = 4000}) {
 
 // Экспорт в excel
 document.getElementById('exportExcelBtn').addEventListener('click', () => {
-    window.location.href = `/teacher/export_exams_excel/?${buildQueryParams({group: groupSelect.value})}`
+    window.location.href = `/teacher/export_exams_excel/?${buildQueryParams({group: groupSelect.value, ...periodParam()})}`
 })

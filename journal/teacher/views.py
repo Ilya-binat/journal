@@ -272,18 +272,39 @@ def exams(request):
                                           'years': years,
                                           'selected_year': current_year
                                           })
+# Находит вбранный экзамен в базе
+def get_group_assessment(group, assessment_id=None):
+    qs = Assessment.objects.filter(group=group)
+    if assessment_id:
+        assessment = qs.filter(pk=assessment_id).first()
+        if assessment:
+            return assessment
+    return qs.order_by('-date_start', '-id').first()
+
+# Возвращает все КПИ группы для выпадающего списка на экране
+def list_group_periods(group):
+    all_assessments = Assessment.objects.filter(group=group).order_by('-date_start', '-id')
+
+    return[{
+        'id': a.id,
+        'name': a.name,
+        'date_start': a.date_start.strftime('%d.%m.%Y'),
+        'date_end': a.date_end.strftime('%d.%m.%Y'),
+    }for a in all_assessments]
 
 
-def build_exams_data(group):
+def build_exams_data(group, assessment_id=None):
     data = StudentGroup.objects.filter(group=group)
     students = CustomUser.objects.filter(
         pk__in=data.values('student')
     )
 
     # Сбор статистики по группе
-    assessment = Assessment.objects.filter(group=group).order_by('-date_start', '-id').first()
+    assessment = get_group_assessment(group, assessment_id)
     if assessment is None:
         return {
+            'periods': [],
+            'selected_assessment_id': None,
             'students_count': students.count(),
             'passed': 0,
             'absent': 0,
@@ -389,6 +410,8 @@ def build_exams_data(group):
         'pass_percent': KPI_PASS_PERCENT,
         'table': table,
         'thead': thead,
+        'periods': list_group_periods(group),
+        'selected_assessment_id': assessment.id,
         'assessment': {
             'name': assessment.name,
             'group': str(assessment.group),
@@ -991,4 +1014,65 @@ def fetch_exams_analytics(request):
         },
         "student_count": len(students),
         "tests": tests,
+    })
+
+
+# Функция сравнения периодов:все экзамены группы, результаты спортсменов по каждому испытанию.
+# Один и тот же тест на разных этапах - разные test_item склеиваются по типу и названию. Пары периодов и их рпзницу будет
+# считать frontend
+
+@role_required('Тренер')
+def fetch_exams_comparison(request):
+    group_pk = request.GET.get('group')
+    group = get_object_or_404(Group, pk=group_pk, coach=request.user)
+    assessments = list(Assessment.objects.filter(group=group).order_by('date_start', 'id'))
+    students = list(CustomUser.objects.filter(
+        id__in=StudentGroup.objects.filter(group=group).values('student')
+    ).order_by('last_name', 'first_name', 'id'))
+    results = AssessmentResult.objects.filter(
+        assessment__in=assessments, athlete__in=students
+    )
+
+    tests = {}
+
+    for res in results:
+        item = res.test_item
+        key = (item.assessment_type, item.name.strip().lower())
+        test = tests.setdefault(key, {
+            'key': '%s:%s' % key,
+            'name': item.name,
+            'type': item.assessment_type,
+            'unit': item.get_unit_display(),
+            'better_direction': item.better_direction,
+            'values': {},
+        })
+
+        score = res.score if res.result in ('passed', 'failed') else None
+        test['values'].setdefault(res.athlete_id, {})[str(res.assessment_id)] = {
+            'score': score,
+            'result': res.result,
+        }
+
+    out_tests = []
+
+    for test in tests.values():
+        rows = [{
+            'athlete_id': student.id,
+            'name': student.get_full_name(),
+            'values': test['values'].get(student.id, {})
+        } for student in students]
+        out_tests.append(
+            {key: value for key, value in test.items() if key != 'values'} | {'rows': rows}
+        )
+
+    out_tests.sort(key=lambda t: (t['type'], t['name']))
+
+    return JsonResponse({
+        'periods': [{
+            'id': a.id,
+            'name': a.name,
+            'date_start': a.date_start.strftime('%d.%m.%Y'),
+            'date_end': a.date_end.strftime('%d.%m.%Y'),
+        } for a in assessments],
+        'tests': out_tests
     })
