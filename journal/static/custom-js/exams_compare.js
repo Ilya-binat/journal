@@ -6,10 +6,9 @@
 // Чтобы подключить настоящие данные: удалите строку "return CMP_STUB"
 // и раскомментируйте блок ниже. Остальной код трогать не нужно.
 async function getComparisonData() {
-    return CMP_STUB  // <-- УДАЛИТЬ
 
-    // const res = await fetch(`/teacher/fetch_exams_comparison/?${buildQueryParams({group: groupSelect.value})}`)
-    // return await res.json()
+    const res = await fetch(`/teacher/fetch_exams_comparison/?${buildQueryParams({group: groupSelect.value})}`)
+    return await res.json()
 }
 
 let cmpData = null        // ответ fetch_exams_comparison
@@ -105,6 +104,10 @@ function cmpPairs(test) {
         .map(r => ({name: r.name, a: r.values[idA].score, b: r.values[idB].score}))
 }
 
+function cmpScores(test, periodId) {
+     return test.rows.filter((r)=>cmpMeasured(r.values[String(periodId)])).map((r)=>r.values[String(periodId)].score)
+}
+
 // разница B - A; good = true, если стало лучше с учётом направления (lower/higher)
 function cmpDelta(test, a, b) {
     if (a === null || b === null) return {d: null, good: false}
@@ -142,7 +145,7 @@ function renderComparison() {
     $c('cmpHeadB').textContent = nameB
 
     const tests = cmpKindTests()
-    let total = 0, improved = 0, worse = 0
+    let total = 0, improved = 0, worse = 0, anyData = false
     const rows = tests.map(t => {
         const pairs = cmpPairs(t)
         pairs.forEach(p => {
@@ -150,15 +153,29 @@ function renderComparison() {
             total++
             if (d !== 0) good ? improved++ : worse++
         })
-        const a = cmpAvg(pairs.map(p => p.a))
-        const b = cmpAvg(pairs.map(p => p.b))
-        const {d, good} = cmpDelta(t, a, b)
+        const idA = cmpData.periods[cmpA].id, idB = cmpData.periods[cmpB].id
+        const onlyA = cmpScores(t, idA), onlyB = cmpScores(t, idB)
+        const hasData = onlyA.length > 0 || onlyB.length > 0
+        if (hasData) anyData = true
+
+        // есть пары: средние по одним и тем же спортсменам; пар нет: показываем, что есть за каждый период
+        const a = pairs.length ? cmpAvg(pairs.map(p => p.a)) : cmpAvg(onlyA)
+        const b = pairs.length ? cmpAvg(pairs.map(p => p.b)) : cmpAvg(onlyB)
+        const {d, good} = cmpDelta(t, pairs.length ? a : null, pairs.length ? b : null)
         const cls = d === null || d === 0 ? '' : good ? 'cmp-good' : 'cmp-bad'
+        // нет пар, но данные есть хотя бы за один период -> «Нет изменений»; данных нет совсем -> «Нет данных»
+        const changeHtml = pairs.length ? cmpDeltaHtml(t, a, b) : hasData ? 'Нет изменений' : 'Нет данных'
+        let note = `Замеров в обоих периодах: ${pairs.length}`
+        if (!pairs.length && hasData) {
+            note += onlyA.length && !onlyB.length ? ` · данные только за «${cmpEsc(nameA)}»`
+                : onlyB.length && !onlyA.length ? ` · данные только за «${cmpEsc(nameB)}»`
+                : ' · у разных спортсменов'
+        }
         return `<tr>
-            <td class="text-start"><b>${cmpEsc(t.name)}</b><div class="an-sub">Замеров в обоих периодах: ${pairs.length}</div></td>
-            <td>${cmpFmt(a)} ${cmpEsc(t.unit)}</td>
-            <td>${cmpFmt(b)} ${cmpEsc(t.unit)}</td>
-            <td class="${cls}">${cmpDeltaHtml(t, a, b)}</td>
+            <td class="text-start"><b>${cmpEsc(t.name)}</b><div class="an-sub">${note}</div></td>
+            <td>${a === null ? '—' : `${cmpFmt(a)} ${cmpEsc(t.unit)}`}</td>
+            <td>${b === null ? '—' : `${cmpFmt(b)} ${cmpEsc(t.unit)}`}</td>
+            <td class="${cls}">${changeHtml}</td>
             <td><button type="button" class="btn btn-link btn-sm p-0" data-cmp-detail="${cmpEsc(t.key)}">По спортсменам <i class="bi bi-box-arrow-up-right"></i></button></td>
         </tr>`
     })
@@ -170,6 +187,9 @@ function renderComparison() {
     if (cmpA === cmpB) {
         summary.className = 'cmp-summary cmp-notice'
         summary.textContent = 'Выберите разные периоды, чтобы увидеть изменения.'
+    } else if (total === 0 && anyData) {
+        summary.className = 'cmp-summary cmp-notice'
+        summary.textContent = 'Нет спортсменов с замером в обоих периодах: показаны имеющиеся результаты, изменений нет.'
     } else {
         summary.className = 'cmp-summary'
         summary.innerHTML = `Из <strong>${total}</strong> пар результатов: <strong>${improved}</strong> лучше, <strong>${worse}</strong> хуже, <strong>${total - improved - worse}</strong> без изменений.`
@@ -189,19 +209,33 @@ function openCompareDetail(key) {
     $c('cmpDetailHeadA').textContent = nameA
     $c('cmpDetailHeadB').textContent = nameB
 
-    const pairs = cmpPairs(t)
-    $c('cmpDetailRows').innerHTML = pairs.length ? pairs.map(p => {
-        const {d, good} = cmpDelta(t, p.a, p.b)
-        const cls = d === 0 ? '' : good ? 'cmp-good' : 'cmp-bad'
-        const sign = d > 0 ? '+' : ''
-        const text = d === 0 ? 'без изменений' : good ? 'лучше' : 'хуже'
+    // все спортсмены, у которых есть замер хотя бы в одном из периодов
+    const idA = String(cmpData.periods[cmpA].id), idB = String(cmpData.periods[cmpB].id)
+    const rows = t.rows
+        .map(r => ({
+            name: r.name,
+            a: cmpMeasured(r.values[idA]) ? r.values[idA].score : null,
+            b: cmpMeasured(r.values[idB]) ? r.values[idB].score : null,
+        }))
+        .filter(r => r.a !== null || r.b !== null)
+
+    $c('cmpDetailRows').innerHTML = rows.length ? rows.map(r => {
+        let change
+        if (r.a !== null && r.b !== null) {
+            const {d, good} = cmpDelta(t, r.a, r.b)
+            const cls = d === 0 ? '' : good ? 'cmp-good' : 'cmp-bad'
+            const text = d === 0 ? 'без изменений' : good ? 'лучше' : 'хуже'
+            change = `<td class="${cls}">${d > 0 ? '+' : ''}${cmpFmt(d)} ${cmpEsc(t.unit)} · ${text}</td>`
+        } else {
+            change = '<td>Нет изменений</td>'   // замер только в одном периоде
+        }
         return `<tr>
-            <td class="text-start">${cmpEsc(p.name)}</td>
-            <td>${cmpFmt(p.a)}</td>
-            <td>${cmpFmt(p.b)}</td>
-            <td class="${cls}">${sign}${cmpFmt(d)} ${cmpEsc(t.unit)} · ${text}</td>
+            <td class="text-start">${cmpEsc(r.name)}</td>
+            <td>${cmpFmt(r.a)}</td>
+            <td>${cmpFmt(r.b)}</td>
+            ${change}
         </tr>`
-    }).join('') : '<tr><td colspan="4" class="text-center text-muted py-3">Нет спортсменов с замером в обоих периодах</td></tr>'
+    }).join('') : '<tr><td colspan="4" class="text-center text-muted py-3">Нет результатов с замером в этих периодах</td></tr>'
 
     bootstrap.Modal.getOrCreateInstance($c('cmpDetailModal')).show()
 }

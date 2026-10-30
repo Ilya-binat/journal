@@ -429,7 +429,8 @@ def build_exams_data(group, assessment_id=None):
 @role_required('Тренер')
 def fetch_exams_data(request):
     group = request.GET.get('group')
-    return JsonResponse(build_exams_data(group))
+    assessment = request.GET.get('assessment')
+    return JsonResponse(build_exams_data(group, assessment))
 
 
 # Берет JS дату и преобразует ее в формат ГГГГ.ММ.ДД
@@ -518,8 +519,9 @@ def add_exam_result(request):
 def fetch_station_data(request):
     # Достаем группу
     group_id = request.GET.get('group')
+    assessment_id = request.GET.get('assessment')
     # Берем испытания для группы сортирую подню начала в порядке убывания(от сегодня назад)
-    assessment = Assessment.objects.filter(group=group_id).order_by('-date_start', '-id').first()
+    assessment = get_group_assessment(group_id, assessment_id)
 
     # Если испытание не найдено возвращаем пустые данные
     if not assessment:
@@ -700,6 +702,7 @@ def fetch_athlete_dynamics(request):
 def export_exams_excel(request):
     # Достаем id группы
     group = request.GET.get('group')
+    assessment = request.GET.get('assessment')
 
     # Если не передано id возвращаем ошибку
     if not group:
@@ -710,7 +713,7 @@ def export_exams_excel(request):
 
     # Достаем всю необходимую информацию через группу
     # Экзамен, список и кол-во студентов, список упражнений,статистику
-    data = build_exams_data(group)
+    data = build_exams_data(group, assessment)
     thead = data['thead']
     info = data['assessment']
 
@@ -933,7 +936,8 @@ def export_exams_excel(request):
 @role_required('Тренер')
 def fetch_exams_analytics(request):
     group = request.GET.get('group')
-    assessment = Assessment.objects.filter(group=group).order_by('-date_start').first()
+    assessment_id = request.GET.get('assessment')
+    assessment = get_group_assessment(group, assessment_id)
 
     if assessment is None:
         return JsonResponse({

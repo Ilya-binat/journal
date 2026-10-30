@@ -71,12 +71,12 @@ window.refreshAnalytics = () => {
 // и раскомментируйте блок ниже. Остальной код трогать не нужно.
 // assessmentId - id КПИ из «Истории группы» (null = последний КПИ группы)
 async function getAnalyticsData(assessmentId) {
-    return AN_STUB  // <-- УДАЛИТЬ
 
-    // const params = {group: groupSelect.value, ...periodParam()}   // по умолчанию - КПИ, выбранный вверху страницы
-    // if (assessmentId) params.assessment = assessmentId
-    // const res = await fetch(`/teacher/fetch_exams_analytics/?${buildQueryParams(params)}`)
-    // return await res.json()
+
+    const params = {group: groupSelect.value, ...periodParam()}   // по умолчанию - КПИ, выбранный вверху страницы
+    if (assessmentId) params.assessment = assessmentId
+    const res = await fetch(`/teacher/fetch_exams_analytics/?${buildQueryParams(params)}`)
+    return await res.json()
 }
 
 // «Открыть →» из истории группы: показать аналитику выбранного КПИ
