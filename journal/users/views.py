@@ -1,5 +1,8 @@
+from django.contrib import messages
 from django.shortcuts import render, redirect
-from .forms import LoginForm, RegisterForm
+from django.views.decorators.http import require_POST
+
+from .forms import LoginForm, RegisterForm, ProfileForm, PhoneForm, AvatarForm
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -56,20 +59,39 @@ def profile(request):
 
 
 @login_required(login_url='/users/log_in')
+@require_POST
 def update_avatar(request):
-    if request.method == "POST":
-        avatar = request.FILES.get("avatar")
-        if avatar:
-            request.user.profile.image = avatar
-            request.user.profile.save()
-        return redirect("users:profile")
+    form = AvatarForm(request.POST, request.FILES)
 
-    return redirect("users:profile")
+    if form.is_valid():
+        user = request.user
+        if user.avatar:
+            user.avatar.delete(save=False)
+        user.avatar = form.cleaned_data.get('avatar')
+        user.save(update_fields=[
+            'avatar'])  # update_fields - принимает только массив поэтому обращаемся к полю avatar черз массив
+        messages.success(request, 'Фото обнавлено')
+    else:
+        messages.error(request, form.errors['avatar'][
+            0])  # form.errors словарь-Сохраняет виды ошибок в словаре со значением в виде массива.
+
+    return redirect('users:profile')
 
 
+# Функция удаления аватарки
+
+# Функция редактирования профайла пользователя
 @login_required(login_url='/users/log_in')
 def edit_profile(request):
-    return render(request, "edit_profile.html")
+    user = CustomUser.objects.get(pk=request.user.pk)
+    form = ProfileForm(request.POST or None,
+                       instance=user)  # instance - нужен для того что бы показать информацию профиля в форме
+
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Профиль обнавлен')
+
+    return redirect('users:profile')
 
 
 @login_required(login_url='/users/log_in')
@@ -78,8 +100,18 @@ def change_password(request):
 
 
 @login_required(login_url='/users/log_in')
+@require_POST
 def profile_update(request):
-    return render(request, "profile_update.html")
+    form = PhoneForm(request.POST)
+
+    if form.is_valid():
+        request.user.phone_number = form.cleaned_data.get('phone_number')
+        request.user.save(update_fields=['phone_number'])
+        messages.success(request, 'Телефон сохранен' if request.user.phone_number else 'Телефон удален')
+    else:
+        messages.error(request, form.errors['phone_number'][0])
+
+    return redirect('users:profile')
 
 
 def users(request):
@@ -134,8 +166,10 @@ def change_password(request, pk):
 
     return HttpResponse('Смена пароля')
 
+
 def get_401(request):
     return render(request, '401.html')
+
 
 def get_403(request):
     return render(request, '403.html')

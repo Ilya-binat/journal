@@ -1,10 +1,8 @@
 from io import BytesIO
 from urllib.parse import quote
-
 from django.shortcuts import render, get_object_or_404, redirect
 from openpyxl.styles import Side, Border, Alignment, Font
 from openpyxl.utils import get_column_letter
-
 from .utils import *
 from administrator.models import *
 from datetime import datetime, date, timedelta

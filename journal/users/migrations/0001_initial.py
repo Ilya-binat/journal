@@ -33,7 +33,6 @@ class Migration(migrations.Migration):
                 ('middle_name', models.CharField(blank=True, max_length=255, null=True)),
                 ('birth_date', models.DateField(blank=True, null=True)),
                 ('phone_number', models.CharField(blank=True, max_length=11, null=True)),
-                ('gender', models.CharField(choices=[('Мужчина', 'Мужчина'), ('Женщина', 'Женщина')], max_length=255, null=True)),
                 ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.group', verbose_name='groups')),
                 ('user_permissions', models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.permission', verbose_name='user permissions')),
             ],

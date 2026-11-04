@@ -1,3 +1,6 @@
+import os.path
+import uuid
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from datetime import date
@@ -6,6 +9,13 @@ GENDER_CHOICES = [
     ("Мужчина", "Мужчина"),
     ("Женщина", "Женщина"),
 ]
+
+# Функция сохранения аватара
+def avatar_upload_to(instance, file_name):
+    ext = os.path.splitext(file_name)[1].lower()
+    return f"avatars/user_{instance.pk}/{uuid.uuid4().hex}{ext}"
+
+
 class CustomUser(AbstractUser):
 
     ROLE_CHOICES = [
@@ -21,6 +31,7 @@ class CustomUser(AbstractUser):
     birth_date = models.DateField(null=True, blank=True)
     phone_number = models.CharField(max_length=11, null=True, blank=True)
     gender = models.CharField(max_length=255, choices=GENDER_CHOICES, null=True)
+    avatar = models.ImageField(upload_to=avatar_upload_to, null=True, blank=True)
 
     
 
