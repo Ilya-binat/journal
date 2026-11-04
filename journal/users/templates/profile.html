@@ -1,31 +1,52 @@
 {% extends 'base_layout.html' %}
 {% load static %}
 {% block content %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <div class="container py-4">
   <div class="row justify-content-center">
     <div class="col-lg-8">
+
+      <!-- Сообщения: успех / ошибка после действий -->
+      {% for message in messages %}
+      <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+      </div>
+      {% endfor %}
+
       <div class="card shadow-sm">
         <div class="card-body">
-          <div class="d-flex align-items-center gap-4">
-            <!-- Avatar -->
-            <div class="position-relative">
-              <img id="avatarImg" src="{% if user_obj.profile.image %}{{ user_obj.profile.image.url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" alt="Аватар" class="rounded-circle img-thumbnail" style="width:120px; height:120px; object-fit:cover;">
-              <label for="avatarInput" class="btn btn-sm btn-outline-secondary position-absolute bottom-0 end-0" style="transform:translate(20%,20%);">Изменить</label>
-              <form id="avatarForm" action="{% url 'users:update_avatar' %}" method="post" enctype="multipart/form-data" class="d-none">
+          <div class="d-flex align-items-center gap-4 flex-wrap flex-md-nowrap">
+
+            <!-- Аватар -->
+            <div class="text-center">
+              <div class="position-relative d-inline-block">
+                {% if user_obj.avatar %}
+                <img id="avatarImg" src="{{ user_obj.avatar.url }}" alt="Аватар" class="rounded-circle img-thumbnail" style="width:120px; height:120px; object-fit:cover;">
+                {% else %}
+                <!-- Фото нет: показываем инициалы -->
+                <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center fw-bold" style="width:120px; height:120px; font-size:2.2rem;">{{ user_obj.get_initials }}</div>
+                {% endif %}
+                <label for="avatarInput" class="btn btn-sm btn-outline-secondary bg-white position-absolute bottom-0 end-0" style="transform:translate(20%,20%);">{% if user_obj.avatar %}Изменить{% else %}Загрузить{% endif %}</label>
+                <form id="avatarForm" action="{% url 'users:update_avatar' %}" method="post" enctype="multipart/form-data" class="d-none">
+                  {% csrf_token %}
+                  <input id="avatarInput" name="avatar" type="file" accept="image/jpeg,image/png,image/webp">
+                </form>
+              </div>
+              {% if user_obj.avatar %}
+              <form action="{% url 'users:delete_avatar' %}" method="post" class="mt-2" onsubmit="return confirm('Удалить фото профиля?')">
                 {% csrf_token %}
-                <input id="avatarInput" name="avatar" type="file" accept="image/*" onchange="document.getElementById('avatarForm').submit()">
+                <button type="submit" class="btn btn-link btn-sm text-danger p-0">Удалить фото</button>
               </form>
+              {% endif %}
             </div>
 
-            <!-- Name and role -->
+            <!-- ФИО и роль -->
             <div class="flex-grow-1">
-              <h4 class="mb-0">{{ user_obj.get_full_name|default:user_obj.username }}</h4>
-              <p class="text-muted mb-1">{{ user_obj.profile.role|default:'Пользователь' }}</p>
+              <h4 class="mb-0">{{ user_obj.get_full_name|default:user_obj.email }}</h4>
+              <p class="text-muted mb-1">{{ user_obj.role|default:'Пользователь' }}</p>
               <small class="text-muted">Зарегистрирован: {{ user_obj.date_joined|date:'d.m.Y' }}</small>
             </div>
 
-            <!-- Edit profile button (optional full-page edit) -->
             <div>
               <a href="{% url 'users:edit_profile' %}" class="btn btn-outline-primary">Редактировать профиль</a>
             </div>
@@ -33,41 +54,47 @@
 
           <hr>
 
-          <!-- Personal data -->
-          <form id="profileForm" action="{% url 'users:profile_update' %}" method="post" class="row g-3">
-            {% csrf_token %}
-
+          <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">Имя</label>
-              <input type="text" name="first_name" value="{{ user_obj.first_name }}" class="form-control" readonly>
+              <input type="text" value="{{ user_obj.first_name }}" class="form-control" readonly>
             </div>
 
             <div class="col-md-6">
               <label class="form-label">Фамилия</label>
-              <input type="text" name="last_name" value="{{ user_obj.last_name }}" class="form-control" readonly>
+              <input type="text" value="{{ user_obj.last_name }}" class="form-control" readonly>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Отчество</label>
+              <input type="text" value="{{ user_obj.middle_name|default:'' }}" class="form-control" readonly>
             </div>
 
             <div class="col-md-6">
               <label class="form-label">Email</label>
-              <input type="email" name="email" value="{{ user_obj.email }}" class="form-control" readonly>
+              <input type="email" value="{{ user_obj.email }}" class="form-control" readonly>
             </div>
 
             <div class="col-md-6">
               <label class="form-label">Телефон</label>
 
-              <!-- phone display / edit group -->
-              <div class="input-group">
-                <input id="phoneInput" type="tel" name="phone" value="{{ user_obj.profile.phone|default:'' }}" class="form-control" placeholder="+7 (900) 000-00-00" disabled>
-                <button id="editPhoneBtn" type="button" class="btn btn-outline-primary">Изменить</button>
-                <button id="savePhoneBtn" type="submit" class="btn btn-primary d-none">Сохранить</button>
-                <button id="cancelPhoneBtn" type="button" class="btn btn-outline-danger d-none">Отменить</button>
-              </div>
-              <div class="form-text">Телефон можно изменить по необходимости. Формат: +7XXXXXXXXXX</div>
+              <!-- Телефон: просмотр / быстрое изменение. Пустое поле удаляет номер -->
+              <form id="phoneForm" action="{% url 'users:profile_update' %}" method="post">
+                {% csrf_token %}
+                <div class="input-group">
+                  <input id="phoneInput" type="tel" name="phone_number" value="{{ user_obj.get_phone_display }}" class="form-control" placeholder="+7 (900) 000-00-00" maxlength="20" disabled>
+                  <button id="editPhoneBtn" type="button" class="btn btn-outline-primary">Изменить</button>
+                  <button id="savePhoneBtn" type="submit" class="btn btn-primary d-none">Сохранить</button>
+                  <button id="cancelPhoneBtn" type="button" class="btn btn-outline-danger d-none">Отменить</button>
+                </div>
+              </form>
+              <div class="form-text">Формат: +7XXXXXXXXXX. Чтобы удалить номер, очистите поле и сохраните.</div>
             </div>
+
             <div class="col-12 d-flex justify-content-end">
               <a href="{% url 'users:change_password' %}" class="btn btn-outline-primary">Сменить пароль</a>
             </div>
-          </form>
+          </div>
 
         </div>
       </div>
@@ -75,44 +102,52 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
-  // Toggle phone field editability
-  const editBtn = document.getElementById('editPhoneBtn');
-  const saveBtn = document.getElementById('savePhoneBtn');
-  const cancelBtn = document.getElementById('cancelPhoneBtn');
-  const phoneInput = document.getElementById('phoneInput');
-  const profileForm = document.getElementById('profileForm');
+  // Аватар: сразу отправляем форму после выбора файла (до 2 МБ проверяет сервер, быстрая проверка здесь)
+  const avatarInput = document.getElementById('avatarInput')
+  avatarInput.addEventListener('change', () => {
+    const file = avatarInput.files[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Файл слишком большой: максимум 2 МБ')
+      avatarInput.value = ''
+      return
+    }
+    document.getElementById('avatarForm').submit()
+  })
 
-  let originalPhone = phoneInput.value;
+  // Телефон: переключение просмотр <-> редактирование
+  const editBtn = document.getElementById('editPhoneBtn')
+  const saveBtn = document.getElementById('savePhoneBtn')
+  const cancelBtn = document.getElementById('cancelPhoneBtn')
+  const phoneInput = document.getElementById('phoneInput')
+  const originalPhone = phoneInput.value
+
+  function setPhoneEditing(editing) {
+    phoneInput.disabled = !editing
+    editBtn.classList.toggle('d-none', editing)
+    saveBtn.classList.toggle('d-none', !editing)
+    cancelBtn.classList.toggle('d-none', !editing)
+  }
 
   editBtn.addEventListener('click', () => {
-    phoneInput.disabled = false;
-    phoneInput.focus();
-    editBtn.classList.add('d-none');
-    saveBtn.classList.remove('d-none');
-    cancelBtn.classList.remove('d-none');
-  });
+    setPhoneEditing(true)
+    phoneInput.focus()
+  })
 
   cancelBtn.addEventListener('click', () => {
-    phoneInput.value = originalPhone;
-    phoneInput.disabled = true;
-    editBtn.classList.remove('d-none');
-    saveBtn.classList.add('d-none');
-    cancelBtn.classList.add('d-none');
-  });
+    phoneInput.value = originalPhone
+    setPhoneEditing(false)
+  })
 
-  // When form is submitted, phone will be sent together with csrf token
-  profileForm.addEventListener('submit', () => {
-    // optional: basic client-side validation for phone
-    const phone = phoneInput.value.trim();
-    if (phone && !/^\+?\d{7,15}$/.test(phone.replace(/[^+\d]/g, ''))) {
-      alert('Неверный формат телефона. Укажите только цифры и знак +.');
-      event.preventDefault();
-      return false;
+  document.getElementById('phoneForm').addEventListener('submit', event => {
+    const digits = phoneInput.value.replace(/\D/g, '')
+    // пусто = удалить номер; иначе 10 цифр или 11 цифр, начиная с 7/8
+    const ok = digits === '' || digits.length === 10 || (digits.length === 11 && '78'.includes(digits[0]))
+    if (!ok) {
+      event.preventDefault()
+      alert('Неверный формат телефона. Введите номер в формате +7XXXXXXXXXX')
     }
-  });
+  })
 </script>
-
 {% endblock %}

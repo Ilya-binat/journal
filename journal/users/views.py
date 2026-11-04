@@ -1,8 +1,8 @@
 from django.contrib import messages
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 
-from .forms import LoginForm, RegisterForm, ProfileForm, PhoneForm, AvatarForm
+from .forms import *
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -58,6 +58,7 @@ def profile(request):
     return render(request, "profile.html", {"user_obj": request.user})
 
 
+# Функция смены аватарки
 @login_required(login_url='/users/log_in')
 @require_POST
 def update_avatar(request):
@@ -79,6 +80,21 @@ def update_avatar(request):
 
 
 # Функция удаления аватарки
+@login_required(login_url='/user/log_in')
+@require_POST
+def delete_avatar(request):
+    user = request.user
+
+    if user.avatar:
+        user.avatar.delete(save=False)
+        user.avatar = None
+        user.save(update_fields=['avatar'])
+        messages.success(request, 'Фото удалено')
+
+    return redirect('users:profile')
+
+
+#
 
 # Функция редактирования профайла пользователя
 @login_required(login_url='/users/log_in')
@@ -94,9 +110,62 @@ def edit_profile(request):
     return redirect('users:profile')
 
 
+# Смена пароля
 @login_required(login_url='/users/log_in')
 def change_password(request):
-    return render(request, "change_password.html")
+    form = StyledPasswordChangeForm(request.user, request.POST or None)
+
+    if request.methood == 'POST' and form.is_valid():
+        user = form.save()
+        update_session_auth_hash(request, user)
+        messages.success(request, 'Пароль обнавлен')
+        return redirect('users:profile')
+
+    return render(request, 'change_password.html', {'form': form})
+
+
+@login_required(login_url='/users/log_in')
+@require_POST
+def change_user_password(request, pk):
+    if request.user.role != 'Администратор' and not request.user.is_superuser:
+        return JsonResponse({
+            'success': False,
+            'error': 'Не достаточно прав'
+        }, status=403)
+    try:
+        data = json.loads(request.body)
+    except ValueError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Не корректный запрос'
+        }, status=400)
+
+    password1 = data.get('password1') or ''
+    password2 = data.get('password2') or ''
+
+    if len(password1) < 8:
+        return JsonResponse({
+            'success': False,
+            'error': 'Пароль слишком короткий',
+
+        }, status=400)
+
+    if password1 != password2:
+        return JsonResponse({
+            'success': False,
+            'error': 'Пароли не совпадают'
+        }, status=400)
+
+    target = get_object_or_404(CustomUser, pk=pk)
+    target.set_pasword(password1)
+    target.save()
+    if target.pk == request.user.pk:
+        update_session_auth_hash(request, target)
+    return JsonResponse({
+        'success': True
+    })
+
+
 
 
 @login_required(login_url='/users/log_in')
