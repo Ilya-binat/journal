@@ -64,7 +64,12 @@ class CustomUser(AbstractUser):
             age -= 1
 
         return age
-
+    # Вывод номера телефона
+    def get_phone_display(self):
+        digits = ''.join(i for i in (self.phone_number or "") if i.isdigit())
+        if len(digits) == 11 and digits[0] in '78':
+            return f'+7 ({digits[1:4]}) {digits[4:7]}-{digits[7:9]}-{digits[9:11]}'
+        return self.phone_number or ''
 
 
 # Create your models here.

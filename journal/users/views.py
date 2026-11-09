@@ -80,7 +80,7 @@ def update_avatar(request):
 
 
 # Функция удаления аватарки
-@login_required(login_url='/user/log_in')
+@login_required(login_url='/users/log_in')
 @require_POST
 def delete_avatar(request):
     user = request.user
@@ -107,7 +107,8 @@ def edit_profile(request):
         form.save()
         messages.success(request, 'Профиль обнавлен')
 
-    return redirect('users:profile')
+        return redirect('users:profile')
+    return render(request, 'edit_profile.html', {'form': form})
 
 
 # Смена пароля
@@ -115,7 +116,7 @@ def edit_profile(request):
 def change_password(request):
     form = StyledPasswordChangeForm(request.user, request.POST or None)
 
-    if request.methood == 'POST' and form.is_valid():
+    if request.method == 'POST' and form.is_valid():
         user = form.save()
         update_session_auth_hash(request, user)
         messages.success(request, 'Пароль обнавлен')
@@ -166,8 +167,6 @@ def change_user_password(request, pk):
     })
 
 
-
-
 @login_required(login_url='/users/log_in')
 @require_POST
 def profile_update(request):
@@ -214,26 +213,6 @@ def patch_user(request, pk):
     user.save()
 
     return redirect('users:users')
-
-
-@login_required(login_url='/users/log_in')
-def change_password(request, pk):
-    data = json.loads(request.body)
-    password1 = data.get('password1')
-    password2 = data.get('password2')
-
-    if len(password1) < 8:
-        return JsonResponse('Пароль слишком короткий')
-
-    if password1 != password2:
-        return JsonResponse('Пароли не совпадают')
-
-    user = request.user
-    user.set_password(password1)
-    user.save()
-    update_session_auth_hash(request, user)
-
-    return HttpResponse('Смена пароля')
 
 
 def get_401(request):
