@@ -1,11 +1,9 @@
 {% extends 'base_layout.html' %}
-{% load static %}
 {% block content %}
 <div class="container py-4">
   <div class="row justify-content-center">
     <div class="col-lg-8">
 
-      <!-- Сообщения: успех / ошибка после действий -->
       {% for message in messages %}
       <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
         {{ message }}
@@ -14,140 +12,58 @@
       {% endfor %}
 
       <div class="card shadow-sm">
-        <div class="card-body">
+        <div class="card-body p-4">
+
+          <!-- Шапка: аватар, ФИО, роль -->
           <div class="d-flex align-items-center gap-4 flex-wrap flex-md-nowrap">
+            {% if user_obj.avatar %}
+            <img src="{{ user_obj.avatar.url }}" alt="Аватар" class="rounded-circle" style="width:96px; height:96px; object-fit:cover;">
+            {% else %}
+            <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width:96px; height:96px; font-size:2rem;">{{ user_obj.get_initials }}</div>
+            {% endif %}
 
-            <!-- Аватар -->
-            <div class="text-center">
-              <div class="position-relative d-inline-block">
-                {% if user_obj.avatar %}
-                <img id="avatarImg" src="{{ user_obj.avatar.url }}" alt="Аватар" class="rounded-circle img-thumbnail" style="width:120px; height:120px; object-fit:cover;">
-                {% else %}
-                <!-- Фото нет: показываем инициалы -->
-                <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center fw-bold" style="width:120px; height:120px; font-size:2.2rem;">{{ user_obj.get_initials }}</div>
-                {% endif %}
-                <label for="avatarInput" class="btn btn-sm btn-outline-secondary bg-white position-absolute bottom-0 end-0" style="transform:translate(20%,20%);">{% if user_obj.avatar %}Изменить{% else %}Загрузить{% endif %}</label>
-                <form id="avatarForm" action="{% url 'users:update_avatar' %}" method="post" enctype="multipart/form-data" class="d-none">
-                  {% csrf_token %}
-                  <input id="avatarInput" name="avatar" type="file" accept="image/jpeg,image/png,image/webp">
-                </form>
-              </div>
-              {% if user_obj.avatar %}
-              <form action="{% url 'users:delete_avatar' %}" method="post" class="mt-2" onsubmit="return confirm('Удалить фото профиля?')">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-link btn-sm text-danger p-0">Удалить фото</button>
-              </form>
-              {% endif %}
-            </div>
-
-            <!-- ФИО и роль -->
             <div class="flex-grow-1">
-              <h4 class="mb-0">{{ user_obj.get_full_name|default:user_obj.email }}</h4>
-              <p class="text-muted mb-1">{{ user_obj.role|default:'Пользователь' }}</p>
-              <small class="text-muted">Зарегистрирован: {{ user_obj.date_joined|date:'d.m.Y' }}</small>
+              <h4 class="mb-1">{{ user_obj.get_full_name|default:user_obj.email }}</h4>
+              <span class="badge text-bg-primary">{{ user_obj.role|default:'Пользователь' }}</span>
+              <div class="text-muted small mt-2">Зарегистрирован: {{ user_obj.date_joined|date:'d.m.Y' }}</div>
             </div>
 
-            <div>
-              <a href="{% url 'users:edit_profile' %}" class="btn btn-outline-primary">Редактировать профиль</a>
-            </div>
-          </div>
-
-          <hr>
-
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Имя</label>
-              <input type="text" value="{{ user_obj.first_name }}" class="form-control" readonly>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Фамилия</label>
-              <input type="text" value="{{ user_obj.last_name }}" class="form-control" readonly>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Отчество</label>
-              <input type="text" value="{{ user_obj.middle_name|default:'' }}" class="form-control" readonly>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Email</label>
-              <input type="email" value="{{ user_obj.email }}" class="form-control" readonly>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">Телефон</label>
-
-              <!-- Телефон: просмотр / быстрое изменение. Пустое поле удаляет номер -->
-              <form id="phoneForm" action="{% url 'users:profile_update' %}" method="post">
-                {% csrf_token %}
-                <div class="input-group">
-                  <input id="phoneInput" type="tel" name="phone_number" value="{{ user_obj.get_phone_display }}" class="form-control" placeholder="+7 (900) 000-00-00" maxlength="20" disabled>
-                  <button id="editPhoneBtn" type="button" class="btn btn-outline-primary">Изменить</button>
-                  <button id="savePhoneBtn" type="submit" class="btn btn-primary d-none">Сохранить</button>
-                  <button id="cancelPhoneBtn" type="button" class="btn btn-outline-danger d-none">Отменить</button>
-                </div>
-              </form>
-              <div class="form-text">Формат: +7XXXXXXXXXX. Чтобы удалить номер, очистите поле и сохраните.</div>
-            </div>
-
-            <div class="col-12 d-flex justify-content-end">
-              <a href="{% url 'users:change_password' %}" class="btn btn-outline-primary">Сменить пароль</a>
+            <div class="d-flex flex-column gap-2">
+              <a href="{% url 'users:edit_profile' %}" class="btn btn-primary">Редактировать профиль</a>
+              <a href="{% url 'users:change_password' %}" class="btn btn-outline-secondary">Сменить пароль</a>
             </div>
           </div>
+
+          <hr class="my-4">
+
+          <!-- Данные профиля: только просмотр -->
+          <h6 class="text-muted text-uppercase small mb-3">Личные данные</h6>
+          <dl class="row mb-0">
+            <dt class="col-sm-4 text-muted fw-normal">Фамилия</dt>
+            <dd class="col-sm-8">{{ user_obj.last_name|default:'—' }}</dd>
+
+            <dt class="col-sm-4 text-muted fw-normal">Имя</dt>
+            <dd class="col-sm-8">{{ user_obj.first_name|default:'—' }}</dd>
+
+            <dt class="col-sm-4 text-muted fw-normal">Отчество</dt>
+            <dd class="col-sm-8">{{ user_obj.middle_name|default:'—' }}</dd>
+
+            <dt class="col-sm-4 text-muted fw-normal">Дата рождения</dt>
+            <dd class="col-sm-8">{% if user_obj.birth_date %}{{ user_obj.birth_date|date:'d.m.Y' }}{% if user_obj.get_age is not None %} ({{ user_obj.get_age }}){% endif %}{% else %}—{% endif %}</dd>
+          </dl>
+
+          <h6 class="text-muted text-uppercase small mt-4 mb-3">Контакты</h6>
+          <dl class="row mb-0">
+            <dt class="col-sm-4 text-muted fw-normal">Email</dt>
+            <dd class="col-sm-8">{{ user_obj.email }}</dd>
+
+            <dt class="col-sm-4 text-muted fw-normal">Телефон</dt>
+            <dd class="col-sm-8">{{ user_obj.get_phone_display|default:'—' }}</dd>
+          </dl>
 
         </div>
       </div>
     </div>
   </div>
 </div>
-
-<script>
-  // Аватар: сразу отправляем форму после выбора файла (до 2 МБ проверяет сервер, быстрая проверка здесь)
-  const avatarInput = document.getElementById('avatarInput')
-  avatarInput.addEventListener('change', () => {
-    const file = avatarInput.files[0]
-    if (!file) return
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Файл слишком большой: максимум 2 МБ')
-      avatarInput.value = ''
-      return
-    }
-    document.getElementById('avatarForm').submit()
-  })
-
-  // Телефон: переключение просмотр <-> редактирование
-  const editBtn = document.getElementById('editPhoneBtn')
-  const saveBtn = document.getElementById('savePhoneBtn')
-  const cancelBtn = document.getElementById('cancelPhoneBtn')
-  const phoneInput = document.getElementById('phoneInput')
-  const originalPhone = phoneInput.value
-
-  function setPhoneEditing(editing) {
-    phoneInput.disabled = !editing
-    editBtn.classList.toggle('d-none', editing)
-    saveBtn.classList.toggle('d-none', !editing)
-    cancelBtn.classList.toggle('d-none', !editing)
-  }
-
-  editBtn.addEventListener('click', () => {
-    setPhoneEditing(true)
-    phoneInput.focus()
-  })
-
-  cancelBtn.addEventListener('click', () => {
-    phoneInput.value = originalPhone
-    setPhoneEditing(false)
-  })
-
-  document.getElementById('phoneForm').addEventListener('submit', event => {
-    const digits = phoneInput.value.replace(/\D/g, '')
-    // пусто = удалить номер; иначе 10 цифр или 11 цифр, начиная с 7/8
-    const ok = digits === '' || digits.length === 10 || (digits.length === 11 && '78'.includes(digits[0]))
-    if (!ok) {
-      event.preventDefault()
-      alert('Неверный формат телефона. Введите номер в формате +7XXXXXXXXXX')
-    }
-  })
-</script>
 {% endblock %}
