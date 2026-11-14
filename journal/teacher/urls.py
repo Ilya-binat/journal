@@ -16,5 +16,9 @@ urlpatterns = [
     path('export_exams_excel/', export_exams_excel, name='export_exams_excel'),
     path('fetch_exams_analytics/', fetch_exams_analytics, name='fetch_exams_analytics'),
     path('fetch_exams_comparison/', fetch_exams_comparison, name='fetch_exams_comparison'),
+    path('homework/', homework_list, name='homework_list'),
+    path('homework/create', homework_create, name='homework_create'),
+    path('homework/<int:pk>/edit', homework_edit, name='homework_edit'),
+    path('homework/<int:pk>/delete', homework_delete, name='homework_delete'),
 
 ]

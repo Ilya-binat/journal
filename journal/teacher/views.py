@@ -1,5 +1,7 @@
 from io import BytesIO
 from urllib.parse import quote
+
+from django.contrib import messages
 from django.shortcuts import render, get_object_or_404, redirect
 from openpyxl.styles import Side, Border, Alignment, Font
 from openpyxl.utils import get_column_letter
@@ -14,6 +16,7 @@ from django.http import JsonResponse, HttpResponse
 from collections import defaultdict
 from users.models import *
 from openpyxl import Workbook
+from .forms import HomeworkForm
 
 
 @role_required('Тренер')
@@ -270,6 +273,8 @@ def exams(request):
                                           'years': years,
                                           'selected_year': current_year
                                           })
+
+
 # Находит вбранный экзамен в базе
 def get_group_assessment(group, assessment_id=None):
     qs = Assessment.objects.filter(group=group)
@@ -279,16 +284,17 @@ def get_group_assessment(group, assessment_id=None):
             return assessment
     return qs.order_by('-date_start', '-id').first()
 
+
 # Возвращает все КПИ группы для выпадающего списка на экране
 def list_group_periods(group):
     all_assessments = Assessment.objects.filter(group=group).order_by('-date_start', '-id')
 
-    return[{
+    return [{
         'id': a.id,
         'name': a.name,
         'date_start': a.date_start.strftime('%d.%m.%Y'),
         'date_end': a.date_end.strftime('%d.%m.%Y'),
-    }for a in all_assessments]
+    } for a in all_assessments]
 
 
 def build_exams_data(group, assessment_id=None):
@@ -1078,3 +1084,36 @@ def fetch_exams_comparison(request):
         } for a in assessments],
         'tests': out_tests
     })
+
+
+@role_required('Тренер', 'Спортсмен')
+def homework_list(request):
+    return render(
+        request,
+        'homework_list.html'
+    )
+
+
+@role_required('Тренер')
+def homework_create(request):
+    form = HomeworkForm(request.POST or None, coach=request.user)
+
+    if form.is_valid() and request.method == 'POST':
+        homework = form.save(commit=False)
+        homework.author = request.user
+        homework.save()
+        messages.success(request, 'Задание добавлено')
+        return redirect('teacher:homework_list')
+    return render(request, 'homework_create.html', {'form': form, 'title': 'Новое задание'})
+
+
+@role_required('Тренер')
+@require_POST
+def homework_edit(request, pk):
+    pass
+
+
+@role_required('Тренер')
+@require_POST
+def homework_delete(request, pk):
+    pass
