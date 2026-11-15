@@ -1,11 +1,11 @@
 from django import forms
 from administrator.models import Group
 from .models import Homework
+from datetime import date
 
 
 class HomeworkForm(forms.ModelForm):
     class Meta:
-
         model = Homework
         fields = ['group', 'title', 'text', 'deadline', 'file']
         labels = {
@@ -30,7 +30,8 @@ class HomeworkForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
-        start, end = cleaned.get('date'), cleaned.get('deadline')
-        if start and end and start > end:
-            self.add_error('deadline', 'Срок сдачи не может быть раньше даты выдочи')
+        deadline = cleaned.get('deadline')
+        start = self.instance.date if self.instance.pk else date.today()
+        if deadline and deadline < start:
+            self.add_error('deadline', 'Срок выполнения не может быть раньше даты выдачи')
         return cleaned

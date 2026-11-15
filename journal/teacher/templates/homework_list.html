@@ -2,21 +2,60 @@
 {% block content %}
 <div class="container py-4">
 
-    {% for message in messages %}
-    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    {% endfor %}
+  {% for message in messages %}
+  <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
 
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-        <h4 class="mb-0">Домашнее задание</h4>
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h4 class="mb-0">Домашнее задание</h4>
+    {% if user.role == 'Тренер' %}
+    <a href="{% url 'teacher:homework_create' %}" class="btn btn-primary">+ Новое задание</a>
+    {% endif %}
+  </div>
+
+  {% if groups %}
+  <form method="get" class="mb-3">
+    <select name="group" class="form-select w-auto" onchange="this.form.submit()">
+      <option value="">Все группы</option>
+      {% for g in groups %}
+      <option value="{{ g.id }}" {% if selected_group == g.id|stringformat:"s" %}selected{% endif %}>{{ g.group_name }}</option>
+      {% endfor %}
+    </select>
+  </form>
+  {% endif %}
+
+  {% for hw in items %}
+  <div class="card shadow-sm mb-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start gap-3">
+        <div>
+          <h5 class="mb-1">{{ hw.title }}</h5>
+          <div class="text-muted small">
+            {{ hw.group.group_name }} · выдано {{ hw.date|date:'d.m.Y' }}
+            {% if hw.deadline %}
+            · срок: <span class="{% if hw.deadline < today %}text-danger{% endif %}">{{ hw.deadline|date:'d.m.Y' }}</span>
+            {% endif %}
+          </div>
+        </div>
         {% if user.role == 'Тренер' %}
-        <a href="{% url 'teacher:homework_create' %}" class="btn btn-primary">+ Новое задание</a>
+        <div class="d-flex gap-2 flex-shrink-0">
+          <a href="{% url 'teacher:homework_edit' hw.pk %}" class="btn btn-outline-primary btn-sm">Изменить</a>
+          <form method="post" action="{% url 'teacher:homework_delete' hw.pk %}" onsubmit="return confirm('Удалить задание?')">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger btn-sm">Удалить</button>
+          </form>
+        </div>
         {% endif %}
+      </div>
+      <p class="mt-3 mb-0" style="white-space: pre-line;">{{ hw.text }}</p>
     </div>
-
-    <p class="text-center text-muted py-5">Заданий пока нет.</p>
+  </div>
+  {% empty %}
+  <p class="text-center text-muted py-5">Заданий пока нет.</p>
+  {% endfor %}
 
 </div>
 {% endblock %}

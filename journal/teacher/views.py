@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.shortcuts import render, get_object_or_404, redirect
 from openpyxl.styles import Side, Border, Alignment, Font
 from openpyxl.utils import get_column_letter
+
+from .models import Homework
 from .utils import *
 from administrator.models import *
 from datetime import datetime, date, timedelta
@@ -17,6 +19,7 @@ from collections import defaultdict
 from users.models import *
 from openpyxl import Workbook
 from .forms import HomeworkForm
+from administrator.models import StudentGroup
 
 
 @role_required('Тренер')
@@ -1088,15 +1091,33 @@ def fetch_exams_comparison(request):
 
 @role_required('Тренер', 'Спортсмен')
 def homework_list(request):
+    if request.user.role == 'Тренер':
+        # group__coach - означает что мы сначала обращаемся к группе и от туда обращаемся к полю coach
+        items = Homework.objects.filter(group__coach=request.user)
+    else:
+        group_ids = StudentGroup.objects.filter(student=request.user).values.list('group_id', flat=True)
+        items = Homework.objects.filter(group_id__in=group_ids)
+
+    group_id = request.GET.get('group')
+
+    if group_id and group_id.isdigit():
+        items = items.filter(group_id=group_id)
+    groups = Group.objects.filter(coach=request.user) if request.user.role == 'Тренер' else []
     return render(
         request,
-        'homework_list.html'
+        'homework_list.html',
+        {
+            'items': items.select_related('group'),
+            'groups': groups,
+            'selected_group': group_id or '',
+            'today': date.today()
+        }
     )
 
 
 @role_required('Тренер')
 def homework_create(request):
-    form = HomeworkForm(request.POST or None, coach=request.user)
+    form = HomeworkForm(request.POST or None, request.FILES or None, coach=request.user)
 
     if form.is_valid() and request.method == 'POST':
         homework = form.save(commit=False)
@@ -1108,7 +1129,6 @@ def homework_create(request):
 
 
 @role_required('Тренер')
-@require_POST
 def homework_edit(request, pk):
     pass
 
