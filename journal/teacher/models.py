@@ -2,6 +2,15 @@ from django.db import models
 from datetime import date
 # Модель Д.З
 class Homework(models.Model):
+    DRAFT = 'draft'
+    ACTIVE = 'active'
+    CLOSED = 'closed'
+
+    STATUS_CHOICES = [
+        (DRAFT, 'Черновик'),
+        (ACTIVE, 'Активно'),
+        (CLOSED, 'Закрыто'),
+    ]
     group = models.ForeignKey(
         'administrator.Group',
         on_delete=models.CASCADE,
@@ -18,6 +27,7 @@ class Homework(models.Model):
     date = models.DateField(auto_now_add=True)
     deadline = models.DateField(null=True, blank=True)
     file = models.FileField(upload_to='homework/%Y/%m', null=True, blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=ACTIVE)
 
     class Meta:
         ordering = ['-date', '-id']

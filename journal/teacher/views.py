@@ -1,7 +1,8 @@
 from io import BytesIO
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 from django.contrib import messages
+from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 from openpyxl.styles import Side, Border, Alignment, Font
 from openpyxl.utils import get_column_letter
@@ -1091,28 +1092,63 @@ def fetch_exams_comparison(request):
 
 @role_required('Тренер', 'Спортсмен')
 def homework_list(request):
-    if request.user.role == 'Тренер':
-        # group__coach - означает что мы сначала обращаемся к группе и от туда обращаемся к полю coach
-        items = Homework.objects.filter(group__coach=request.user)
+    today = date.today()
+    base = Homework.objects.filter(group__coach=request.user).select_related('group')
+
+    tab = request.GET.get('tab', 'all')
+    group_id = request.GET.get('group', '')
+    query = request.GET.get('query', '').strip()
+    sort = request.GET.get('sort', 'new')
+
+    items = base
+    if tab in (Homework.DRAFT, Homework.CLOSED, Homework.ACTIVE):
+        items = items.filter(status=tab)
     else:
-        group_ids = StudentGroup.objects.filter(student=request.user).values.list('group_id', flat=True)
-        items = Homework.objects.filter(group_id__in=group_ids)
+        tab = 'all'
 
-    group_id = request.GET.get('group')
-
-    if group_id and group_id.isdigit():
+    if group_id.isdigit():
         items = items.filter(group_id=group_id)
-    groups = Group.objects.filter(coach=request.user) if request.user.role == 'Тренер' else []
-    return render(
-        request,
-        'homework_list.html',
-        {
-            'items': items.select_related('group'),
-            'groups': groups,
-            'selected_group': group_id or '',
-            'today': date.today()
-        }
+
+    if query:
+        items = items.filter(title__icontains=query)
+
+    if sort == 'deadline':
+        # сортируем по дате deadline в порядке возрастания
+        items = items.order_by(F('deadline').asc(nulls_last=True), '-id')
+    else:
+        sort = 'new'
+        items = items.order_by('-date', '-id')
+
+    items = list(items)
+
+    for hw in items:
+        hw.days_left = (hw.deadline - today).days if hw.deadline else None
+        hw.overdue = hw.status == Homework.ACTIVE and hw.days_left is not None and hw.days_left < 0
+
+    counts = base.aggregate(
+        all=Count('id'),
+        active=Count('id', filter=Q(status=Homework.ACTIVE)),
+        closed=Count('id', filter=Q(status=Homework.CLOSED)),
+        draft=Count('id', filter=Q(status=Homework.DRAFT))
     )
+
+    active_qs = base.filter(status=Homework.ACTIVE)  # Активные дз
+    overdue_qs = active_qs.filter(deadline__lt=today)  # Активные но просроченные
+    soon_qs = active_qs.filter(deadline__gte=today,
+                               deadline__lte=today + timedelta(days=3))  # Активные но с наступающим сроком сдачи
+    return render(request, 'homework_list.html', {
+        'items': items,
+        'counts': counts,
+        'overdue_count': overdue_qs.count(),
+        'soon_count': soon_qs.count(),
+        'attention': overdue_qs.order_by('deadline')[:5],
+        'upcoming': active_qs.filter(deadline__gte=today).order_by('deadline')[:5],
+        'groups': Group.objects.filter(coach=request.user),
+        'selected_group': group_id,
+        'query': query,
+        'sort': sort,
+        'current_tab': tab,
+    })
 
 
 @role_required('Тренер')

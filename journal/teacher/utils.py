@@ -173,3 +173,5 @@ def is_score_passed(test_item, athlete, score):
        return score <= norm
     return score >= norm
 
+
+

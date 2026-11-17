@@ -1,6 +1,12 @@
 {% extends 'base_layout.html' %}
 {% block content %}
-<div class="container py-4">
+<style>
+  .hw-desc { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .hw-stat-icon { width: 42px; height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+  .hw-item:hover { background: #fcfdff; }
+</style>
+
+<div class="container-fluid py-4 px-lg-4">
 
   {% for message in messages %}
   <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">
@@ -9,53 +15,176 @@
   </div>
   {% endfor %}
 
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-    <h4 class="mb-0">Домашнее задание</h4>
-    {% if user.role == 'Тренер' %}
-    <a href="{% url 'teacher:homework_create' %}" class="btn btn-primary">+ Новое задание</a>
-    {% endif %}
+  <!-- Заголовок -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+      <h3 class="mb-1">Домашние задания</h3>
+      <p class="text-muted mb-0">Задания для групп</p>
+    </div>
+    <a href="{% url 'teacher:homework_create' %}" class="btn btn-primary">+ Выдать задание</a>
   </div>
 
-  {% if groups %}
-  <form method="get" class="mb-3">
-    <select name="group" class="form-select w-auto" onchange="this.form.submit()">
-      <option value="">Все группы</option>
+  <!-- Сводка -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">
+      <div class="card h-100"><div class="card-body d-flex align-items-center gap-3">
+        <div class="hw-stat-icon bg-primary-subtle text-primary"><i class="bi bi-journal-text"></i></div>
+        <div><div class="fs-4 fw-bold lh-1">{{ counts.all }}</div><div class="text-muted small mt-1">Всего заданий</div></div>
+      </div></div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="card h-100"><div class="card-body d-flex align-items-center gap-3">
+        <div class="hw-stat-icon bg-success-subtle text-success"><i class="bi bi-play-circle"></i></div>
+        <div><div class="fs-4 fw-bold lh-1">{{ counts.active }}</div><div class="text-muted small mt-1">Активные</div></div>
+      </div></div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="card h-100"><div class="card-body d-flex align-items-center gap-3">
+        <div class="hw-stat-icon bg-warning-subtle text-warning"><i class="bi bi-clock"></i></div>
+        <div><div class="fs-4 fw-bold lh-1">{{ soon_count }}</div><div class="text-muted small mt-1">Срок в ближайшие 3 дня</div></div>
+      </div></div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="card h-100"><div class="card-body d-flex align-items-center gap-3">
+        <div class="hw-stat-icon bg-danger-subtle text-danger"><i class="bi bi-exclamation-circle"></i></div>
+        <div><div class="fs-4 fw-bold lh-1">{{ overdue_count }}</div><div class="text-muted small mt-1">Просрочены</div></div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="row g-4 align-items-start">
+
+    <!-- Список -->
+    <div class="col-xl-9">
+      <div class="card overflow-hidden">
+
+        <ul class="nav nav-tabs px-3 pt-2">
+          {% for t in tabs %}
+          <li class="nav-item">
+            <a class="nav-link {% if t.active %}active{% endif %}" href="{{ t.url }}">
+              {{ t.label }} <span class="badge text-bg-light ms-1">{{ t.count }}</span>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+
+        <form method="get">
+  <ul class="nav nav-tabs px-3 pt-2">
+    <li class="nav-item">
+      <button name="tab" value="all" class="nav-link {% if current_tab == 'all' %}active{% endif %}">Все <span class="badge text-bg-light ms-1">{{ counts.all }}</span></button>
+    </li>
+    <li class="nav-item">
+      <button name="tab" value="active" class="nav-link {% if current_tab == 'active' %}active{% endif %}">Активные <span class="badge text-bg-light ms-1">{{ counts.active }}</span></button>
+    </li>
+    <li class="nav-item">
+      <button name="tab" value="closed" class="nav-link {% if current_tab == 'closed' %}active{% endif %}">Закрытые <span class="badge text-bg-light ms-1">{{ counts.closed }}</span></button>
+    </li>
+    <li class="nav-item">
+      <button name="tab" value="draft" class="nav-link {% if current_tab == 'draft' %}active{% endif %}">Черновики <span class="badge text-bg-light ms-1">{{ counts.draft }}</span></button>
+    </li>
+  </ul>
+
+  <div class="d-flex flex-wrap gap-2 p-3">
+    <input type="search" name="q" value="{{ query }}" class="form-control form-control-sm w-auto flex-grow-1" placeholder="Найти задание по теме…">
+    <select name="group" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+      <option value="">Все мои группы</option>
       {% for g in groups %}
       <option value="{{ g.id }}" {% if selected_group == g.id|stringformat:"s" %}selected{% endif %}>{{ g.group_name }}</option>
       {% endfor %}
     </select>
-  </form>
-  {% endif %}
+    <select name="sort" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+      <option value="new" {% if sort == 'new' %}selected{% endif %}>Сначала новые</option>
+      <option value="deadline" {% if sort == 'deadline' %}selected{% endif %}>По сроку выполнения</option>
+    </select>
+    <button name="tab" value="{{ current_tab }}" class="btn btn-outline-secondary btn-sm">Найти</button>
+  </div>
+</form>
 
-  {% for hw in items %}
-  <div class="card shadow-sm mb-3">
-    <div class="card-body">
-      <div class="d-flex justify-content-between align-items-start gap-3">
-        <div>
-          <h5 class="mb-1">{{ hw.title }}</h5>
-          <div class="text-muted small">
-            {{ hw.group.group_name }} · выдано {{ hw.date|date:'d.m.Y' }}
-            {% if hw.deadline %}
-            · срок: <span class="{% if hw.deadline < today %}text-danger{% endif %}">{{ hw.deadline|date:'d.m.Y' }}</span>
-            {% endif %}
+        <div class="px-3 pb-2 text-muted small">Найдено: {{ items|length }}</div>
+
+        {% for hw in items %}
+        <div class="hw-item border-top p-3">
+          <div class="d-flex justify-content-between align-items-start gap-3">
+            <div class="flex-grow-1" style="min-width:0">
+              <h6 class="mb-1">
+                {{ hw.title }}
+                {% if hw.status == 'draft' %}<span class="badge text-bg-secondary ms-2">Черновик</span>
+                {% elif hw.status == 'closed' %}<span class="badge text-bg-success ms-2">Закрыто</span>
+                {% elif hw.overdue %}<span class="badge text-bg-danger ms-2">Просрочено</span>
+                {% else %}<span class="badge text-bg-primary ms-2">Активно</span>{% endif %}
+              </h6>
+              <div class="text-muted small d-flex flex-wrap gap-3">
+                <span><i class="bi bi-people"></i> {{ hw.group.group_name }}</span>
+                <span><i class="bi bi-calendar"></i> Выдано {{ hw.date|date:'d.m.Y' }}</span>
+                {% if hw.deadline %}
+                <span class="{% if hw.overdue %}text-danger{% endif %}"><i class="bi bi-clock"></i> Срок {{ hw.deadline|date:'d.m.Y' }}{% if hw.status == 'active' and hw.days_left >= 0 and hw.days_left <= 3 %} · осталось {{ hw.days_left }} дн.{% endif %}</span>
+                {% else %}
+                <span><i class="bi bi-clock"></i> Без срока</span>
+                {% endif %}
+                {% if hw.file %}<span><i class="bi bi-paperclip"></i> Есть файл</span>{% endif %}
+              </div>
+              <p class="hw-desc text-muted small mt-2 mb-0">{{ hw.text }}</p>
+            </div>
+
+            <div class="d-flex gap-2 flex-shrink-0">
+              <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#hw-{{ hw.pk }}">Подробнее</button>
+              <a href="{% url 'teacher:homework_edit' hw.pk %}" class="btn btn-outline-primary btn-sm">Изменить</a>
+              <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="dropdown" aria-label="Действия"><i class="bi bi-three-dots"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Полный текст и файл -->
+          <div class="collapse" id="hw-{{ hw.pk }}">
+            <div class="bg-light rounded p-3 mt-3">
+              <div style="white-space: pre-line;">{{ hw.text }}</div>
+              {% if hw.file %}
+              <a href="{{ hw.file.url }}" target="_blank" class="btn btn-outline-secondary btn-sm mt-3"><i class="bi bi-paperclip"></i> {{ hw.file.name|cut:'homework/' }}</a>
+              {% endif %}
+            </div>
           </div>
         </div>
-        {% if user.role == 'Тренер' %}
-        <div class="d-flex gap-2 flex-shrink-0">
-          <a href="{% url 'teacher:homework_edit' hw.pk %}" class="btn btn-outline-primary btn-sm">Изменить</a>
-          <form method="post" action="{% url 'teacher:homework_delete' hw.pk %}" onsubmit="return confirm('Удалить задание?')">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-outline-danger btn-sm">Удалить</button>
-          </form>
-        </div>
-        {% endif %}
+        {% empty %}
+        <div class="border-top text-center text-muted py-5">Заданий не найдено.</div>
+        {% endfor %}
       </div>
-      <p class="mt-3 mb-0" style="white-space: pre-line;">{{ hw.text }}</p>
     </div>
-  </div>
-  {% empty %}
-  <p class="text-center text-muted py-5">Заданий пока нет.</p>
-  {% endfor %}
 
+    <!-- Правая колонка -->
+    <div class="col-xl-3">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h6 class="mb-3"><i class="bi bi-exclamation-circle text-danger"></i> Требует внимания</h6>
+          {% for hw in attention %}
+          <div class="mb-2">
+            <a href="{% url 'teacher:homework_edit' hw.pk %}" class="text-decoration-none">{{ hw.title }}</a>
+            <div class="text-muted small">{{ hw.group.group_name }} · срок был {{ hw.deadline|date:'d.m.Y' }}</div>
+          </div>
+          {% empty %}
+          <p class="text-muted small mb-0">Просроченных заданий нет.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <h6 class="mb-3">Ближайшие сроки</h6>
+          {% for hw in upcoming %}
+          <div class="d-flex justify-content-between gap-2 mb-2">
+            <div style="min-width:0">
+              <div class="text-truncate">{{ hw.title }}</div>
+              <div class="text-muted small">{{ hw.group.group_name }}</div>
+            </div>
+            <span class="badge text-bg-light align-self-start">{{ hw.deadline|date:'d.m' }}</span>
+          </div>
+          {% empty %}
+          <p class="text-muted small mb-0">Нет заданий со сроком.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
 {% endblock %}
