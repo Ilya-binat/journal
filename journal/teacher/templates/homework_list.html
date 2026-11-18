@@ -98,6 +98,27 @@
 
         <p class="hw-desc">{{ hw.text }}</p>
 
+        <div class="hw-item-bottom">
+          <button class="hw-act" type="button" data-bs-toggle="collapse" data-bs-target="#hw-{{ hw.pk }}">Подробнее</button>
+          <a href="{% url 'teacher:homework_edit' hw.pk %}" class="hw-act primary">Изменить <i class="bi bi-arrow-right"></i></a>
+
+          <form method="post" action="{% url 'teacher:homework_status' hw.pk %}" class="d-inline">
+            {% csrf_token %}
+            {% if hw.status == 'draft' %}
+            <input type="hidden" name="status" value="active"><button class="hw-act">Опубликовать</button>
+            {% elif hw.status == 'active' %}
+            <input type="hidden" name="status" value="closed"><button class="hw-act">Завершить</button>
+            {% else %}
+            <input type="hidden" name="status" value="active"><button class="hw-act">Открыть снова</button>
+            {% endif %}
+          </form>
+
+          <form method="post" action="{% url 'teacher:homework_delete' hw.pk %}" class="d-inline" onsubmit="return confirm('Удалить задание?')">
+            {% csrf_token %}
+            <button class="hw-act danger" aria-label="Удалить"><i class="bi bi-trash"></i></button>
+          </form>
+        </div>
+
         <div class="collapse" id="hw-{{ hw.pk }}">
           <div class="hw-details">{{ hw.text }}{% if hw.file %}
             <br><a href="{{ hw.file.url }}" target="_blank" class="hw-act"><i class="bi bi-paperclip"></i> {{ hw.file.name|cut:'homework/' }}</a>{% endif %}</div>

@@ -1154,22 +1154,59 @@ def homework_list(request):
 @role_required('Тренер')
 def homework_create(request):
     form = HomeworkForm(request.POST or None, request.FILES or None, coach=request.user)
+    action = request.POST.get('action')
 
     if form.is_valid() and request.method == 'POST':
         homework = form.save(commit=False)
         homework.author = request.user
+        homework.status = Homework.DRAFT if action == 'draft' else Homework.ACTIVE
         homework.save()
-        messages.success(request, 'Задание добавлено')
+        messages.success(request, 'Черновик сохранен' if action == 'draft' else 'Задание добавлено')
         return redirect('teacher:homework_list')
     return render(request, 'homework_create.html', {'form': form, 'title': 'Новое задание'})
 
 
 @role_required('Тренер')
 def homework_edit(request, pk):
-    pass
+    homework = get_object_or_404(Homework, pk=pk, group__coach=request.user)
+    form = HomeworkForm(request.POST or None, request.FILES or None, instance=homework, coach=request.user )
+
+    if form.is_valid() and request.method == 'POST':
+        homework = form.save(commit=False)
+        action = request.POST.get('action')
+
+        if action == Homework.DRAFT:
+            homework.status = Homework.DRAFT
+        elif action == 'publish' and homework.status == Homework.DRAFT:
+            homework.status = Homework.ACTIVE
+        homework.save()
+
+        messages.success(request, 'Задание обновлено')
+        return redirect('teacher:homework_list')
+    return render(request, 'homework_create.html', {'form': form, 'homework': homework, 'title': 'Редактирование задания'})
+
 
 
 @role_required('Тренер')
 @require_POST
 def homework_delete(request, pk):
-    pass
+    homework = get_object_or_404(Homework, pk=pk, group__coach=request.user)
+
+    if homework.file:
+        homework.file.delete(save=False)
+    homework.delete()
+    messages.success(request, 'Задание удалено')
+
+    return redirect('teacher:homework_list')
+
+@role_required('Тренер')
+@require_POST
+def homework_status(request, pk):
+    homework = get_object_or_404(Homework, pk=pk, group__coach=request.user)
+    new_status = request.POST.get('status')
+
+    if new_status in dict(Homework.STATUS_CHOICES):
+        homework.status = new_status
+        homework.save(update_fields=['status'])
+        messages.success(request, 'Статус задания обнавлен')
+    return redirect('teacher:homework_list')

@@ -19,6 +19,7 @@ urlpatterns = [
     path('homework/', homework_list, name='homework_list'),
     path('homework/create', homework_create, name='homework_create'),
     path('homework/<int:pk>/edit', homework_edit, name='homework_edit'),
+    path('homework_status/<int:pk>', homework_status, name='homework_status'),
     path('homework/<int:pk>/delete', homework_delete, name='homework_delete'),
 
 ]
